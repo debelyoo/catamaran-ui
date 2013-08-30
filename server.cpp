@@ -27,7 +27,7 @@ void Server::listen()
     foreach (QHostAddress address, QNetworkInterface::allAddresses()) {
         if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost))
         {
-            QString msg = "Listening on " + address.toString() +":"+QString::number(port);
+            QString msg = "Listening on " + address.toString() +":"+QString::number(port)+"\n";
             emit displayInGui(msg);
         }
     }

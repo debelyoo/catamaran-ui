@@ -61,9 +61,18 @@ void MessageConsumer::readQueue()
             break;
         }
         case 1:
-            str = "read >> CMD message\n";
-            emit messageParsed(str);
+        {
+            //str = "read >> CMD message\n";
+            int qs = queue->size();
+            if (qs < msgLength) {
+                waitingData = msgLength;
+                //printf("[MessageConsumer] Wait data !\n");
+                //fflush(stdout);
+                return; // need to wait for more data
+            }
+            parseCmdMessage();
             break;
+        }
         default:
             str = "read >> unknown message\n";
             emit messageParsed(str);
@@ -248,7 +257,7 @@ void MessageConsumer::parseCmdMessage()
     {
         // only one param (address)
         int paramLength = converter->byteArrayToUInt32(readBytes(4));
-        int address = converter->byteArrayToUInt32(readBytes(paramLength));
+        int address = converter->byteArrayToUInt8(readBytes(paramLength));
         str += " " + QString::number(address);
         handleGetCommand(address);
         break;
@@ -282,7 +291,9 @@ void MessageConsumer::handleGetCommand(int address)
         QByteArray data;
         data.push_back(command);
         data.push_back(converter->intToByteArray(2, 4));
+        // add address
         data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
+        // add stream array
         data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
         Server* s = (Server*)parent();
         s->sendCommandMessage(MessageUtil::Set, data);
