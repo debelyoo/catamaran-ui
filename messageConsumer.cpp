@@ -46,33 +46,21 @@ void MessageConsumer::readQueue()
         QString str;
         uint msgType = converter->byteArrayToUInt8(readBytes(1));
         uint msgLength = converter->byteArrayToUInt32(readBytes(4));
+        int qs = queue->size();
+        if (qs < msgLength) {
+            waitingData = msgLength;
+            //printf("[MessageConsumer] Wait data !\n");
+            //fflush(stdout);
+            return; // need to wait for more data
+        }
+        //str = "read >> DATA of length "+ QString::number(msgLength)+" \n";
         switch (msgType) {
         case 0:
-        {
-            int qs = queue->size();
-            if (qs < msgLength) {
-                waitingData = msgLength;
-                //printf("[MessageConsumer] Wait data !\n");
-                //fflush(stdout);
-                return; // need to wait for more data
-            }
-            //str = "read >> DATA of length "+ QString::number(msgLength)+" \n";
             parseDataMessage();
             break;
-        }
         case 1:
-        {
-            //str = "read >> CMD message\n";
-            int qs = queue->size();
-            if (qs < msgLength) {
-                waitingData = msgLength;
-                //printf("[MessageConsumer] Wait data !\n");
-                //fflush(stdout);
-                return; // need to wait for more data
-            }
             parseCmdMessage();
             break;
-        }
         default:
             str = "read >> unknown message\n";
             emit messageParsed(str);
@@ -114,11 +102,11 @@ void MessageConsumer::parseDataMessage()
     int address = converter->byteArrayToUInt8(readBytes(1));
     str += "address: "+ QString::number(address);
     int dataArrayLength = converter->byteArrayToUInt32(readBytes(4));
-    QVector< QPair<QString, DataType::Types> > values;
+    QVector< QPair<QVariant, DataType::Types> > values;
     for (int i = 0; i < dataArrayLength; i++) {
-        QPair<QString, DataType::Types> res = decodeDataValue();
+        QPair<QVariant, DataType::Types> res = decodeDataValue();
         values.push_back(res);
-        str += " " + res.first;
+        str += " " + res.first.toString();
     }
     double ts = decodeTimestamp();
     waitingData = 0;
@@ -133,14 +121,15 @@ void MessageConsumer::parseDataMessage()
  * @brief MessageConsumer::decodeDataValue
  * @return
  */
-QPair<QString, DataType::Types> MessageConsumer::decodeDataValue()
+QPair<QVariant, DataType::Types> MessageConsumer::decodeDataValue()
 {
-    QPair<QString, DataType::Types> pair;
+    QPair<QVariant, DataType::Types> pair;
     bool ok;
     int valueLength = converter->byteArrayToUInt32(readBytes(4));
     QByteArray valueBytes = readBytes(valueLength);
     int valueType = converter->byteArrayToUInt8(readBytes(1));
     QString valStr;
+    QVariant valVar;
     uint v;
     double d;
     switch (valueType) {
@@ -149,24 +138,28 @@ QPair<QString, DataType::Types> MessageConsumer::decodeDataValue()
         QByteArray invertedBytes = converter->invertBytes(valueBytes); // invert bytes because for double type Labview sends the bytes in reverse order
         d = converter->byteArrayToDouble(invertedBytes);
         //msg = "["+ QString::number(d) +", Double]";
-        valStr = QString::number(d, 'f', 6);
+        //valStr = QString::number(d, 'f', 6);
+        valVar = QVariant(d);
         break;
     }
     case DataType::UInt32: // uint32
         v = converter->byteArrayToUInt32(valueBytes);
         //msg = "["+ QString::number(v) +", uint32]";
-        valStr = QString::number(v);
+        //valStr = QString::number(v);
+        valVar = QVariant(v);
         break;
     case DataType::UInt16:
         v = converter->byteArrayToUInt16(valueBytes);
         //msg = "["+ QString::number(v) +", uint16]";
-        valStr = QString::number(v);
+        //valStr = QString::number(v);
+        valVar = QVariant(v);
         break;
     default:
-        valStr = "NaN";
+        //valStr = "NaN";
+        valVar = QVariant();
         break;
     }
-    pair.first = valStr;
+    pair.first = valVar;
     pair.second = (DataType::Types)valueType;
     return pair;
 }
@@ -199,7 +192,7 @@ double MessageConsumer::decodeTimestamp()
  * @param values The values of the log
  * @param ts The timestamp of the log
  */
-void MessageConsumer::handleMessageData(int address, QVector< QPair<QString, DataType::Types> > values, double ts)
+void MessageConsumer::handleMessageData(int address, QVector< QPair<QVariant, DataType::Types> > values, double ts)
 {
     if (sensorConfig->containsSensor(address))
     {

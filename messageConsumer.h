@@ -13,7 +13,7 @@ class MessageConsumer : public QObject
     Q_OBJECT
     public:
         explicit MessageConsumer(QObject *parent = 0, QQueue<char> *q = 0);
-        void handleMessageData(int address, QVector< QPair<QString, DataType::Types> > v, double ts); // TODO - test
+        void handleMessageData(int address, QVector< QPair<QVariant, DataType::Types> > v, double ts); // TODO - test
 
     signals:
         void messageParsed(QString);
@@ -34,7 +34,7 @@ class MessageConsumer : public QObject
         void readQueue();
         QByteArray readBytes(int nbBytesToRead);
         void parseDataMessage();
-        QPair<QString, DataType::Types> decodeDataValue();
+        QPair<QVariant, DataType::Types> decodeDataValue();
         double decodeTimestamp();
         void parseCmdMessage();
         void handleGetCommand(int address);

@@ -124,6 +124,9 @@ QByteArray ByteArrayConverter::byteArrayForCmdParameterStreamArray(QList<Sensor*
             ba.push_back(s->getAddress());
         }
     }
+    // add array length (uint32) before array
+    ba.prepend(intToByteArray(ba.length(), 4));
+    // add string length (uint32) before (array len, array)
     ba.prepend(intToByteArray(ba.length(), 4));
     return ba;
 }
