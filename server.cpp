@@ -113,7 +113,8 @@ void Server::on_gpsPointReceived(double x, double y)
 
 void Server::sendCommandMessage(int command, QByteArray msg)
 {
-    publisher->sendCommandMessage(command, msg);
+    if (isConnected())
+        publisher->sendCommandMessage(command, msg);
 }
 
 bool Server::isConnected()

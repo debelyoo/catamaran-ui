@@ -275,8 +275,19 @@ void MessageConsumer::handleGetCommand(int address)
 {
     switch (address) {
     case 5:
+    {
         // send addresses array (config)
+        quint8 command = MessageUtil::Set;
+        quint8 engineAddr = 5;
+        QByteArray data;
+        data.push_back(command);
+        data.push_back(converter->intToByteArray(2, 4));
+        data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
+        data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
+        Server* s = (Server*)parent();
+        s->sendCommandMessage(MessageUtil::Set, data);
         break;
+    }
     default:
         printf("[MessageConsumer] handleGetCommand() - unhandled address !\n");
         fflush(stdout);

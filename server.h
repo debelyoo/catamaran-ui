@@ -28,6 +28,8 @@ class Server : public QObject
         explicit Server(QObject *parent = 0);
         void listen();
         bool isConnected();
+        void sendCommandMessage(int, QByteArray);
+
     signals:
         void displayInGui(QString);
         void dataReceived();
@@ -39,7 +41,6 @@ class Server : public QObject
         void on_disconnected();
         void on_messageParsed(QString);
         void on_gpsPointReceived(double, double);
-        void sendCommandMessage(int, QByteArray);
 
     private:
         QTcpServer* server;

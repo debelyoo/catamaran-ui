@@ -1,6 +1,7 @@
 #ifndef BYTEARRAYCONVERTER_H
 #define BYTEARRAYCONVERTER_H
 
+#include "sensor.h"
 #include <QObject>
 #include <QDataStream>
 #include <QVector>
@@ -40,7 +41,8 @@ class ByteArrayConverter
         QByteArray getFirstBytesOfArray(QByteArray ba, int n);
         QByteArray getLastBytesOfArray(QByteArray ba, int n);
         QByteArray invertBytes(QByteArray ba);
-        QByteArray byteArrayForCmdParameter(int val); // return a byte array with length and value
+        QByteArray byteArrayForCmdParameterInt(int val); // return a byte array with length and value
+        QByteArray byteArrayForCmdParameterStreamArray(QList<Sensor*> sensors); // return a byte array with length and values (bool, address)
 
     public slots:
 

@@ -99,11 +99,31 @@ QByteArray ByteArrayConverter::invertBytes(QByteArray ba)
  * @param val The value to encode
  * @return A QByteArray with length and value
  */
-QByteArray ByteArrayConverter::byteArrayForCmdParameter(int val)
+QByteArray ByteArrayConverter::byteArrayForCmdParameterInt(int val)
 {
     QByteArray ba;
     QByteArray length = intToByteArray(1, 4);
     ba.push_back(length);
     ba.push_back(val);
+    return ba;
+}
+
+/**
+ * Create the byte array for the array of values to send to the cRIO (addresses to stream)
+ * @brief ByteArrayConverter::byteArrayForCmdParameterStreamArray
+ * @param sensors The sensors in the config
+ * @return The Byte array
+ */
+QByteArray ByteArrayConverter::byteArrayForCmdParameterStreamArray(QList<Sensor*> sensors)
+{
+    QByteArray ba;
+    foreach (Sensor* s, sensors) {
+        if (s->getStream())
+        {
+            ba.push_back(s->getStream());
+            ba.push_back(s->getAddress());
+        }
+    }
+    ba.prepend(intToByteArray(ba.length(), 4));
     return ba;
 }
