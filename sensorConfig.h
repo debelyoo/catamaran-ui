@@ -16,7 +16,7 @@ class SensorConfig
         bool containsSensor(int addr);
         Sensor* getSensor(int addr);
         QMap<int, QString> getSensorTypes();
-        int NB_ADDRESSES = 75;
+        //int NB_ADDRESSES = 75;
         bool qstringToBool(QString str);
 
 

@@ -18,6 +18,7 @@ quint16 ByteArrayConverter::byteArrayToUInt16(QByteArray ba) {
     QDataStream ds(ba);
     quint16 v;
     ds >> v;
+    return v;
 }
 quint32 ByteArrayConverter::byteArrayToUInt32(QByteArray ba) {
     QDataStream ds(ba);
