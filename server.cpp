@@ -27,10 +27,11 @@ void Server::listen()
     foreach (QHostAddress address, QNetworkInterface::allAddresses()) {
         if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost))
         {
-            QString msg = "Listening on " + address.toString() +":"+QString::number(port)+"\n";
-            emit displayInGui(msg);
+            ipAddress = address;
         }
     }
+    QString msg = "Listening on " + ipAddress.toString() +":"+QString::number(port)+"\n";
+    emit displayInGui(msg);
     server->listen(QHostAddress(ipAddress), port);
 }
 
