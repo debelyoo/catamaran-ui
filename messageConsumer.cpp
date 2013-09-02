@@ -1,4 +1,4 @@
-#include "messageConsumer.h";
+#include "messageConsumer.h"
 #include "server.h"
 #include <QThread>
 
@@ -44,8 +44,8 @@ void MessageConsumer::readQueue()
 {
     if (!queue->isEmpty()) {
         QString str;
-        uint msgType = converter->byteArrayToUInt8(readBytes(1));
-        uint msgLength = converter->byteArrayToUInt32(readBytes(4));
+        int msgType = converter->byteArrayToUInt8(readBytes(1));
+        int msgLength = converter->byteArrayToUInt32(readBytes(4));
         int qs = queue->size();
         if (qs < msgLength) {
             waitingData = msgLength;
@@ -124,36 +124,55 @@ void MessageConsumer::parseDataMessage()
 QPair<QVariant, DataType::Types> MessageConsumer::decodeDataValue()
 {
     QPair<QVariant, DataType::Types> pair;
-    bool ok;
     int valueLength = converter->byteArrayToUInt32(readBytes(4));
     QByteArray valueBytes = readBytes(valueLength);
     int valueType = converter->byteArrayToUInt8(readBytes(1));
-    QString valStr;
+    //QString valStr;
     QVariant valVar;
-    uint v;
-    double d;
     switch (valueType) {
     case DataType::Double: // double
     {
         QByteArray invertedBytes = converter->invertBytes(valueBytes); // invert bytes because for double type Labview sends the bytes in reverse order
-        d = converter->byteArrayToDouble(invertedBytes);
-        //msg = "["+ QString::number(d) +", Double]";
-        //valStr = QString::number(d, 'f', 6);
+        double d = converter->byteArrayToDouble(invertedBytes);
         valVar = QVariant(d);
         break;
     }
     case DataType::UInt32: // uint32
-        v = converter->byteArrayToUInt32(valueBytes);
-        //msg = "["+ QString::number(v) +", uint32]";
-        //valStr = QString::number(v);
+    {
+        quint32 v = converter->byteArrayToUInt32(valueBytes);
         valVar = QVariant(v);
         break;
+    }
     case DataType::UInt16:
-        v = converter->byteArrayToUInt16(valueBytes);
-        //msg = "["+ QString::number(v) +", uint16]";
-        //valStr = QString::number(v);
+    {
+        quint16 v = converter->byteArrayToUInt16(valueBytes);
         valVar = QVariant(v);
         break;
+    }
+    case DataType::UInt8:
+    {
+        quint8 v = converter->byteArrayToUInt8(valueBytes);
+        valVar = QVariant(v);
+        break;
+    }
+    case DataType::Int32:
+    {
+        qint32 v = converter->byteArrayToInt32(valueBytes);
+        valVar = QVariant(v);
+        break;
+    }
+    case DataType::Int16:
+    {
+        qint16 v = converter->byteArrayToInt16(valueBytes);
+        valVar = QVariant(v);
+        break;
+    }
+    case DataType::Int8:
+    {
+        qint8 v = converter->byteArrayToInt8(valueBytes);
+        valVar = QVariant(v);
+        break;
+    }
     default:
         //valStr = "NaN";
         valVar = QVariant();
@@ -171,7 +190,7 @@ QPair<QVariant, DataType::Types> MessageConsumer::decodeDataValue()
  */
 double MessageConsumer::decodeTimestamp()
 {
-    bool ok;
+    //bool ok;
     QByteArray tsBytes = readBytes(16);
     qint64 seconds = converter->byteArrayToInt64(converter->getFirstBytesOfArray(tsBytes, 8));
     //qint64 secondsBis = converter->byteArrayToInt64Bis(converter->getFirstBytesOfArray(tsBytes, 8));

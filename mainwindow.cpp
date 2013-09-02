@@ -446,7 +446,7 @@ void MainWindow::createConfigurationPanel()
     }
     scrollArea->setWidget(viewport);
 
-    QSpacerItem *spacer = new QSpacerItem(300, 100);
+    //QSpacerItem *spacer = new QSpacerItem(300, 100);
 
     /*QHBoxLayout *configurationPanelLayout = new QHBoxLayout;
     configurationPanel->setLayout(configurationPanelLayout);

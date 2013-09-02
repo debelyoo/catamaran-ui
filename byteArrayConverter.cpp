@@ -32,17 +32,27 @@ quint64 ByteArrayConverter::byteArrayToUInt64(QByteArray ba) {
     ds >> v;
     return v;
 }
+qint8 ByteArrayConverter::byteArrayToInt8(QByteArray ba) {
+    return ba[0];
+}
+qint16 ByteArrayConverter::byteArrayToInt16(QByteArray ba) {
+    QDataStream ds(ba);
+    qint16 v;
+    ds >> v;
+    return v;
+}
+qint32 ByteArrayConverter::byteArrayToInt32(QByteArray ba) {
+    QDataStream ds(ba);
+    qint32 v;
+    ds >> v;
+    return v;
+}
 qint64 ByteArrayConverter::byteArrayToInt64(QByteArray ba) {
     QDataStream ds(ba);
     qint64 v;
     ds >> v;
     return v;
 }
-/*qint64 ByteArrayConverter::byteArrayToInt64Bis(QByteArray ba) {
-    qint64 v;
-    v = ((qint64*)ba.constData())[0];
-    return v;
-}*/
 double ByteArrayConverter::byteArrayToDouble(QByteArray ba) {
     double d;
     d = ((double*)ba.constData())[0];

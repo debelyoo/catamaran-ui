@@ -19,7 +19,7 @@ class Sensor
 {
     public:
     explicit Sensor(int addr = 0, QString name = "",
-                    int type = 0, QString display = false,
+                    int type = 0, QString display = "NO",
                     bool record = false, bool stream = false, QString filename = "");
     /// getters
     int getAddress();

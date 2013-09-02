@@ -9,7 +9,7 @@
 namespace DataType {
     typedef enum {
         Double = 0,
-        QString = 1,
+        String = 1,
         FXP2410 = 2,
         Int32 = 3,
         Int16 = 4,
@@ -35,6 +35,9 @@ class ByteArrayConverter
         quint16 byteArrayToUInt16(QByteArray ba);
         quint32 byteArrayToUInt32(QByteArray ba);
         quint64 byteArrayToUInt64(QByteArray ba);
+        qint8 byteArrayToInt8(QByteArray ba);
+        qint16 byteArrayToInt16(QByteArray ba);
+        qint32 byteArrayToInt32(QByteArray ba);
         qint64 byteArrayToInt64(QByteArray ba);
         double byteArrayToDouble(QByteArray ba);
         QByteArray intToByteArray(int val, int byteArraySize);
