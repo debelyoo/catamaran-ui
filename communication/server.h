@@ -5,6 +5,7 @@
 #include <QQueue>
 #include "messageConsumer.h"
 #include "messagePublisher.h"
+
 class QTcpServer;
 class QTcpSocket;
 
@@ -28,7 +29,7 @@ class Server : public QObject
         explicit Server(QObject *parent = 0);
         void listen();
         bool isConnected();
-        void sendCommandMessage(int, QByteArray);
+        void sendCommandMessage(QByteArray data);
 
     signals:
         void displayInGui(QString);
@@ -47,10 +48,12 @@ class Server : public QObject
         QTcpSocket* socket;
         MessageConsumer* consumer;
         MessagePublisher* publisher;
+        DatabaseManager* dbManager;
         SensorConfig* sensorConfig; // singleton
         QQueue<char> *queue;
         static const int BYTE_CHUNK_SIZE_TO_READ = 32; // in bytes
         bool connected;
+        void testDB(); // TODO
 };
 
 #endif // SERVER_H

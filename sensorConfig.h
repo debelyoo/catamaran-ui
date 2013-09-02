@@ -3,7 +3,7 @@
 
 #include <QHash>
 #include <QMap>
-#include "sensor.h"
+#include "model/sensor.h"
 
 class SensorConfig
 {

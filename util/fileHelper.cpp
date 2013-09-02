@@ -1,4 +1,4 @@
-#include "fileHelper.h";
+#include "fileHelper.h"
 #include <QFile>
 #include <QDir>
 #include <QTextStream>

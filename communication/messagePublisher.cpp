@@ -1,4 +1,4 @@
-#include "messagePublisher.h";
+#include "messagePublisher.h"
 #include "server.h"
 
 MessagePublisher::MessagePublisher(QObject *parent, QTcpSocket *sk) :
@@ -7,7 +7,7 @@ QObject(parent)
     socket = sk;
 }
 
-void MessagePublisher::sendCommandMessage(int command, QByteArray data)
+void MessagePublisher::sendCommandMessage(QByteArray data)
 {
     // CMD(uint8) | length (4B) | params (bytes array)
     quint8 msgType = MessageUtil::Cmd;

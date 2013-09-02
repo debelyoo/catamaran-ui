@@ -1,4 +1,4 @@
-#include "byteArrayConverter.h";
+#include "byteArrayConverter.h"
 
 ByteArrayConverter* ByteArrayConverter::m_Instance = 0;
 

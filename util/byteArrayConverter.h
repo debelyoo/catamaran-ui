@@ -1,7 +1,7 @@
 #ifndef BYTEARRAYCONVERTER_H
 #define BYTEARRAYCONVERTER_H
 
-#include "sensor.h"
+#include "model/sensor.h"
 #include <QObject>
 #include <QDataStream>
 #include <QVector>

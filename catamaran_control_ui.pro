@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,7 +25,9 @@ SOURCES += main.cpp\
     gui/inRowLineEdit.cpp\
     communication/server.cpp\
     communication/messageConsumer.cpp\
-    communication/messagePublisher.cpp
+    communication/messagePublisher.cpp \
+    util/databaseManager.cpp \
+    communication/dataObject.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -38,7 +40,10 @@ HEADERS  += sensorConfig.h\
     gui/inRowLineEdit.h\
     communication/server.h\
     communication/messageConsumer.h\
-    communication/messagePublisher.h
+    communication/messagePublisher.h \
+    util/databaseManager.h \
+    util/timeHelper.h \
+    communication/dataObject.h
 
 FORMS    += mainwindow.ui
 

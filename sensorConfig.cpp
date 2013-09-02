@@ -1,5 +1,4 @@
-#include "sensorConfig.h";
-//#include <algorithm>
+#include "sensorConfig.h"
 #include <QtAlgorithms>
 
 SensorConfig* SensorConfig::m_Instance = 0;

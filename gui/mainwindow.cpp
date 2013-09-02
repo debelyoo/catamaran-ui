@@ -260,13 +260,9 @@ void MainWindow::sendLeftEngineCommand()
     QByteArray data;
     data.push_back(command);
     data.push_back(converter->intToByteArray(2, 4)); // array len
-    //data.push_back(converter->intToByteArray(1, 4));
-    //data.push_back(engineAddr);
     data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
-    //data.push_back(converter->intToByteArray(1, 4));
-    //data.push_back(correctEngineCommandValue(val));
     data.push_back(converter->byteArrayForCmdParameterInt(val));
-    s->sendCommandMessage(MessageUtil::Set, data);
+    s->sendCommandMessage(data);
     char str[128];
     sprintf(str, "sendLeftEngineCommand() [%d]\n", correctEngineCommandValue(val));
     printf(str);
@@ -281,13 +277,9 @@ void MainWindow::sendRightEngineCommand()
     QByteArray data;
     data.push_back(command);
     data.push_back(converter->intToByteArray(2, 4));
-    //data.push_back(converter->intToByteArray(1, 4));
-    //data.push_back(engineAddr);
     data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
-    //data.push_back(converter->intToByteArray(1, 4));
-    //data.push_back(correctEngineCommandValue(val));
     data.push_back(converter->byteArrayForCmdParameterInt(val));
-    s->sendCommandMessage(MessageUtil::Set, data);
+    s->sendCommandMessage(data);
     char str[128];
     sprintf(str, "sendRightEngineCommand() [%d]\n", correctEngineCommandValue(val));
     printf(str);

@@ -9,6 +9,7 @@ Server::Server(QObject *parent) :
 QObject(parent)
 {
     sensorConfig = SensorConfig::instance();
+    dbManager = DatabaseManager::instance();
     server = new QTcpServer(this);
     queue = new QQueue<char>();
     consumer = new MessageConsumer(this, queue);
@@ -33,6 +34,16 @@ void Server::listen()
     QString msg = "Listening on " + ipAddress.toString() +":"+QString::number(port)+"\n";
     emit displayInGui(msg);
     server->listen(QHostAddress(ipAddress), port);
+
+    //testDB(); // TODO
+}
+
+void Server::testDB()
+{
+    //dbManager->openDB();
+    dbManager->createTemperatureLogTable();
+    dbManager->insertTemperatureLog(22, 123456, 22.3);
+    dbManager->getTemperatureLog();
 }
 
 void Server::on_newConnection()
@@ -112,10 +123,10 @@ void Server::on_gpsPointReceived(double x, double y)
     emit gpsPointReceived(x, y);
 }
 
-void Server::sendCommandMessage(int command, QByteArray msg)
+void Server::sendCommandMessage(QByteArray msg)
 {
     if (isConnected())
-        publisher->sendCommandMessage(command, msg);
+        publisher->sendCommandMessage(msg);
 }
 
 bool Server::isConnected()

@@ -8,6 +8,7 @@ QObject(parent)
     sensorConfig = SensorConfig::instance();
     fileHelper = FileHelper::instance();
     converter = ByteArrayConverter::instance();
+    dbManager = DatabaseManager::instance();
     queue = q;
     consuming = false;
     waitingData = 0;
@@ -108,9 +109,10 @@ void MessageConsumer::parseDataMessage()
         values.push_back(res);
         str += " " + res.first.toString();
     }
-    double ts = decodeTimestamp();
+    qint64 ts = decodeTimestamp();
+    DataObject* dataObj = new DataObject(address, values, ts);
     waitingData = 0;
-    handleMessageData(address, values, ts);
+    handleMessageData(dataObj);
     emit messageParsed(str+"\n");
     checkQueue(false); // force checking queue to parse data that would have arrived meanwhile
     //return str;
@@ -188,20 +190,18 @@ QPair<QVariant, DataType::Types> MessageConsumer::decodeDataValue()
  * @brief MessageConsumer::decodeTimestamp
  * @return
  */
-double MessageConsumer::decodeTimestamp()
+qint64 MessageConsumer::decodeTimestamp()
 {
-    //bool ok;
     QByteArray tsBytes = readBytes(16);
     qint64 seconds = converter->byteArrayToInt64(converter->getFirstBytesOfArray(tsBytes, 8));
-    //qint64 secondsBis = converter->byteArrayToInt64Bis(converter->getFirstBytesOfArray(tsBytes, 8));
     quint64 fraction = converter->byteArrayToUInt64(converter->getLastBytesOfArray(tsBytes, 8));
     quint64 divider = 18446744073709551615; // 2^64 -1
     double decimal = (double)fraction / divider;
-    double ts = seconds + decimal;
-    //QString tsStr = "some TS";
-    printf("TS: %f", ts);
+    double ts = seconds + decimal; // labview timestamp: seconds since the epoch 01/01/1904 00:00:00.00 UTC
+    qint64 tsUnix = TimeHelper::labviewTsToUnixTs(ts);
+    printf("TS: %f, TS unix: %lld", ts, tsUnix);
     fflush(stdout);
-    return ts;
+    return tsUnix;
 }
 
 /**
@@ -211,20 +211,20 @@ double MessageConsumer::decodeTimestamp()
  * @param values The values of the log
  * @param ts The timestamp of the log
  */
-void MessageConsumer::handleMessageData(int address, QVector< QPair<QVariant, DataType::Types> > values, double ts)
+void MessageConsumer::handleMessageData(DataObject* dataObj)
 {
-    if (sensorConfig->containsSensor(address))
+    if (sensorConfig->containsSensor(dataObj->getAddress()))
     {
-        Sensor *s = sensorConfig->getSensor(address);
+        Sensor *s = sensorConfig->getSensor(dataObj->getAddress());
         // switch can not be used with QString
 
         switch (s->getType()) {
         case SensorType::GPS_position:
         {
             // GPS position
-            double lat = values[0].first.toDouble();
-            double lon = values[1].first.toDouble();
-            double elevation = values[2].first.toDouble();
+            double lat = dataObj->getValues()[0].first.toDouble();
+            double lon = dataObj->getValues()[1].first.toDouble();
+            double elevation = dataObj->getValues()[2].first.toDouble();
             // convert to CH1903 coordinates (east, north, h)
             QVector<double> swissCoordinates = coordinateHelper->WGS84toLV03(lat, lon, elevation);
             // get x,y position for map in UI
@@ -235,8 +235,15 @@ void MessageConsumer::handleMessageData(int address, QVector< QPair<QVariant, Da
                 emit gpsPointReceived(mapPosition[0], mapPosition[1]);
             }
             QString logFile = s->getFilename() + ".log";
-            QString log = QString::number(s->getAddress()) + "\t" + QString::number(ts,'f',6) + "\t" + QString::number(lat,'f',6) + "\t" + QString::number(lon,'f',6) + "\t" + QString::number(elevation,'f',6);
+            QString log = QString::number(s->getAddress()) + "\t" + QString::number(dataObj->getTimestamp(),'f',6) + "\t" + QString::number(lat,'f',6) + "\t" + QString::number(lon,'f',6) + "\t" + QString::number(elevation,'f',6);
             fileHelper->appendToFile(logFile, log);
+            break;
+        }
+        case SensorType::PT100:
+        {
+            double temp = dataObj->getValues()[0].first.toDouble();
+            // save it to database
+            dbManager->insertTemperatureLog(dataObj->getAddress(), dataObj->getTimestamp(), dataObj->getValues()[0].first.toDouble());
             break;
         }
         default:
@@ -308,7 +315,7 @@ void MessageConsumer::handleGetCommand(int address)
         // add stream array
         data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
         Server* s = (Server*)parent();
-        s->sendCommandMessage(MessageUtil::Set, data);
+        s->sendCommandMessage(data);
         break;
     }
     default:

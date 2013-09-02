@@ -1,10 +1,13 @@
 #ifndef MESSAGECONSUMER_H
 #define MESSAGECONSUMER_H
 
-#include "byteArrayConverter.h"
+#include "util/byteArrayConverter.h"
 #include "sensorConfig.h"
-#include "coordinateHelper.h"
-#include "fileHelper.h"
+#include "util/coordinateHelper.h"
+#include "util/fileHelper.h"
+#include "util/timeHelper.h"
+#include "util/databaseManager.h"
+#include "dataObject.h"
 #include <QObject>
 #include <QQueue>
 
@@ -13,7 +16,7 @@ class MessageConsumer : public QObject
     Q_OBJECT
     public:
         explicit MessageConsumer(QObject *parent = 0, QQueue<char> *q = 0);
-        void handleMessageData(int address, QVector< QPair<QVariant, DataType::Types> > v, double ts); // TODO - test
+        void handleMessageData(DataObject* dataObj);
 
     signals:
         void messageParsed(QString);
@@ -26,16 +29,17 @@ class MessageConsumer : public QObject
         QQueue<char> *queue;
         bool consuming;
         int waitingData;
-        ByteArrayConverter *converter; // singleton
-        SensorConfig *sensorConfig; // singleton
-        CoordinateHelper* coordinateHelper; // singleton
-        FileHelper *fileHelper; // singleton
+        ByteArrayConverter *converter;
+        SensorConfig *sensorConfig;
+        CoordinateHelper* coordinateHelper;
+        FileHelper *fileHelper;
+        DatabaseManager* dbManager;
         void checkQueue(bool checkIfConsuming);
         void readQueue();
         QByteArray readBytes(int nbBytesToRead);
         void parseDataMessage();
         QPair<QVariant, DataType::Types> decodeDataValue();
-        double decodeTimestamp();
+        qint64 decodeTimestamp();
         void parseCmdMessage();
         void handleGetCommand(int address);
 

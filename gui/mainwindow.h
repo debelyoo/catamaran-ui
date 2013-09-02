@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "server.h"
-#include "fileHelper.h"
+#include "communication/server.h"
+#include "util/fileHelper.h"
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QPushButton>
