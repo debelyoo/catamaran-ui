@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network sql
+QT       += core gui network sql printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,7 +27,9 @@ SOURCES += main.cpp\
     communication/messageConsumer.cpp\
     communication/messagePublisher.cpp \
     util/databaseManager.cpp \
-    communication/dataObject.cpp
+    communication/dataObject.cpp \
+    gui/qcustomplot.cpp \
+    gui/dataPlot.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -43,7 +45,9 @@ HEADERS  += sensorConfig.h\
     communication/messagePublisher.h \
     util/databaseManager.h \
     util/timeHelper.h \
-    communication/dataObject.h
+    communication/dataObject.h \
+    gui/qcustomplot.h \
+    gui/dataPlot.h
 
 FORMS    += mainwindow.ui
 

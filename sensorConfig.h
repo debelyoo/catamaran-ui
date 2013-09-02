@@ -41,7 +41,6 @@ class SensorConfig
         static SensorConfig* m_Instance;
 
         QHash<int, Sensor*> sensors;
-        //QList<QString> sensorTypes;
         QMap<int, QString> sensorTypes;
 
         static bool addressLessThan(Sensor* s1, Sensor* s2);

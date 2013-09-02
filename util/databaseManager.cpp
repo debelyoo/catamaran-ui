@@ -17,18 +17,23 @@ DatabaseManager* DatabaseManager::instance()
     return m_Instance;
 }
 
+QString DatabaseManager::getTableName(Datastore::Tables t)
+{
+    return tables[t];
+}
+
 /*bool DatabaseManager::openDB()
 {
     // open database
     return db.open();
 }*/
 
-bool DatabaseManager::createTemperatureLogTable()
+bool DatabaseManager::createLogTableForDoubleValue(QString tableName)
 {
     bool res;
     if (db.open()) {
         QSqlQuery query(db);
-        if (query.exec("CREATE TABLE temperaturelog ( id INTEGER PRIMARY KEY AUTOINCREMENT, sensor_address INTEGER, timestamp INTEGER, value REAL );")) {
+        if (query.exec("CREATE TABLE IF NOT EXISTS "+ tableName +" ( id INTEGER PRIMARY KEY AUTOINCREMENT, sensor_address INTEGER, timestamp INTEGER, value REAL );")) {
             res = true;
             qDebug() << "table creation succeeded !";
         } else {
@@ -43,12 +48,12 @@ bool DatabaseManager::createTemperatureLogTable()
     return res;
 }
 
-bool DatabaseManager::insertTemperatureLog(int address, int ts, double value)
+bool DatabaseManager::insertLogDoubleValue(QString tableName, int address, qint64 ts, double value)
 {
     bool res;
     if (db.open()) {
         QSqlQuery query(db);
-        query.prepare("INSERT INTO temperaturelog ( sensor_address, timestamp, value ) VALUES (?, ?, ?);");
+        query.prepare("INSERT INTO "+ tableName +" ( sensor_address, timestamp, value ) VALUES (?, ?, ?);");
         query.bindValue(0, address);
         query.bindValue(1, ts);
         query.bindValue(2, value);

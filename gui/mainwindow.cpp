@@ -27,6 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
     scene->addItem(item);
     ui->graphicsView->setScene(scene);
 
+    createPlotsPanel();
+
     createConfigurationPanel();
 
 
@@ -415,6 +417,134 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     connect(filenameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_filenameValueChanged(QString, int)));
 }
 
+void MainWindow::createPlotsPanel()
+{
+    QWidget *plotsPanel = ui->tabWidget->widget(1);
+    QScrollArea *scrollArea = new QScrollArea;
+    QWidget *viewport = new QWidget;
+    QVBoxLayout *layout = new QVBoxLayout;
+    viewport->setLayout(layout);
+    int nbPlots = 3;
+    int plotHeight = round((ui->tabWidget->height() - 50) / (double)2);
+    for (int i = 0; i < nbPlots; i++)
+    {
+        //QLabel* l = new QLabel("Graph X");
+        //layout->addWidget(l);
+        QWidget* plot;
+        if (i == 0)
+            plot = createPlotByDate(0, i * plotHeight, viewport->width(), plotHeight);
+        else
+            plot = createPlot(0, i * plotHeight, viewport->width(), plotHeight);
+        layout->addWidget(plot);
+    }
+    viewport->setGeometry(0,0,ui->tabWidget->width()-80, nbPlots * plotHeight);
+    QVBoxLayout *plotsPanelLayout = new QVBoxLayout;
+    plotsPanel->setLayout(plotsPanelLayout);
+    scrollArea->setWidget(viewport);
+    plotsPanelLayout->addWidget(scrollArea);
+}
+
+QWidget* MainWindow::createPlot(int xPos, int yPos, int width, int height)
+{
+    QWidget *viewport = new QWidget;
+    QVBoxLayout *layout = new QVBoxLayout;
+    viewport->setLayout(layout);
+
+    QCustomPlot* plot1 = new QCustomPlot;
+    layout->addWidget(plot1);
+    // add title layout element:
+    //plot1->plotLayout()->insertRow(0);
+    //plot1->plotLayout()->addElement(0, 0, new QCPPlotTitle(plot1, "GraphX"));
+    plot1->setGeometry(xPos, yPos, width, height);
+    // generate some data:
+    QVector<double> x(101), y(101); // initialize with entries 0..100
+    for (int i=0; i<101; ++i)
+    {
+      x[i] = i/50.0 - 1; // x goes from -1 to 1
+      y[i] = x[i]*x[i]; // let's plot a quadratic function
+    }
+    // create graph and assign data to it:
+    plot1->addGraph();
+    plot1->graph(0)->setData(x, y);
+    // give the axes some labels:
+    plot1->xAxis->setLabel("x");
+    plot1->yAxis->setLabel("y");
+    // set axes ranges, so we see all data:
+    plot1->xAxis->setRange(-1, 1);
+    plot1->yAxis->setRange(0, 1);
+    plot1->replot();
+    return viewport;
+}
+
+QWidget* MainWindow::createPlotByDate(int xPos, int yPos, int width, int height)
+{
+    QWidget *viewport = new QWidget;
+    QVBoxLayout *layout = new QVBoxLayout;
+    viewport->setLayout(layout);
+
+    QCustomPlot* customPlot = new QCustomPlot;
+    layout->addWidget(customPlot);
+    customPlot->setGeometry(xPos, yPos, width, height);
+
+    // set locale to english, so we get english month names:
+    customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
+    // seconds of current time, we'll use it as starting point in time for data:
+    double now = QDateTime::currentDateTime().toTime_t();
+    srand(8); // set the random seed, so we always get the same random data
+    // create multiple graphs:
+    for (int gi=0; gi<5; ++gi)
+    {
+    customPlot->addGraph();
+    QPen pen;
+    pen.setColor(QColor(0, 0, 255, 200));
+    customPlot->graph()->setLineStyle(QCPGraph::lsLine);
+    customPlot->graph()->setPen(pen);
+    customPlot->graph()->setBrush(QBrush(QColor(255/4.0*gi,160,50,150)));
+    // generate random walk data:
+    QVector<double> time(250), value(250);
+    for (int i=0; i<250; ++i)
+    {
+      time[i] = now + 24*3600*i;
+      if (i == 0)
+        value[i] = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+      else
+        value[i] = fabs(value[i-1])*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+    }
+    customPlot->graph()->setData(time, value);
+    }
+    // configure bottom axis to show date and time instead of number:
+    customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
+    customPlot->xAxis->setDateTimeFormat("MMMM\nyyyy");
+    // set a more compact font size for bottom and left axis tick labels:
+    customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
+    customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
+    // set a fixed tick-step to one tick per month:
+    customPlot->xAxis->setAutoTickStep(false);
+    customPlot->xAxis->setTickStep(2628000); // one month in seconds
+    customPlot->xAxis->setSubTickCount(3);
+    // apply manual tick and tick label for left axis:
+    customPlot->yAxis->setAutoTicks(false);
+    customPlot->yAxis->setAutoTickLabels(false);
+    customPlot->yAxis->setTickVector(QVector<double>() << 5 << 55);
+    customPlot->yAxis->setTickVectorLabels(QVector<QString>() << "Not so\nhigh" << "Very\nhigh");
+    // set axis labels:
+    customPlot->xAxis->setLabel("Date");
+    customPlot->yAxis->setLabel("Random wobbly lines value");
+    // make top and right axes visible but without ticks and labels:
+    customPlot->xAxis2->setVisible(true);
+    customPlot->yAxis2->setVisible(true);
+    customPlot->xAxis2->setTicks(false);
+    customPlot->yAxis2->setTicks(false);
+    customPlot->xAxis2->setTickLabels(false);
+    customPlot->yAxis2->setTickLabels(false);
+    // set axis ranges to show all data:
+    customPlot->xAxis->setRange(now, now+24*3600*249);
+    customPlot->yAxis->setRange(0, 60);
+    // show legend:
+    customPlot->legend->setVisible(true);
+    return viewport;
+}
+
 void MainWindow::createConfigurationPanel()
 {
     // load config file
@@ -437,14 +567,6 @@ void MainWindow::createConfigurationPanel()
         createAddressFormRow(layout, i, sensors[i-1]);
     }
     scrollArea->setWidget(viewport);
-
-    //QSpacerItem *spacer = new QSpacerItem(300, 100);
-
-    /*QHBoxLayout *configurationPanelLayout = new QHBoxLayout;
-    configurationPanel->setLayout(configurationPanelLayout);
-    configurationPanelLayout->addWidget(scrollArea);
-    configurationPanelLayout->addSpacerItem(spacer);
-    */
 
     QVBoxLayout *configurationPanelLayout = new QVBoxLayout;
     configurationPanel->setLayout(configurationPanelLayout);

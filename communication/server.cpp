@@ -41,8 +41,8 @@ void Server::listen()
 void Server::testDB()
 {
     //dbManager->openDB();
-    dbManager->createTemperatureLogTable();
-    dbManager->insertTemperatureLog(22, 123456, 22.3);
+    dbManager->createLogTableForDoubleValue("temperaturelog");
+    dbManager->insertLogDoubleValue("temperaturelog", 22, 123456, 22.3);
     dbManager->getTemperatureLog();
 }
 

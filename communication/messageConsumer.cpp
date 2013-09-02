@@ -115,7 +115,6 @@ void MessageConsumer::parseDataMessage()
     handleMessageData(dataObj);
     emit messageParsed(str+"\n");
     checkQueue(false); // force checking queue to parse data that would have arrived meanwhile
-    //return str;
 }
 
 /**
@@ -134,8 +133,8 @@ QPair<QVariant, DataType::Types> MessageConsumer::decodeDataValue()
     switch (valueType) {
     case DataType::Double: // double
     {
-        QByteArray invertedBytes = converter->invertBytes(valueBytes); // invert bytes because for double type Labview sends the bytes in reverse order
-        double d = converter->byteArrayToDouble(invertedBytes);
+        //QByteArray invertedBytes = converter->invertBytes(valueBytes); // invert bytes because for double type Labview sends the bytes in reverse order
+        double d = converter->byteArrayToDouble(valueBytes);
         valVar = QVariant(d);
         break;
     }
@@ -199,7 +198,7 @@ qint64 MessageConsumer::decodeTimestamp()
     double decimal = (double)fraction / divider;
     double ts = seconds + decimal; // labview timestamp: seconds since the epoch 01/01/1904 00:00:00.00 UTC
     qint64 tsUnix = TimeHelper::labviewTsToUnixTs(ts);
-    printf("TS: %f, TS unix: %lld", ts, tsUnix);
+    printf("TS: %f, TS unix: %lld\n", ts, tsUnix);
     fflush(stdout);
     return tsUnix;
 }
@@ -241,9 +240,27 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
         }
         case SensorType::PT100:
         {
+            // dataObj->values contains only one temperature value
             double temp = dataObj->getValues()[0].first.toDouble();
             // save it to database
-            dbManager->insertTemperatureLog(dataObj->getAddress(), dataObj->getTimestamp(), dataObj->getValues()[0].first.toDouble());
+            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::TemperatureLog), dataObj->getAddress(), dataObj->getTimestamp(), temp);
+            break;
+        }
+        case SensorType::Wind_speed:
+        case SensorType::Wind_direction:
+        {
+            // dataObj->values contains only one temperature value
+            double value = dataObj->getValues()[0].first.toDouble();
+            // save it to database
+            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::WindLog), dataObj->getAddress(), dataObj->getTimestamp(), value);
+            break;
+        }
+        case SensorType::Radiometer:
+        {
+            // dataObj->values contains only one temperature value
+            double value = dataObj->getValues()[0].first.toDouble();
+            // save it to database
+            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::RadiometerLog), dataObj->getAddress(), dataObj->getTimestamp(), value);
             break;
         }
         default:

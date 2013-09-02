@@ -3,6 +3,7 @@
 
 #include "communication/server.h"
 #include "util/fileHelper.h"
+#include "qcustomplot.h"
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QPushButton>
@@ -56,6 +57,11 @@ private:
     void sendLeftEngineCommand();
     void sendRightEngineCommand();
     int zoomStep;
+    /// plots panel
+    void createPlotsPanel();
+    QWidget* createPlot(int xPos, int yPos, int width, int height);
+    QWidget* createPlotByDate(int xPos, int yPos, int width, int height);
+    /// configuration panel
     void createConfigurationPanel();
     void createLabelLine(QGridLayout* l);
     void createAddressFormRow(QGridLayout* l, int rowIndex, Sensor* s);
