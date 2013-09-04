@@ -28,7 +28,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->graphicsView->setScene(scene);
 
     createPlotsPanel();
-
     createConfigurationPanel();
 
 
@@ -417,6 +416,10 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     connect(filenameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_filenameValueChanged(QString, int)));
 }
 
+/**
+ * Create the panel containing the plots (tab 2)
+ * @brief MainWindow::createPlotsPanel
+ */
 void MainWindow::createPlotsPanel()
 {
     QWidget *plotsPanel = ui->tabWidget->widget(1);
@@ -432,7 +435,7 @@ void MainWindow::createPlotsPanel()
         //layout->addWidget(l);
         QWidget* plot;
         if (i == 0)
-            plot = createPlotByDate(0, i * plotHeight, viewport->width(), plotHeight);
+            plot = createPlotByDate2(0, i * plotHeight, viewport->width(), plotHeight);
         else
             plot = createPlot(0, i * plotHeight, viewport->width(), plotHeight);
         layout->addWidget(plot);
@@ -490,27 +493,28 @@ QWidget* MainWindow::createPlotByDate(int xPos, int yPos, int width, int height)
     customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
     // seconds of current time, we'll use it as starting point in time for data:
     double now = QDateTime::currentDateTime().toTime_t();
-    srand(8); // set the random seed, so we always get the same random data
+    //srand(8); // set the random seed, so we always get the same random data
     // create multiple graphs:
     for (int gi=0; gi<5; ++gi)
     {
-    customPlot->addGraph();
-    QPen pen;
-    pen.setColor(QColor(0, 0, 255, 200));
-    customPlot->graph()->setLineStyle(QCPGraph::lsLine);
-    customPlot->graph()->setPen(pen);
-    customPlot->graph()->setBrush(QBrush(QColor(255/4.0*gi,160,50,150)));
-    // generate random walk data:
-    QVector<double> time(250), value(250);
-    for (int i=0; i<250; ++i)
-    {
-      time[i] = now + 24*3600*i;
-      if (i == 0)
-        value[i] = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-      else
-        value[i] = fabs(value[i-1])*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-    }
-    customPlot->graph()->setData(time, value);
+        customPlot->addGraph();
+        QPen pen;
+        //before: 0, 0, 255, 200
+        pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
+        customPlot->graph()->setLineStyle(QCPGraph::lsLine);
+        customPlot->graph()->setPen(pen);
+        //customPlot->graph()->setBrush(QBrush(QColor(255/4.0*gi,160,50,150)));
+        // generate random walk data:
+        QVector<double> time(250), value(250);
+        for (int i=0; i<250; ++i)
+        {
+          time[i] = now + 24*3600*i;
+          if (i == 0)
+            value[i] = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+          else
+            value[i] = fabs(value[i-1])*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
+        }
+        customPlot->graph()->setData(time, value);
     }
     // configure bottom axis to show date and time instead of number:
     customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
@@ -543,6 +547,26 @@ QWidget* MainWindow::createPlotByDate(int xPos, int yPos, int width, int height)
     // show legend:
     customPlot->legend->setVisible(true);
     return viewport;
+}
+
+QWidget* MainWindow::createPlotByDate2(int xPos, int yPos, int width, int height)
+{
+    QWidget *viewport = new QWidget;
+    QVBoxLayout *layout = new QVBoxLayout;
+    viewport->setLayout(layout);
+
+    QVector<Sensor*> sensorsToPlot;
+    sensorsToPlot.push_back(new Sensor(15, "sensor1", 1, "G0", false, true, "file1"));
+    sensorsToPlot.push_back(new Sensor(16, "sensor2", 1, "G0", false, true, "file1"));
+    sensorsToPlot.push_back(new Sensor(17, "sensor3", 1, "G0", false, true, "file1"));
+    DataPlot* dataPlot = new DataPlot(this, sensorsToPlot);
+    layout->addWidget(dataPlot);
+    dataPlot->setGeometry(xPos, yPos, width, height);
+    QTimer *timer = new QTimer();
+    timer->setInterval(3000);
+    connect(timer, SIGNAL(timeout()), dataPlot, SLOT(updatePlot()));
+    timer->start();
+    return dataPlot;
 }
 
 void MainWindow::createConfigurationPanel()

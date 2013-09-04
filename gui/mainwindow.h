@@ -3,10 +3,12 @@
 
 #include "communication/server.h"
 #include "util/fileHelper.h"
-#include "qcustomplot.h"
+//#include "qcustomplot.h"
+#include "dataPlot.h"
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QTimer>
 
 namespace Ui {
     class MainWindow;
@@ -61,6 +63,7 @@ private:
     void createPlotsPanel();
     QWidget* createPlot(int xPos, int yPos, int width, int height);
     QWidget* createPlotByDate(int xPos, int yPos, int width, int height);
+    QWidget* createPlotByDate2(int xPos, int yPos, int width, int height);
     /// configuration panel
     void createConfigurationPanel();
     void createLabelLine(QGridLayout* l);
@@ -68,6 +71,7 @@ private:
     QWidget* createSpacedWidget(QWidget *w, int spaceBefore, int spaceAfter);
     QPushButton* saveBtn;
     void changeSaveBtnColor(QString cssColor);
+    //QTimer *myTimer; // creates SEGFAULT
 };
 
 #endif // MAINWINDOW_H
