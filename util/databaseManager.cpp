@@ -95,3 +95,31 @@ bool DatabaseManager::getTemperatureLog()
     db.close();
     return res;
 }
+
+QPair< QVector<double>, QVector<double> >* DatabaseManager::getData(Sensor* s)
+{
+    QVector<double> logTimes;
+    QVector<double> logValues;
+    if (db.open()) {
+        QSqlQuery query(db);
+        uint now = QDateTime::currentDateTime().toTime_t();
+        uint start = now - (15 * 60 * 1000); // timestamp 15 minutes before now
+        QString sqlQuery = "SELECT * FROM "+ s->getType()->getDbTableName() +" WHERE sensor_address = "+ QString::number(s->getAddress());
+        sqlQuery += " AND timestamp > "+ start ;
+        sqlQuery += ";";
+        if (query.exec(sqlQuery)) {
+            while( query.next() )
+            {
+                logTimes.push_back(query.value( 2 ).toDouble());
+                logValues.push_back(query.value( 3 ).toDouble());
+            }
+        } else {
+            qDebug() << "select failed !" << query.lastError();
+        }
+    } else {
+        qDebug() << "DB not open !";
+    }
+    db.close();
+    QPair< QVector<double>, QVector<double> >* data = new QPair< QVector<double>, QVector<double> >(logTimes, logValues);
+    return data;
+}

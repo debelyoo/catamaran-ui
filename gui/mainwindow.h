@@ -40,7 +40,7 @@ public slots:
     void on_addressValueChanged(QString, int);
     void on_nameValueChanged(QString, int);
     void on_typeValueChanged(int, int);
-    void on_displayValueChanged(QString, int);
+    void on_displayValueChanged(int, int);
     void on_recordValueChanged(bool, int);
     void on_streamValueChanged(bool, int);
     void on_filenameValueChanged(QString, int);
@@ -61,9 +61,9 @@ private:
     int zoomStep;
     /// plots panel
     void createPlotsPanel();
+    void clearPlotsPanel();
     QWidget* createPlot(int xPos, int yPos, int width, int height);
-    QWidget* createPlotByDate(int xPos, int yPos, int width, int height);
-    QWidget* createPlotByDate2(int xPos, int yPos, int width, int height);
+    QWidget* createPlotByDate(int plotIndex, QRect geometry);
     /// configuration panel
     void createConfigurationPanel();
     void createLabelLine(QGridLayout* l);

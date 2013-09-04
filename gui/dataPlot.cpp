@@ -1,8 +1,9 @@
 #include "dataPlot.h"
 
-DataPlot::DataPlot(QWidget *parent, QVector<Sensor*> stp) :
+DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
     QCustomPlot(parent)
 {
+    dbManager = DatabaseManager::instance();
     sensorsToPlot = stp;
     for (int gi=0; gi<sensorsToPlot.size(); ++gi)
     {
@@ -27,13 +28,13 @@ DataPlot::DataPlot(QWidget *parent, QVector<Sensor*> stp) :
     // set a fixed tick-step to one tick per month:
     this->xAxis->setAutoTickStep(false);
     //this->xAxis->setTickStep(2628000); // one month in seconds
-    this->xAxis->setTickStep(60*5); // 5 minutes in seconds
+    this->xAxis->setTickStep(15); // in seconds
     this->xAxis->setSubTickCount(3);
     // apply manual tick and tick label for left axis:
-    this->yAxis->setAutoTicks(false);
-    this->yAxis->setAutoTickLabels(false);
-    this->yAxis->setTickVector(QVector<double>() << 5 << 55);
-    this->yAxis->setTickVectorLabels(QVector<QString>() << "Not so\nhigh" << "Very\nhigh");
+    //this->yAxis->setAutoTicks(false);
+    //this->yAxis->setAutoTickLabels(false);
+    //this->yAxis->setTickVector(QVector<double>() << 5 << 55);
+    //this->yAxis->setTickVectorLabels(QVector<QString>() << "Not so\nhigh" << "Very\nhigh");
     // set axis labels:
     this->xAxis->setLabel("Date");
     this->yAxis->setLabel("Random wobbly lines value");
@@ -44,10 +45,6 @@ DataPlot::DataPlot(QWidget *parent, QVector<Sensor*> stp) :
     this->yAxis2->setTicks(false);
     this->xAxis2->setTickLabels(false);
     this->yAxis2->setTickLabels(false);
-    // set axis ranges to show all data:
-    double now = QDateTime::currentDateTime().toTime_t();
-    this->xAxis->setRange(now, now+10*249);
-    this->yAxis->setRange(0, 60);
     // show legend:
     this->legend->setVisible(true);
 }
@@ -60,12 +57,17 @@ DataPlot::~DataPlot()
 void DataPlot::updatePlot()
 {
     //qDebug() << "DataPlot.updatePlot()";
-    for (int gi=0; gi<sensorsToPlot.size(); ++gi)
+    for (int i=0; i<sensorsToPlot.size(); ++i)
     {
-        // get data
-        QPair< QVector<double>, QVector<double> >* data = getData(gi);
-        this->graph(gi)->setData(data->first, data->second);
+        // get data for sensor
+        QPair< QVector<double>, QVector<double> >* data = dbManager->getData(sensorsToPlot[i]);
+        //QPair< QVector<double>, QVector<double> >* data = getData(gi);
+        this->graph(i)->setData(data->first, data->second);
     }
+    // set axis ranges to show all data:
+    double now = QDateTime::currentDateTime().toTime_t();
+    this->xAxis->setRange(now, now+249);
+    this->yAxis->setRange(0, 60);
     // redraw plot
     this->replot();
 }
@@ -77,7 +79,7 @@ QPair< QVector<double>, QVector<double> >* DataPlot::getData(int gi)
     double now = QDateTime::currentDateTime().toTime_t();
     for (int i=0; i<250; ++i)
     {
-      time[i] = now + 10*i; // every ten sec
+      time[i] = now + i; // every sec
       if (i == 0)
         value[i] = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
       else

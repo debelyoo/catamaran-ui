@@ -5,6 +5,8 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QMap>
+#include <QDateTime>
+#include "model/sensor.h"
 
 namespace Datastore {
     typedef enum {
@@ -23,6 +25,7 @@ class DatabaseManager
         bool createLogTableForDoubleValue(QString tableName);
         bool insertLogDoubleValue(QString tableName, int address, qint64 ts, double value);
         bool getTemperatureLog();
+        QPair< QVector<double>, QVector<double> >* getData(Sensor* s);
         QString getTableName(Datastore::Tables);
 
     private:

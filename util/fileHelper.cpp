@@ -48,7 +48,7 @@ void FileHelper::appendToFile(QString filename, QString text)
  */
 void FileHelper::loadConfigFile(SensorConfig* sensorConfig)
 {
-    QString filePath = QDir::currentPath() + "/config.txt";
+    QString filePath = QDir::currentPath() + "/config2.txt";
     QFile file(filePath);
     if(!file.open(QIODevice::ReadOnly)) {
         QMessageBox::information(0, "error", file.errorString());
@@ -59,13 +59,15 @@ void FileHelper::loadConfigFile(SensorConfig* sensorConfig)
     int count = 0;
     while(!in.atEnd()) {
         QString line = in.readLine();
-        QStringList fields = line.split("\t"); // separate by tab
+        QStringList fields = line.split("\t"); // separated by tab
         if (fields.length() == 7 && count > 0 && fields.at(0) != "")
         {
             int addr = QString(fields.at(0)).toInt();
-            int sType = QString(fields.at(2)).toInt();
+            //int sType = QString(fields.at(2)).toInt();
+            SensorType* sType = sensorConfig->getSensorTypes().value(QString(fields.at(2)).toInt());
+            int displayInd = sensorConfig->getDisplayIndexForGraphName(fields.at(3));
             Sensor *s = new Sensor(addr, fields.at(1), sType,
-                                   fields.at(3), sensorConfig->qstringToBool(fields.at(4)),
+                                   displayInd, sensorConfig->qstringToBool(fields.at(4)),
                                    sensorConfig->qstringToBool(fields.at(5)), fields.at(6));
             sensorConfig->addSensor(s);
         }

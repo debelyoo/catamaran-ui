@@ -21,27 +21,60 @@ void SensorConfig::addSensor(Sensor *s)
     sensors.insert(s->getAddress(), s);
 }
 
+/**
+ * Get the sensors as a QList
+ * @brief SensorConfig::getSensors
+ * @return
+ */
 QList<Sensor*> SensorConfig::getSensors()
 {
     QList<Sensor*> list = sensors.values();
-    //std::sort(list.begin(), list.end(), addressLessThan);
     qSort(list.begin(), list.end(), addressLessThan);
     return list;
 }
 
+/**
+ * Get the sensors to be plotted on plot with index "plotIndex"
+ * @brief SensorConfig::getSensorsForPlot
+ * @param plotIndex The index of the desired plot
+ * @return A list of sensors
+ */
+QList<Sensor*> SensorConfig::getSensorsForPlot(int plotIndex)
+{
+    QList<Sensor*> list = sensors.values();
+    QMutableListIterator<Sensor *> i(list);
+    while (i.hasNext()) {
+        if (i.next()->getDisplay() != plotIndex)
+            i.remove();
+    }
+    return list;
+}
+
+int SensorConfig::getDisplayIndexForGraphName(QString gName)
+{
+    int gIndex;
+    QMap<int, QString>::iterator i;
+    for (i = displayGraphs.begin(); i != displayGraphs.end(); ++i)
+    {
+        if (i.value() == gName)
+            gIndex = i.key();
+    }
+    return gIndex;
+}
+
 QString SensorConfig::getSensorsAsTabSeparatedText()
 {
-    QString res = "Address\tName\tType\tDisplay\tRecord\tStream\tFilename\t\n";
+    QString res = "Address\tName\tType\tDisplay\tRecord\tStream\tFilename\n";
     QList<Sensor*> list = sensors.values();
     qSort(list.begin(), list.end(), addressLessThan);
     foreach (Sensor* s, list) {
         res += QString::number(s->getAddress())+"\t";
         res += s->getName()+"\t";
-        res += QString::number(s->getType())+"\t";
-        res += s->getDisplay()+"\t";
+        res += QString::number(s->getType()->getId())+"\t";
+        res += displayGraphs.value(s->getDisplay())+"\t";
         res += QString::number(s->getRecord())+"\t";
         res += QString::number(s->getStream())+"\t";
-        res += s->getFilename()+"\t\n";
+        res += s->getFilename()+"\n";
     }
     return res;
 }
@@ -56,9 +89,14 @@ Sensor* SensorConfig::getSensor(int addr)
     return sensors[addr];
 }
 
-QMap<int, QString> SensorConfig::getSensorTypes()
+QMap<int, SensorType*> SensorConfig::getSensorTypes()
 {
     return sensorTypes;
+}
+
+QMap<int, QString> SensorConfig::getDisplayValues()
+{
+    return displayGraphs;
 }
 
 bool SensorConfig::qstringToBool(QString str)

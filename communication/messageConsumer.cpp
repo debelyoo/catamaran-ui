@@ -216,9 +216,8 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
     {
         Sensor *s = sensorConfig->getSensor(dataObj->getAddress());
         // switch can not be used with QString
-
-        switch (s->getType()) {
-        case SensorType::GPS_position:
+        switch (s->getType()->getId()) {
+        case SensorList::GPS_position:
         {
             // GPS position
             double lat = dataObj->getValues()[0].first.toDouble();
@@ -238,7 +237,7 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
             fileHelper->appendToFile(logFile, log);
             break;
         }
-        case SensorType::PT100:
+        case SensorList::PT100:
         {
             // dataObj->values contains only one temperature value
             double temp = dataObj->getValues()[0].first.toDouble();
@@ -246,8 +245,8 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
             dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::TemperatureLog), dataObj->getAddress(), dataObj->getTimestamp(), temp);
             break;
         }
-        case SensorType::Wind_speed:
-        case SensorType::Wind_direction:
+        case SensorList::Wind_speed:
+        case SensorList::Wind_direction:
         {
             // dataObj->values contains only one temperature value
             double value = dataObj->getValues()[0].first.toDouble();
@@ -255,7 +254,7 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
             dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::WindLog), dataObj->getAddress(), dataObj->getTimestamp(), value);
             break;
         }
-        case SensorType::Radiometer:
+        case SensorList::Radiometer:
         {
             // dataObj->values contains only one temperature value
             double value = dataObj->getValues()[0].first.toDouble();

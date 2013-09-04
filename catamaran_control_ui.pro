@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     util/databaseManager.cpp \
     communication/dataObject.cpp \
     gui/qcustomplot.cpp \
-    gui/dataPlot.cpp
+    gui/dataPlot.cpp \
+    model/sensorType.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -47,7 +48,8 @@ HEADERS  += sensorConfig.h\
     util/timeHelper.h \
     communication/dataObject.h \
     gui/qcustomplot.h \
-    gui/dataPlot.h
+    gui/dataPlot.h \
+    model/sensorType.h
 
 FORMS    += mainwindow.ui
 

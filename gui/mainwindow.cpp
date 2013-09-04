@@ -129,6 +129,9 @@ void MainWindow::on_saveConfigClicked()
     fileHelper->writeFile("config2.txt", sensorConfig->getSensorsAsTabSeparatedText());
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");
+    // recreate plots panel
+    clearPlotsPanel();
+    createPlotsPanel();
 }
 
 void MainWindow::on_addressValueChanged(QString addrStr, int rowIndex)
@@ -161,18 +164,19 @@ void MainWindow::on_nameValueChanged(QString name, int rowIndex)
 void MainWindow::on_typeValueChanged(int typeInd, int rowIndex)
 {
     Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setType(typeInd);
-    QString msg = "Type ["+ QString::number(rowIndex) +"] changed: " + sensorConfig->getSensorTypes().value(typeInd) + "\n";
+    s->setType(sensorConfig->getSensorTypes().value(typeInd));
+    QString msg = "Type ["+ QString::number(rowIndex) +"] changed: " + sensorConfig->getSensorTypes().value(typeInd)->getName() + "\n";
     addStatusText(msg);
     changeSaveBtnColor("red");
 }
 
-void MainWindow::on_displayValueChanged(QString dis, int rowIndex)
+void MainWindow::on_displayValueChanged(int displayInd, int rowIndex)
 {
     Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setDisplay(dis);
-    QString msg = "Display ["+ QString::number(rowIndex) +"] changed: " + dis + "\n";
+    s->setDisplay(displayInd);
+    QString msg = "Display ["+ QString::number(rowIndex) +"] changed: " + sensorConfig->getDisplayValues().value(displayInd) + "\n";
     addStatusText(msg);
+    changeSaveBtnColor("red");
 }
 
 void MainWindow::on_recordValueChanged(bool rec, int rowIndex)
@@ -181,6 +185,7 @@ void MainWindow::on_recordValueChanged(bool rec, int rowIndex)
     s->setRecord(rec);
     QString msg = "Record ["+ QString::number(rowIndex) +"] changed: " + QString::number(rec) + "\n";
     addStatusText(msg);
+    changeSaveBtnColor("red");
 }
 
 void MainWindow::on_streamValueChanged(bool stream, int rowIndex)
@@ -189,12 +194,14 @@ void MainWindow::on_streamValueChanged(bool stream, int rowIndex)
     s->setStream(stream);
     QString msg = "Stream ["+ QString::number(rowIndex) +"] changed: " + QString::number(stream) + "\n";
     addStatusText(msg);
+    changeSaveBtnColor("red");
 }
 
 void MainWindow::on_filenameValueChanged(QString fn, int rowIndex)
 {
     QString msg = "Filename ["+ QString::number(rowIndex) +"] changed: " + fn + "\n";
     addStatusText(msg);
+    changeSaveBtnColor("red");
 }
 
 void MainWindow::zoomIn()
@@ -373,23 +380,19 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     InRowLineEdit* nameField = new InRowLineEdit(this, sensorIndex);
     nameField->setText(QString(s->getName()));
     InRowComboBox* typeBox = new InRowComboBox(this, sensorIndex);
-    QMap<int, QString> sensorTypes = sensorConfig->getSensorTypes();
+    QMap<int, SensorType*> sensorTypes = sensorConfig->getSensorTypes();
     for (int i=0; i < sensorTypes.size(); i++)
     {
-
-        typeBox->addItem(sensorTypes.value(i));
-        //typeBox->addItem(sensorTypes.at(i));
+        typeBox->addItem(sensorTypes.value(i)->getName());
     }
     QWidget* typeBoxContainer = createSpacedWidget(typeBox, 0, 10);
     InRowComboBox* displayBox = new InRowComboBox(this, sensorIndex);
-    displayBox->addItem("NO");
-    for (int i=0; i < 3; i++)
+    QMap<int, QString> displayGraphs = sensorConfig->getDisplayValues();
+    for (int i=0; i < displayGraphs.size(); i++)
     {
-        char str[128];
-        sprintf(str, "G%d", i);
-        displayBox->addItem(QString(str));
+        displayBox->addItem(displayGraphs.value(i));
     }
-    displayBox->setCurrentText(s->getDisplay());
+    displayBox->setCurrentIndex(s->getDisplay());
     QWidget* displayBoxContainer = createSpacedWidget(displayBox, 0, 10);
     InRowCheckBox* recordCB = new InRowCheckBox(this, sensorIndex);
     recordCB->setChecked(s->getRecord());
@@ -410,10 +413,25 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     connect(addressField, SIGNAL(textChanged(QString, int)), this, SLOT(on_addressValueChanged(QString, int)));
     connect(nameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_nameValueChanged(QString, int)));
     connect(typeBox, SIGNAL(valueChanged(int,int)), this, SLOT(on_typeValueChanged(int, int)));
-    connect(displayBox, SIGNAL(valueChanged(QString,int)), this, SLOT(on_displayValueChanged(QString,int)));
+    connect(displayBox, SIGNAL(valueChanged(int,int)), this, SLOT(on_displayValueChanged(int,int)));
     connect(recordCB, SIGNAL(clicked(bool,int)), this, SLOT(on_recordValueChanged(bool,int)));
     connect(streamCB, SIGNAL(clicked(bool,int)), this, SLOT(on_streamValueChanged(bool,int)));
     connect(filenameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_filenameValueChanged(QString, int)));
+}
+
+void MainWindow::clearPlotsPanel()
+{
+    QWidget *plotsPanel = ui->tabWidget->widget(1);
+    if ( plotsPanel->layout() != NULL )
+    {
+        QLayoutItem* item;
+        while ( ( item = plotsPanel->layout()->takeAt( 0 ) ) != NULL )
+        {
+            delete item->widget();
+            delete item;
+        }
+        delete plotsPanel->layout();
+    }
 }
 
 /**
@@ -434,10 +452,8 @@ void MainWindow::createPlotsPanel()
         //QLabel* l = new QLabel("Graph X");
         //layout->addWidget(l);
         QWidget* plot;
-        if (i == 0)
-            plot = createPlotByDate2(0, i * plotHeight, viewport->width(), plotHeight);
-        else
-            plot = createPlot(0, i * plotHeight, viewport->width(), plotHeight);
+        QRect geom = QRect(0, i * plotHeight, viewport->width(), plotHeight);
+        plot = createPlotByDate(i, geom);
         layout->addWidget(plot);
     }
     viewport->setGeometry(0,0,ui->tabWidget->width()-80, nbPlots * plotHeight);
@@ -479,94 +495,32 @@ QWidget* MainWindow::createPlot(int xPos, int yPos, int width, int height)
     return viewport;
 }
 
-QWidget* MainWindow::createPlotByDate(int xPos, int yPos, int width, int height)
+/**
+ * Create a plot with date as x axis
+ * @brief MainWindow::createPlotByDate
+ * @param plotIndex
+ * @param geometry
+ * @return
+ */
+QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
 {
     QWidget *viewport = new QWidget;
     QVBoxLayout *layout = new QVBoxLayout;
     viewport->setLayout(layout);
 
-    QCustomPlot* customPlot = new QCustomPlot;
-    layout->addWidget(customPlot);
-    customPlot->setGeometry(xPos, yPos, width, height);
-
-    // set locale to english, so we get english month names:
-    customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
-    // seconds of current time, we'll use it as starting point in time for data:
-    double now = QDateTime::currentDateTime().toTime_t();
-    //srand(8); // set the random seed, so we always get the same random data
-    // create multiple graphs:
-    for (int gi=0; gi<5; ++gi)
+    QList<Sensor*> sensorsToPlot = sensorConfig->getSensorsForPlot(plotIndex+1); // plotIndex + 1 because index 0 is for "NO" plot
+    if (sensorsToPlot.length() > 0)
     {
-        customPlot->addGraph();
-        QPen pen;
-        //before: 0, 0, 255, 200
-        pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
-        customPlot->graph()->setLineStyle(QCPGraph::lsLine);
-        customPlot->graph()->setPen(pen);
-        //customPlot->graph()->setBrush(QBrush(QColor(255/4.0*gi,160,50,150)));
-        // generate random walk data:
-        QVector<double> time(250), value(250);
-        for (int i=0; i<250; ++i)
-        {
-          time[i] = now + 24*3600*i;
-          if (i == 0)
-            value[i] = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-          else
-            value[i] = fabs(value[i-1])*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-        }
-        customPlot->graph()->setData(time, value);
+        DataPlot* dataPlot = new DataPlot(this, sensorsToPlot);
+        layout->addWidget(dataPlot);
+        dataPlot->setGeometry(geometry);
+        QTimer *timer = new QTimer();
+        timer->setInterval(3000);
+        connect(timer, SIGNAL(timeout()), dataPlot, SLOT(updatePlot()));
+        timer->start();
+        layout->addWidget(dataPlot);
     }
-    // configure bottom axis to show date and time instead of number:
-    customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
-    customPlot->xAxis->setDateTimeFormat("MMMM\nyyyy");
-    // set a more compact font size for bottom and left axis tick labels:
-    customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
-    customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
-    // set a fixed tick-step to one tick per month:
-    customPlot->xAxis->setAutoTickStep(false);
-    customPlot->xAxis->setTickStep(2628000); // one month in seconds
-    customPlot->xAxis->setSubTickCount(3);
-    // apply manual tick and tick label for left axis:
-    customPlot->yAxis->setAutoTicks(false);
-    customPlot->yAxis->setAutoTickLabels(false);
-    customPlot->yAxis->setTickVector(QVector<double>() << 5 << 55);
-    customPlot->yAxis->setTickVectorLabels(QVector<QString>() << "Not so\nhigh" << "Very\nhigh");
-    // set axis labels:
-    customPlot->xAxis->setLabel("Date");
-    customPlot->yAxis->setLabel("Random wobbly lines value");
-    // make top and right axes visible but without ticks and labels:
-    customPlot->xAxis2->setVisible(true);
-    customPlot->yAxis2->setVisible(true);
-    customPlot->xAxis2->setTicks(false);
-    customPlot->yAxis2->setTicks(false);
-    customPlot->xAxis2->setTickLabels(false);
-    customPlot->yAxis2->setTickLabels(false);
-    // set axis ranges to show all data:
-    customPlot->xAxis->setRange(now, now+24*3600*249);
-    customPlot->yAxis->setRange(0, 60);
-    // show legend:
-    customPlot->legend->setVisible(true);
     return viewport;
-}
-
-QWidget* MainWindow::createPlotByDate2(int xPos, int yPos, int width, int height)
-{
-    QWidget *viewport = new QWidget;
-    QVBoxLayout *layout = new QVBoxLayout;
-    viewport->setLayout(layout);
-
-    QVector<Sensor*> sensorsToPlot;
-    sensorsToPlot.push_back(new Sensor(15, "sensor1", 1, "G0", false, true, "file1"));
-    sensorsToPlot.push_back(new Sensor(16, "sensor2", 1, "G0", false, true, "file1"));
-    sensorsToPlot.push_back(new Sensor(17, "sensor3", 1, "G0", false, true, "file1"));
-    DataPlot* dataPlot = new DataPlot(this, sensorsToPlot);
-    layout->addWidget(dataPlot);
-    dataPlot->setGeometry(xPos, yPos, width, height);
-    QTimer *timer = new QTimer();
-    timer->setInterval(3000);
-    connect(timer, SIGNAL(timeout()), dataPlot, SLOT(updatePlot()));
-    timer->start();
-    return dataPlot;
 }
 
 void MainWindow::createConfigurationPanel()

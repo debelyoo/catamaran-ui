@@ -1,7 +1,7 @@
 #include "sensor.h"
 
-Sensor::Sensor(int addr, QString n, int t,
-               QString d, bool rec, bool st, QString fn)
+Sensor::Sensor(int addr, QString n, SensorType* t,
+               int d, bool rec, bool st, QString fn)
 {
     address = addr;
     name = n;
@@ -23,12 +23,12 @@ QString Sensor::getName()
     return name;
 }
 
-int Sensor::getType()
+SensorType* Sensor::getType()
 {
     return type;
 }
 
-QString Sensor::getDisplay()
+int Sensor::getDisplay()
 {
     return display;
 }
@@ -59,12 +59,12 @@ void Sensor::setName(QString n)
     name = n;
 }
 
-void Sensor::setType(int t)
+void Sensor::setType(SensorType* t)
 {
     type = t;
 }
 
-void Sensor::setDisplay(QString d)
+void Sensor::setDisplay(int d)
 {
     display = d;
 }

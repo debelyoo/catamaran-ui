@@ -2,8 +2,9 @@
 #define SENSOR_H
 
 #include <QObject>
+#include "sensorType.h"
 
-namespace SensorType {
+namespace SensorList {
     typedef enum {
         Unknown = 0,
         GPS_position = 1,
@@ -19,13 +20,13 @@ class Sensor
 {
     public:
     explicit Sensor(int addr = 0, QString name = "",
-                    int type = 0, QString display = "NO",
+                    SensorType* type = 0, int display = 0,
                     bool record = false, bool stream = false, QString filename = "");
     /// getters
     int getAddress();
     QString getName();
-    int getType();
-    QString getDisplay();
+    SensorType* getType();
+    int getDisplay();
     bool getRecord();
     bool getStream();
     QString getFilename();
@@ -33,8 +34,8 @@ class Sensor
     /// setters
     void setAddress(int addr);
     void setName(QString name);
-    void setType(int);
-    void setDisplay(QString display);
+    void setType(SensorType* t);
+    void setDisplay(int display);
     void setRecord(bool b);
     void setStream(bool b);
     void setFilename(QString fn);
@@ -42,8 +43,8 @@ class Sensor
     private:
         int address;
         QString name;
-        int type;
-        QString display;
+        SensorType* type;
+        int display;
         bool record;
         bool stream;
         QString filename;
