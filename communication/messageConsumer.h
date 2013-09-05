@@ -43,6 +43,7 @@ class MessageConsumer : public QObject
         qint64 decodeTimestamp2();
         void parseCmdMessage();
         void handleGetCommand(int address);
+        void writeInLogFile(Sensor* s, QString logTxt);
 
 };
 

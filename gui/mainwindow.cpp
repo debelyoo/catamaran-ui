@@ -127,6 +127,7 @@ void MainWindow::on_saveConfigClicked()
 {
     // write config file
     fileHelper->writeFile("config2.txt", sensorConfig->getSensorsAsTabSeparatedText());
+    fileHelper->createLogFiles(sensorConfig);
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");
     // recreate plots panel
@@ -385,6 +386,7 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     {
         typeBox->addItem(sensorTypes.value(i)->getName());
     }
+    typeBox->setCurrentIndex(s->getType()->getId());
     QWidget* typeBoxContainer = createSpacedWidget(typeBox, 0, 10);
     InRowComboBox* displayBox = new InRowComboBox(this, sensorIndex);
     QMap<int, QString> displayGraphs = sensorConfig->getDisplayValues();
@@ -401,7 +403,7 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     streamCB->setChecked(s->getStream());
     QWidget* streamCBContainer = createSpacedWidget(streamCB, 10, 0);
     InRowLineEdit* filenameField = new InRowLineEdit(this, sensorIndex);
-    filenameField->setText(s->getFilename());
+    filenameField->setText(s->getLogFilePrefix());
     layout->addWidget(addressFieldContainer, rowIndex, 0);
     layout->addWidget(nameField, rowIndex, 1);
     layout->addWidget(typeBoxContainer, rowIndex, 2);

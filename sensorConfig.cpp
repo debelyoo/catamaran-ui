@@ -74,7 +74,7 @@ QString SensorConfig::getSensorsAsTabSeparatedText()
         res += displayGraphs.value(s->getDisplay())+"\t";
         res += QString::number(s->getRecord())+"\t";
         res += QString::number(s->getStream())+"\t";
-        res += s->getFilename()+"\n";
+        res += s->getLogFilePrefix()+"\n";
     }
     return res;
 }

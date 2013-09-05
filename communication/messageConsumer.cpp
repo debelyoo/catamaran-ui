@@ -247,9 +247,8 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
                 // notify GUI only if coordinates are plausible
                 emit gpsPointReceived(mapPosition[0], mapPosition[1]);
             }
-            QString logFile = s->getFilename() + ".log";
             QString log = QString::number(s->getAddress()) + "\t" + QString::number(dataObj->getTimestamp(),'f',6) + "\t" + QString::number(lat,'f',6) + "\t" + QString::number(lon,'f',6) + "\t" + QString::number(elevation,'f',6);
-            fileHelper->appendToFile(logFile, log);
+            writeInLogFile(s, log);
             break;
         }
         case SensorList::PT100:
@@ -258,6 +257,9 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
             double temp = dataObj->getValues()[0].first.toDouble();
             // save it to database
             dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::TemperatureLog), dataObj->getAddress(), dataObj->getTimestamp(), temp);
+            // log it in log file
+            QString log = QString::number(s->getAddress()) + "\t" + QString::number(dataObj->getTimestamp()) + "\t" + QString::number(temp,'f',3);
+            writeInLogFile(s, log);
             break;
         }
         case SensorList::Wind_speed:
@@ -353,5 +355,20 @@ void MessageConsumer::handleGetCommand(int address)
         printf("[MessageConsumer] handleGetCommand() - unhandled address !\n");
         fflush(stdout);
         break;
+    }
+}
+
+/**
+ * Write some text in log file
+ * @brief MessageConsumer::writeInLogFile
+ * @param s
+ * @param logTxt
+ */
+void MessageConsumer::writeInLogFile(Sensor* s, QString logTxt)
+{
+    QString logFile = s->getCurrentLogFilename();
+    if (logFile != "")
+    {
+        fileHelper->appendToFile(logFile, logTxt);
     }
 }

@@ -55,6 +55,7 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
     this->xAxis->setRange(fromTs, now);
     //this->yAxis->setRange(0, 30);
     // show legend:
+    this->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft);
     this->legend->setVisible(true);
 }
 
@@ -66,7 +67,7 @@ DataPlot::~DataPlot()
 void DataPlot::updatePlot()
 {
     //qDebug() << "DataPlot.updatePlot()";
-    double now = QDateTime::currentDateTime().toTime_t(); //add 2 hours for time zone
+    double now = QDateTime::currentDateTime().toTime_t();
     int fromTs = now - timeWindow;
     //qDebug() << "Range: "+ QString::number(fromTs)+" -> "+ QString::number(now);
     for (int i=0; i<sensorsToPlot.size(); ++i)

@@ -21,7 +21,8 @@ class Sensor
     public:
     explicit Sensor(int addr = 0, QString name = "",
                     SensorType* type = 0, int display = 0,
-                    bool record = false, bool stream = false, QString filename = "");
+                    bool record = false, bool stream = false,
+                    QString logFilePrefix = "", QString currentLogFilename = "");
     /// getters
     int getAddress();
     QString getName();
@@ -29,7 +30,8 @@ class Sensor
     int getDisplay();
     bool getRecord();
     bool getStream();
-    QString getFilename();
+    QString getLogFilePrefix();
+    QString getCurrentLogFilename();
 
     /// setters
     void setAddress(int addr);
@@ -38,7 +40,8 @@ class Sensor
     void setDisplay(int display);
     void setRecord(bool b);
     void setStream(bool b);
-    void setFilename(QString fn);
+    void setLogFilePrefix(QString prefix);
+    void setCurrentLogFilename(QString fn);
 
     private:
         int address;
@@ -47,7 +50,8 @@ class Sensor
         int display;
         bool record;
         bool stream;
-        QString filename;
+        QString logFilePrefix;
+        QString currentLogFilename;
 };
 
 #endif // SENSOR_H

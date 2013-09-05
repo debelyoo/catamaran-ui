@@ -2,6 +2,7 @@
 #define FILEHELPER_H
 
 #include <QObject>
+#include <QDateTime>
 #include "sensorConfig.h"
 
 /**
@@ -19,11 +20,15 @@ class FileHelper
         void createLogFiles(SensorConfig* sc);
 
     private:
-        FileHelper() {}
+        FileHelper() {
+            logFolder = "logs";
+        }
         FileHelper(const FileHelper &);
         FileHelper& operator=(const FileHelper &);
 
         static FileHelper* m_Instance;
+
+        QString logFolder;
 };
 
 #endif // FILEHELPER_H

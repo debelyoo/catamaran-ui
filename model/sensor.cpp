@@ -1,7 +1,7 @@
 #include "sensor.h"
 
 Sensor::Sensor(int addr, QString n, SensorType* t,
-               int d, bool rec, bool st, QString fn)
+               int d, bool rec, bool st, QString logPrefix, QString lfn)
 {
     address = addr;
     name = n;
@@ -9,7 +9,8 @@ Sensor::Sensor(int addr, QString n, SensorType* t,
     display = d;
     record = rec;
     stream = st;
-    filename = fn;
+    logFilePrefix = logPrefix;
+    currentLogFilename = lfn;
 }
 
 /// getters
@@ -43,9 +44,14 @@ bool Sensor::getStream()
     return stream;
 }
 
-QString Sensor::getFilename()
+QString Sensor::getLogFilePrefix()
 {
-    return filename;
+    return logFilePrefix;
+}
+
+QString Sensor::getCurrentLogFilename()
+{
+    return currentLogFilename;
 }
 
 /// setters
@@ -79,7 +85,11 @@ void Sensor::setStream(bool b)
     stream = b;
 }
 
-void Sensor::setFilename(QString fn)
+void Sensor::setLogFilePrefix(QString prefix){
+    logFilePrefix = prefix;
+}
+
+void Sensor::setCurrentLogFilename(QString fn)
 {
-    filename = fn;
+    currentLogFilename = fn;
 }

@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QDebug>
 
 FileHelper* FileHelper::m_Instance = 0;
 
@@ -23,7 +24,14 @@ FileHelper* FileHelper::instance()
  */
 void FileHelper::writeFile(QString filename, QString fileContent)
 {
-    QString filePath = QDir::currentPath() + "/" + filename;
+    QString logFolderPath = QDir::currentPath() + "/" + logFolder;
+    QString filePath = logFolder + "/" +filename;
+    QDir logDir(logFolderPath);
+    if (!logDir.exists())
+    {
+        QDir::current().mkdir(logFolder);
+    }
+
     QFile file(filePath);
     if (file.open(QIODevice::ReadWrite)) {
         QTextStream stream(&file);
@@ -33,7 +41,7 @@ void FileHelper::writeFile(QString filename, QString fileContent)
 
 void FileHelper::appendToFile(QString filename, QString text)
 {
-    QString filePath = QDir::currentPath() + "/" + filename;
+    QString filePath = QDir::currentPath() + "/"+ logFolder +"/" + filename;
     QFile file(filePath);
     if (file.open(QIODevice::ReadWrite)) {
         file.seek(file.size());
@@ -66,9 +74,12 @@ void FileHelper::loadConfigFile(SensorConfig* sensorConfig)
             //int sType = QString(fields.at(2)).toInt();
             SensorType* sType = sensorConfig->getSensorTypes().value(QString(fields.at(2)).toInt());
             int displayInd = sensorConfig->getDisplayIndexForGraphName(fields.at(3));
+            QString dateStr = QDateTime::currentDateTime().toString("ddMMyyyy_hhmmss");
+            bool record = sensorConfig->qstringToBool(fields.at(4));
+            QString currentLogFilename = "";
             Sensor *s = new Sensor(addr, fields.at(1), sType,
-                                   displayInd, sensorConfig->qstringToBool(fields.at(4)),
-                                   sensorConfig->qstringToBool(fields.at(5)), fields.at(6));
+                                   displayInd, record,
+                                   sensorConfig->qstringToBool(fields.at(5)), fields.at(6), currentLogFilename);
             sensorConfig->addSensor(s);
         }
         count++;
@@ -77,14 +88,23 @@ void FileHelper::loadConfigFile(SensorConfig* sensorConfig)
     file.close();
 }
 
+/**
+ * Create the log files for the sensor that have the 'record' flag set and log file prefix
+ * @brief FileHelper::createLogFiles
+ * @param sensorConfig The config object
+ */
 void FileHelper::createLogFiles(SensorConfig* sensorConfig)
 {
+    //qDebug() << "createLogFiles()";
     foreach(Sensor* s, sensorConfig->getSensors())
     {
-        if (s->getRecord() && s->getFilename() != "")
+        if (s->getRecord() && s->getLogFilePrefix() != "" && s->getCurrentLogFilename() == "")
         {
-            QString filename = s->getFilename() + ".log";
-            writeFile(filename, "");
+            QString dateStr = QDateTime::currentDateTime().toString("ddMMyyyy_hhmmss");
+            QString currentLogFilename = s->getLogFilePrefix() + "_" + dateStr + ".log";
+            //qDebug() << currentLogFilename;
+            s->setCurrentLogFilename(currentLogFilename);
+            writeFile(s->getCurrentLogFilename(), "");
         }
     }
 }
