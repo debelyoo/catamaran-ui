@@ -25,7 +25,7 @@ class DatabaseManager
         bool createLogTableForDoubleValue(QString tableName);
         bool insertLogDoubleValue(QString tableName, int address, qint64 ts, double value);
         bool getTemperatureLog();
-        QPair< QVector<double>, QVector<double> >* getData(Sensor* s);
+        QPair< QVector<double>, QVector<double> >* getData(Sensor* s, int fromTs);
         QString getTableName(Datastore::Tables);
 
     private:

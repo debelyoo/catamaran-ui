@@ -109,7 +109,7 @@ void MessageConsumer::parseDataMessage()
         values.push_back(res);
         str += " " + res.first.toString();
     }
-    qint64 ts = decodeTimestamp();
+    qint64 ts = decodeTimestamp2(); // TODO
     DataObject* dataObj = new DataObject(address, values, ts);
     waitingData = 0;
     handleMessageData(dataObj);
@@ -198,6 +198,21 @@ qint64 MessageConsumer::decodeTimestamp()
     double decimal = (double)fraction / divider;
     double ts = seconds + decimal; // labview timestamp: seconds since the epoch 01/01/1904 00:00:00.00 UTC
     qint64 tsUnix = TimeHelper::labviewTsToUnixTs(ts);
+    printf("TS: %f, TS unix: %lld\n", ts, tsUnix);
+    fflush(stdout);
+    return tsUnix;
+}
+
+qint64 MessageConsumer::decodeTimestamp2()
+{
+    QByteArray tsBytes = readBytes(16);
+    double seconds = converter->byteArrayToDouble(converter->getFirstBytesOfArray(tsBytes, 8));
+    double fraction = converter->byteArrayToDouble(converter->getLastBytesOfArray(tsBytes, 8)); // always 0 in test
+    //quint64 divider = 18446744073709551615; // 2^64 -1
+    //double decimal = (double)fraction / divider;
+    double ts = seconds + fraction;
+    //qint64 tsUnix = TimeHelper::labviewTsToUnixTs(ts);
+    qint64 tsUnix = round(ts * 1000); // milliseconds from epoch
     printf("TS: %f, TS unix: %lld\n", ts, tsUnix);
     fflush(stdout);
     return tsUnix;

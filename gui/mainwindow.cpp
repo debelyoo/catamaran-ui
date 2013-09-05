@@ -27,8 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
     scene->addItem(item);
     ui->graphicsView->setScene(scene);
 
-    createPlotsPanel();
     createConfigurationPanel();
+    createPlotsPanel(); // need to be after configuration panel for plots
 
 
     // start server

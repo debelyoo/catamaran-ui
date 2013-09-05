@@ -40,6 +40,7 @@ class MessageConsumer : public QObject
         void parseDataMessage();
         QPair<QVariant, DataType::Types> decodeDataValue();
         qint64 decodeTimestamp();
+        qint64 decodeTimestamp2();
         void parseCmdMessage();
         void handleGetCommand(int address);
 

@@ -102,7 +102,7 @@ QMap<int, QString> SensorConfig::getDisplayValues()
 bool SensorConfig::qstringToBool(QString str)
 {
     bool b;
-    if (str == "YES") {
+    if (str == "1") {
         b = true;
     } else {
         b = false;
