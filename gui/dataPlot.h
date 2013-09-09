@@ -20,7 +20,7 @@ public slots:
 private:
     DatabaseManager* dbManager;
     QList<Sensor*> sensorsToPlot;
-    QPair< QVector<double>, QVector<double> >* getData(int gi);
+    QPair< QVector<double>, QVector<double> > getData(int gi);
     int timeWindow;
 
 };

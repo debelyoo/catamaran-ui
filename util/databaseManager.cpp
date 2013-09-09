@@ -114,7 +114,7 @@ bool DatabaseManager::getTemperatureLog()
  * @param fromTs The timestamp from which getting the data (in seconds)
  * @return A pair of vectors: one containing times (ts in seconds), and one containing values
  */
-QPair< QVector<double>, QVector<double> >* DatabaseManager::getData(Sensor* s, int fromTs)
+QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, int fromTs)
 {
     QVector<double> logTimes;
     QVector<double> logValues;
@@ -143,6 +143,6 @@ QPair< QVector<double>, QVector<double> >* DatabaseManager::getData(Sensor* s, i
         qDebug() << "getData() - values: "+ QString::number(logValues.size())+" for sensor address: "+ QString::number(s->getAddress());
         //qDebug() << "getData() - last time: "+ QString::number(logTimes.last(), 'f', 10)+" last value: "+ QString::number(logValues.last());
     }*/
-    QPair< QVector<double>, QVector<double> >* data = new QPair< QVector<double>, QVector<double> >(logTimes, logValues);
+    QPair< QVector<double>, QVector<double> > data = QPair< QVector<double>, QVector<double> >(logTimes, logValues);
     return data;
 }

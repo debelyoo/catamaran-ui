@@ -20,8 +20,8 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
         this->graph(gi)->setName(sensorsToPlot[gi]->getName());
         //customPlot->graph()->setBrush(QBrush(QColor(255/4.0*gi,160,50,150)));
         // get data
-        QPair< QVector<double>, QVector<double> >* data = dbManager->getData(sensorsToPlot[gi], fromTs);
-        this->graph(gi)->setData(data->first, data->second);
+        QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[gi], fromTs);
+        this->graph(gi)->setData(data.first, data.second);
         this->graph(gi)->rescaleAxes(true);
     }
     // configure bottom axis to show date and time instead of number:
@@ -73,11 +73,11 @@ void DataPlot::updatePlot()
     for (int i=0; i<sensorsToPlot.size(); ++i)
     {
         // get data for sensor
-        QPair< QVector<double>, QVector<double> >* data = dbManager->getData(sensorsToPlot[i], fromTs);
+        QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[i], fromTs);
         //QPair< QVector<double>, QVector<double> >* data = getData(i);
-        if (data->first.size() > 0)
+        if (data.first.size() > 0)
         {
-            this->graph(i)->setData(data->first, data->second);
+            this->graph(i)->setData(data.first, data.second);
             //QList<double> list = new QList<double>(data->second);
             this->graph(i)->rescaleAxes(true);
         }
@@ -89,7 +89,8 @@ void DataPlot::updatePlot()
     this->replot();
 }
 
-QPair< QVector<double>, QVector<double> >* DataPlot::getData(int gi)
+/// for test only
+QPair< QVector<double>, QVector<double> > DataPlot::getData(int gi)
 {
     // generate random walk data:
     QVector<double> time(250), value(250);
@@ -104,7 +105,7 @@ QPair< QVector<double>, QVector<double> >* DataPlot::getData(int gi)
       else
         value[i] = fabs(value[i-1])*(1+0.02/4.0*(4-gi)) + (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
     }
-    QPair< QVector<double>, QVector<double> >* data = new QPair< QVector<double>, QVector<double> >(time, value);
+    QPair< QVector<double>, QVector<double> > data = QPair< QVector<double>, QVector<double> >(time, value);
     return data;
 }
 
