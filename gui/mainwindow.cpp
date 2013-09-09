@@ -126,7 +126,7 @@ void MainWindow::on_directionValueChanged(int val)
 void MainWindow::on_saveConfigClicked()
 {
     // write config file
-    fileHelper->writeFile("config2.txt", sensorConfig->getSensorsAsTabSeparatedText());
+    fileHelper->writeFile("config2.txt", sensorConfig->getSensorsAsTabSeparatedText(), false);
     fileHelper->createLogFiles(sensorConfig);
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");

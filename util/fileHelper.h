@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QDateTime>
+#include <QMap>
 #include "sensorConfig.h"
 
 /**
@@ -14,7 +15,7 @@ class FileHelper
     public:
         static FileHelper* instance();
 
-        void writeFile(QString filename, QString fileContent);
+        void writeFile(QString filename, QString fileContent, bool isLog);
         void appendToFile(QString filename, QString text);
         void loadConfigFile(SensorConfig* sc);
         void createLogFiles(SensorConfig* sc);
@@ -29,6 +30,8 @@ class FileHelper
         static FileHelper* m_Instance;
 
         QString logFolder;
+        QMap<QString, QString> logFiles;
+        QString getLogFileName(QString prefix);
 };
 
 #endif // FILEHELPER_H

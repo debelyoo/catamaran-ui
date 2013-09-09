@@ -21,12 +21,21 @@ FileHelper* FileHelper::instance()
  * @brief FileHelper::writeFile
  * @param filename The name of the file to write
  * @param fileContent The content of the file
+ * @param isLog Indicates if the file to write is a log file
  */
-void FileHelper::writeFile(QString filename, QString fileContent)
+void FileHelper::writeFile(QString filename, QString fileContent, bool isLog)
 {
-    QString logFolderPath = QDir::currentPath() + "/" + logFolder;
-    QString filePath = logFolder + "/" +filename;
-    QDir logDir(logFolderPath);
+    QString folderPath;
+    if (isLog)
+    {
+        folderPath = QDir::currentPath() + "/" + logFolder;
+    }
+    else
+    {
+        folderPath = QDir::currentPath();
+    }
+    QString filePath = folderPath + "/" +filename;
+    QDir logDir(folderPath);
     if (!logDir.exists())
     {
         QDir::current().mkdir(logFolder);
@@ -34,11 +43,20 @@ void FileHelper::writeFile(QString filename, QString fileContent)
 
     QFile file(filePath);
     if (file.open(QIODevice::ReadWrite)) {
-        QTextStream stream(&file);
-        stream << fileContent << endl;
+        if (fileContent != "")
+        {
+            QTextStream stream(&file);
+            stream << fileContent << endl;
+        }
     }
 }
 
+/**
+ * Append text to log file
+ * @brief FileHelper::appendToFile
+ * @param filename
+ * @param text
+ */
 void FileHelper::appendToFile(QString filename, QString text)
 {
     QString filePath = QDir::currentPath() + "/"+ logFolder +"/" + filename;
@@ -100,11 +118,32 @@ void FileHelper::createLogFiles(SensorConfig* sensorConfig)
     {
         if (s->getRecord() && s->getLogFilePrefix() != "" && s->getCurrentLogFilename() == "")
         {
-            QString dateStr = QDateTime::currentDateTime().toString("ddMMyyyy_hhmmss");
-            QString currentLogFilename = s->getLogFilePrefix() + "_" + dateStr + ".log";
-            //qDebug() << currentLogFilename;
+            QString currentLogFilename = getLogFileName(s->getLogFilePrefix());
+            qDebug() << currentLogFilename;
             s->setCurrentLogFilename(currentLogFilename);
-            writeFile(s->getCurrentLogFilename(), "");
+            writeFile(s->getCurrentLogFilename(), "", true);
         }
     }
+}
+
+/**
+ * Get the name of the log file. Returns existing filename it file with same prefix already exists
+ * @brief FileHelper::getLogFileName
+ * @param prefix The prefix of the log file
+ * @return The name of the logfile
+ */
+QString FileHelper::getLogFileName(QString prefix)
+{
+    QString logFileName;
+    if(logFiles.contains(prefix))
+    {
+        logFileName = logFiles.value(prefix);
+    }
+    else
+    {
+        QString dateStr = QDateTime::currentDateTime().toString("ddMMyyyy_hhmmss");
+        logFileName = prefix + "_" + dateStr + ".log";
+        logFiles.insert(prefix, logFileName);
+    }
+    return logFileName;
 }
