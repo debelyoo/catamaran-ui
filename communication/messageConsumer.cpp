@@ -204,8 +204,9 @@ qint64 MessageConsumer::decodeTimestamp()
     double decimal = (double)fraction / divider;
     double ts = seconds + decimal; // labview timestamp: seconds since the epoch 01/01/1904 00:00:00.00 UTC
     qint64 tsUnix = TimeHelper::labviewTsToUnixTs(ts);
-    printf("TS: %f, TS unix: %lld\n", ts, tsUnix);
-    fflush(stdout);
+    char str[128];
+    sprintf(str, "TS: %f, TS unix: %lld\n", ts, tsUnix);
+    qDebug() << str;
     return tsUnix;
 }
 
@@ -217,8 +218,9 @@ qint64 MessageConsumer::decodeTimestamp2()
     double fraction = converter->byteArrayToDouble(converter->getLastBytesOfArray(tsBytes, 8)); // always 0 in test
     double ts = seconds + fraction;
     qint64 tsUnix = round(ts * 1000); // milliseconds from epoch
-    printf("TS: %f, TS unix: %lld\n", ts, tsUnix);
-    fflush(stdout);
+    char str[128];
+    sprintf(str, "TS: %f, TS unix: %lld", ts, tsUnix);
+    qDebug() << str;
     return tsUnix;
 }
 
@@ -291,15 +293,13 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
         }
         default:
             // unknown sensor type
-            printf("[MessageConsumer] Unknown sensor type !\n");
-            fflush(stdout);
+            qDebug() << "[MessageConsumer] Unknown sensor type !\n";
             break;
         }
     }
     else
     {
-        printf("[MessageConsumer] Sensor not found in config !\n");
-        fflush(stdout);
+        qDebug() << "[MessageConsumer] Sensor not found in config !";
     }
 }
 

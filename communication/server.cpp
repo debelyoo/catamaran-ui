@@ -39,21 +39,11 @@ void Server::listen()
 
 }
 
-void Server::testDB()
-{
-    //dbManager->openDB();
-    dbManager->createLogTableForDoubleValue("temperaturelog");
-    dbManager->insertLogDoubleValue("temperaturelog", 22, 123456, 22.3);
-    dbManager->getTemperatureLog();
-}
-
 void Server::on_newConnection()
 {
     socket = server->nextPendingConnection();
     if(socket->state() == QTcpSocket::ConnectedState)
     {
-        printf("New connection established.\n");
-        fflush(stdout);
         emit displayInGui("New connection established.\n");
         connected = true;
     }
@@ -64,9 +54,6 @@ void Server::on_newConnection()
 
 void Server::on_readyRead()
 {
-    //printf("--> on_readyRead()\n");
-    //fflush(stdout);
-    //while(socket->canReadLine())
     while(socket->bytesAvailable() > 0)
     {
         //QByteArray ba = socket->readLine();
@@ -79,14 +66,12 @@ void Server::on_readyRead()
         //printf(">> %s", ba.constData());
         //fflush(stdout);
         //printf("bytearray size >> %d\n", ba.length());
-        //fflush(stdout);
 
         for (int i=0; i < ba.length(); i++) {
             char c = ba.at(i);
             queue->enqueue(c);
         }
         //printf("queue size >> %d \n", queue->size());
-        //fflush(stdout);
 
         emit dataReceived();
     }
@@ -94,7 +79,7 @@ void Server::on_readyRead()
 
 void Server::on_disconnected()
 {
-    printf("Connection disconnected.\n");
+    //printf("Connection disconnected.\n");
     emit displayInGui("Connection disconnected.\n");
     connected = false;
     fflush(stdout);

@@ -21,7 +21,6 @@ void MessagePublisher::sendCommandMessage(QByteArray data)
     char str[128];
     sprintf(str, "Wrote [%d] bytes on wire - flushed: %d\n", bytesWritten, bytesFlushed);
     //sprintf(str, "Sent value [%d] \n", val);
-    printf(str);
-    fflush(stdout);
+    qDebug() << str;
 }
 

@@ -53,7 +53,6 @@ class Server : public QObject
         QQueue<char> *queue;
         static const int BYTE_CHUNK_SIZE_TO_READ = 32; // in bytes
         bool connected;
-        void testDB(); // TODO
 };
 
 #endif // SERVER_H

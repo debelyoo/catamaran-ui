@@ -119,7 +119,7 @@ void FileHelper::createLogFiles(SensorConfig* sensorConfig)
         if (s->getRecord() && s->getLogFilePrefix() != "" && s->getCurrentLogFilename() == "")
         {
             QString currentLogFilename = getLogFileName(s->getLogFilePrefix());
-            qDebug() << currentLogFilename;
+            //qDebug() << currentLogFilename;
             s->setCurrentLogFilename(currentLogFilename);
             writeFile(s->getCurrentLogFilename(), "", true);
         }
