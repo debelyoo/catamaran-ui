@@ -16,7 +16,7 @@ class MessageConsumer : public QObject
     Q_OBJECT
     public:
         explicit MessageConsumer(QObject *parent = 0, QQueue<char> *q = 0);
-        void handleMessageData(DataObject* dataObj);
+        void handleMessageData(DataObject dataObj);
 
     signals:
         void messageParsed(QString);
@@ -43,7 +43,7 @@ class MessageConsumer : public QObject
         qint64 decodeTimestamp2();
         void parseCmdMessage();
         void handleGetCommand(int address);
-        QString createLogText(DataObject* dataObj);
+        QString createLogText(DataObject dataObj);
         void writeInLogFile(Sensor* s, QString logTxt);
         QVariant applyTransformation(QString dllName, QVariant val);
 

@@ -116,7 +116,7 @@ void MessageConsumer::parseDataMessage()
         str += " " + transformedVal.first.toString();
     }
     qint64 ts = decodeTimestamp2(); // TODO
-    DataObject* dataObj = new DataObject(address, values, ts);
+    DataObject dataObj = DataObject(address, values, ts);
     waitingData = 0;
     handleMessageData(dataObj);
     emit messageParsed(str+"\n");
@@ -231,19 +231,19 @@ qint64 MessageConsumer::decodeTimestamp2()
  * @param values The values of the log
  * @param ts The timestamp of the log
  */
-void MessageConsumer::handleMessageData(DataObject* dataObj)
+void MessageConsumer::handleMessageData(DataObject dataObj)
 {
-    if (sensorConfig->containsSensor(dataObj->getAddress()))
+    if (sensorConfig->containsSensor(dataObj.getAddress()))
     {
-        Sensor *s = sensorConfig->getSensor(dataObj->getAddress());
+        Sensor *s = sensorConfig->getSensor(dataObj.getAddress());
         // switch can not be used with QString
         switch (s->getType()->getId()) {
         case SensorList::GPS_position:
         {
             // GPS position
-            double lat = dataObj->getValues()[0].first.toDouble();
-            double lon = dataObj->getValues()[1].first.toDouble();
-            double elevation = dataObj->getValues()[2].first.toDouble();
+            double lat = dataObj.getValues()[0].first.toDouble();
+            double lon = dataObj.getValues()[1].first.toDouble();
+            double elevation = dataObj.getValues()[2].first.toDouble();
             // convert to CH1903 coordinates (east, north, h)
             QVector<double> swissCoordinates = coordinateHelper->WGS84toLV03(lat, lon, elevation);
             // get x,y position for map in UI
@@ -253,16 +253,17 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
                 // notify GUI only if coordinates are plausible
                 emit gpsPointReceived(mapPosition[0], mapPosition[1]);
             }
-            QString log = QString::number(s->getAddress()) + "\t" + QString::number(dataObj->getTimestamp(),'f',6) + "\t" + QString::number(lat,'f',6) + "\t" + QString::number(lon,'f',6) + "\t" + QString::number(elevation,'f',6);
+            //QString log = QString::number(s->getAddress()) + "\t" + QString::number(dataObj->getTimestamp(),'f',6) + "\t" + QString::number(lat,'f',6) + "\t" + QString::number(lon,'f',6) + "\t" + QString::number(elevation,'f',6);
+            QString log = createLogText(dataObj);
             writeInLogFile(s, log);
             break;
         }
         case SensorList::PT100:
         {
             // dataObj->values contains only one temperature value
-            double temp = dataObj->getValues()[0].first.toDouble();
+            double temp = dataObj.getValues()[0].first.toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::TemperatureLog), dataObj->getAddress(), dataObj->getTimestamp(), temp);
+            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::TemperatureLog), dataObj.getAddress(), dataObj.getTimestamp(), temp);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -272,9 +273,9 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
         case SensorList::Wind_direction:
         {
             // dataObj->values contains only one value
-            double value = dataObj->getValues()[0].first.toDouble();
+            double value = dataObj.getValues()[0].first.toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::WindLog), dataObj->getAddress(), dataObj->getTimestamp(), value);
+            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::WindLog), dataObj.getAddress(), dataObj.getTimestamp(), value);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -283,9 +284,9 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
         case SensorList::Radiometer:
         {
             // dataObj->values contains only one value
-            double value = dataObj->getValues()[0].first.toDouble();
+            double value = dataObj.getValues()[0].first.toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::RadiometerLog), dataObj->getAddress(), dataObj->getTimestamp(), value);
+            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::RadiometerLog), dataObj.getAddress(), dataObj.getTimestamp(), value);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -368,22 +369,22 @@ void MessageConsumer::handleGetCommand(int address)
     }
 }
 
-QString MessageConsumer::createLogText(DataObject *dataObj)
+QString MessageConsumer::createLogText(DataObject dataObj)
 {
     QString log;
     QString valuesAsText;
     QPair<QVariant, DataType::Types> val;
-    foreach (val, dataObj->getValues()) {
+    foreach (val, dataObj.getValues()) {
         QMetaType::Type type = (QMetaType::Type)val.first.type();
         switch (type) {
         case QMetaType::Double:
-            valuesAsText += "\t"+ QString::number(val.first.toDouble(), 'f', 3);
+            valuesAsText += "\t"+ QString::number(val.first.toDouble(), 'f', 6);
             break;
         default:
             break;
         }
     }
-    log = QString::number(dataObj->getAddress()) + "\t" + QString::number(dataObj->getTimestamp()) + valuesAsText;
+    log = QString::number(dataObj.getAddress()) + "\t" + QString::number(dataObj.getTimestamp()) + valuesAsText;
     return log;
 }
 
