@@ -6,10 +6,12 @@
 #include <QVariant>
 #include "util/byteArrayConverter.h"
 
+typedef QVector< QPair<QVariant, DataType::Types> > DataValues;
+
 class DataObject
 {
     public:
-        explicit DataObject(int address, QVector< QPair<QVariant, DataType::Types> > values, qint64 ts);
+        explicit DataObject(int address, DataValues values, qint64 ts);
         int getAddress();
         QVector< QPair<QVariant, DataType::Types> > getValues();
         qint64 getTimestamp();
