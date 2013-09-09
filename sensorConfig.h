@@ -11,7 +11,8 @@ class SensorConfig
 
     public:
         static SensorConfig* instance();
-        void addSensor(Sensor *s);
+        void addSensor(Sensor* s);
+        void addSensorType(SensorType* st);
         QList<Sensor*> getSensors();
         QList<Sensor*> getSensorsForPlot(int plotIndex);
         int getDisplayIndexForGraphName(QString str);
@@ -24,13 +25,7 @@ class SensorConfig
 
     private:
         SensorConfig() {
-            sensorTypes.insert(0, new SensorType(0, "Unknown", ""));
-            sensorTypes.insert(1, new SensorType(1, "GPS position", "gpslog"));
-            sensorTypes.insert(2, new SensorType(2, "GPS speed", "gpslog"));
-            sensorTypes.insert(3, new SensorType(3, "PT100", "temperaturelog"));
-            sensorTypes.insert(4, new SensorType(4, "Wind speed", "windlog", "windTransformation"));
-            sensorTypes.insert(5, new SensorType(5, "Wind direction", "windlog"));
-            sensorTypes.insert(6, new SensorType(6, "Radiometer", "radiometerlog"));
+            sensorTypes.insert(0, new SensorType(0, "Unknown", "")); // other tyes are loaded at launch from sensortypes.txt
 
             displayGraphs.insert(0, "NO");
             displayGraphs.insert(1, "G0");

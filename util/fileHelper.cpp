@@ -1,4 +1,5 @@
 #include "fileHelper.h"
+#include "databaseManager.h"
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
@@ -71,13 +72,16 @@ void FileHelper::appendToFile(QString filename, QString text)
 /**
  * Load the config file in memory (populate sensors list in SensorConfig singleton)
  * @brief MainWindow::loadConfigFile
+ * @param sensorConfig The sensor configuration object
  */
-void FileHelper::loadConfigFile(SensorConfig* sensorConfig)
+bool FileHelper::loadConfigFile(SensorConfig* sensorConfig)
 {
-    QString filePath = QDir::currentPath() + "/config2.txt";
+    bool res = false;
+    QString configFilename = "config2.txt";
+    QString filePath = QDir::currentPath() + "/"+ configFilename;
     QFile file(filePath);
     if(!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::information(0, "error", file.errorString());
+        QMessageBox::information(0, "error", file.errorString() +" ["+configFilename+"]");
     }
 
     QTextStream in(&file);
@@ -99,11 +103,13 @@ void FileHelper::loadConfigFile(SensorConfig* sensorConfig)
                                    displayInd, record,
                                    sensorConfig->qstringToBool(fields.at(5)), fields.at(6), currentLogFilename);
             sensorConfig->addSensor(s);
+            res = true;
         }
         count++;
     }
 
     file.close();
+    return res;
 }
 
 /**
@@ -124,6 +130,38 @@ void FileHelper::createLogFiles(SensorConfig* sensorConfig)
             writeFile(s->getCurrentLogFilename(), "", true);
         }
     }
+}
+
+bool FileHelper::loadSensorTypesFile(SensorConfig* sensorConfig)
+{
+    bool res = false;
+    QString sensorTypesFile = "sensortypes.txt";
+    DatabaseManager* dbManager = DatabaseManager::instance();
+    QString filePath = QDir::currentPath() + "/"+ sensorTypesFile;
+    QFile file(filePath);
+    if(!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::information(0, "error", file.errorString() + " ["+sensorTypesFile+"]");
+    }
+
+    QTextStream in(&file);
+
+    int count = 0;
+    while(!in.atEnd()) {
+        QString line = in.readLine();
+        QStringList fields = line.split("\t"); // separated by tab
+        if (count > 0 && fields.at(0) != "")
+        {
+            int id = QString(fields.at(0)).toInt();
+            SensorType* st = new SensorType(id, fields.at(1), fields.at(2), fields.at(3));
+            sensorConfig->addSensorType(st);
+            dbManager->createLogTableForDoubleValue(fields.at(2));
+            res = true;
+        }
+        count++;
+    }
+
+    file.close();
+    return res;
 }
 
 /**

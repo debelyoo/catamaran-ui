@@ -527,9 +527,11 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
 
 void MainWindow::createConfigurationPanel()
 {
+    // load sensorTypes file
+    fileHelper->loadSensorTypesFile(sensorConfig);
     // load config file
     fileHelper->loadConfigFile(sensorConfig);
-    // create log files - TODO
+    // create log files
     fileHelper->createLogFiles(sensorConfig);
     QList<Sensor*> sensors = sensorConfig->getSensors();
 

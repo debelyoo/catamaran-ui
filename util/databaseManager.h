@@ -4,17 +4,16 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include <QSqlError>
-#include <QMap>
 #include <QDateTime>
 #include "model/sensor.h"
 
-namespace Datastore {
+/*namespace Datastore {
     typedef enum {
         TemperatureLog = 0,
         WindLog = 1,
         RadiometerLog = 2
     } Tables;
-}
+}*/
 
 class DatabaseManager
 {
@@ -26,20 +25,13 @@ class DatabaseManager
         bool insertLogDoubleValue(QString tableName, int address, qint64 ts, double value);
         bool getTemperatureLog();
         QPair< QVector<double>, QVector<double> > getData(Sensor* s, int fromTs);
-        QString getTableName(Datastore::Tables);
+        //QString getTableName(Datastore::Tables);
 
     private:
         DatabaseManager(){
-            tables.insert(0, "temperaturelog");
-            tables.insert(1, "windlog");
-            tables.insert(2, "radiometerlog");
-
             // Find SQLite driver
             db = QSqlDatabase::addDatabase("QSQLITE");
             db.setDatabaseName("ecoldata.sqlite");
-            createLogTableForDoubleValue(getTableName(Datastore::TemperatureLog));
-            createLogTableForDoubleValue(getTableName(Datastore::WindLog));
-            createLogTableForDoubleValue(getTableName(Datastore::RadiometerLog));
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);
@@ -47,7 +39,7 @@ class DatabaseManager
         static DatabaseManager* m_Instance;
 
         QSqlDatabase db;
-        QMap<int, QString> tables;
+        //QList<QString> tables;
 
 };
 

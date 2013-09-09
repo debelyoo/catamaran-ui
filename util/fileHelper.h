@@ -17,8 +17,9 @@ class FileHelper
 
         void writeFile(QString filename, QString fileContent, bool isLog);
         void appendToFile(QString filename, QString text);
-        void loadConfigFile(SensorConfig* sc);
+        bool loadConfigFile(SensorConfig* sc);
         void createLogFiles(SensorConfig* sc);
+        bool loadSensorTypesFile(SensorConfig* sc);
 
     private:
         FileHelper() {

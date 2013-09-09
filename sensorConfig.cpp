@@ -16,9 +16,14 @@ SensorConfig* SensorConfig::instance()
     return m_Instance;
 }
 
-void SensorConfig::addSensor(Sensor *s)
+void SensorConfig::addSensor(Sensor* s)
 {
     sensors.insert(s->getAddress(), s);
+}
+
+void SensorConfig::addSensorType(SensorType* st)
+{
+    sensorTypes.insert(st->getId(), st);
 }
 
 /**

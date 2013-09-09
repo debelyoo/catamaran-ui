@@ -17,10 +17,10 @@ DatabaseManager* DatabaseManager::instance()
     return m_Instance;
 }
 
-QString DatabaseManager::getTableName(Datastore::Tables t)
+/*QString DatabaseManager::getTableName(Datastore::Tables t)
 {
     return tables[t];
-}
+}*/
 
 /*bool DatabaseManager::openDB()
 {
@@ -28,6 +28,12 @@ QString DatabaseManager::getTableName(Datastore::Tables t)
     return db.open();
 }*/
 
+/**
+ * Create a table in embedded Sqlite DB (id, sensor_address, timestamp (double), value (double))
+ * @brief DatabaseManager::createLogTableForDoubleValue
+ * @param tableName The name of the table to create
+ * @return true if table has been created successfully
+ */
 bool DatabaseManager::createLogTableForDoubleValue(QString tableName)
 {
     bool res;
@@ -35,7 +41,7 @@ bool DatabaseManager::createLogTableForDoubleValue(QString tableName)
         QSqlQuery query(db);
         if (query.exec("CREATE TABLE IF NOT EXISTS "+ tableName +" ( id INTEGER PRIMARY KEY AUTOINCREMENT, sensor_address INTEGER, timestamp REAL, value REAL );")) {
             res = true;
-            //qDebug() << "table creation succeeded !";
+            //qDebug() << "table creation succeeded ! "+ tableName;
         } else {
             res = false;
             qDebug() << "table creation failed !" << query.lastError();

@@ -263,7 +263,7 @@ void MessageConsumer::handleMessageData(DataObject dataObj)
             // dataObj->values contains only one temperature value
             double temp = dataObj.getValues()[0].first.toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::TemperatureLog), dataObj.getAddress(), dataObj.getTimestamp(), temp);
+            dbManager->insertLogDoubleValue(s->getType()->getDbTableName(), dataObj.getAddress(), dataObj.getTimestamp(), temp);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -275,7 +275,7 @@ void MessageConsumer::handleMessageData(DataObject dataObj)
             // dataObj->values contains only one value
             double value = dataObj.getValues()[0].first.toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::WindLog), dataObj.getAddress(), dataObj.getTimestamp(), value);
+            dbManager->insertLogDoubleValue(s->getType()->getDbTableName(), dataObj.getAddress(), dataObj.getTimestamp(), value);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -286,7 +286,7 @@ void MessageConsumer::handleMessageData(DataObject dataObj)
             // dataObj->values contains only one value
             double value = dataObj.getValues()[0].first.toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::RadiometerLog), dataObj.getAddress(), dataObj.getTimestamp(), value);
+            dbManager->insertLogDoubleValue(s->getType()->getDbTableName(), dataObj.getAddress(), dataObj.getTimestamp(), value);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
