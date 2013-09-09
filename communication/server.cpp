@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <QVector>
 #include <QNetworkInterface>
+#include <QDir>
 
 Server::Server(QObject *parent) :
 QObject(parent)
@@ -35,7 +36,7 @@ void Server::listen()
     emit displayInGui(msg);
     server->listen(QHostAddress(ipAddress), port);
 
-    //testDB(); // TODO
+
 }
 
 void Server::testDB()

@@ -1,6 +1,8 @@
 #include "messageConsumer.h"
 #include "server.h"
 #include <QThread>
+#include <QLibrary>
+#include <QDir>
 
 MessageConsumer::MessageConsumer(QObject *parent, QQueue<char> *q) :
 QObject(parent)
@@ -101,13 +103,17 @@ void MessageConsumer::parseDataMessage()
     QString str;
     str = "[DATA] ";
     int address = converter->byteArrayToUInt8(readBytes(1));
+    Sensor *s = sensorConfig->getSensor(address);
     str += "address: "+ QString::number(address);
     int dataArrayLength = converter->byteArrayToUInt32(readBytes(4));
     QVector< QPair<QVariant, DataType::Types> > values;
     for (int i = 0; i < dataArrayLength; i++) {
-        QPair<QVariant, DataType::Types> res = decodeDataValue();
-        values.push_back(res);
-        str += " " + res.first.toString();
+        QPair<QVariant, DataType::Types> val = decodeDataValue();
+        QPair<QVariant, DataType::Types> transformedVal;
+        transformedVal.first = applyTransformation(s->getType()->getDllName(), val.first);
+        transformedVal.second = val.second;
+        values.push_back(transformedVal);
+        str += " " + transformedVal.first.toString();
     }
     qint64 ts = decodeTimestamp2(); // TODO
     DataObject* dataObj = new DataObject(address, values, ts);
@@ -203,15 +209,13 @@ qint64 MessageConsumer::decodeTimestamp()
     return tsUnix;
 }
 
+/// For test only
 qint64 MessageConsumer::decodeTimestamp2()
 {
     QByteArray tsBytes = readBytes(16);
     double seconds = converter->byteArrayToDouble(converter->getFirstBytesOfArray(tsBytes, 8));
     double fraction = converter->byteArrayToDouble(converter->getLastBytesOfArray(tsBytes, 8)); // always 0 in test
-    //quint64 divider = 18446744073709551615; // 2^64 -1
-    //double decimal = (double)fraction / divider;
     double ts = seconds + fraction;
-    //qint64 tsUnix = TimeHelper::labviewTsToUnixTs(ts);
     qint64 tsUnix = round(ts * 1000); // milliseconds from epoch
     printf("TS: %f, TS unix: %lld\n", ts, tsUnix);
     fflush(stdout);
@@ -258,25 +262,31 @@ void MessageConsumer::handleMessageData(DataObject* dataObj)
             // save it to database
             dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::TemperatureLog), dataObj->getAddress(), dataObj->getTimestamp(), temp);
             // log it in log file
-            QString log = QString::number(s->getAddress()) + "\t" + QString::number(dataObj->getTimestamp()) + "\t" + QString::number(temp,'f',3);
+            QString log = createLogText(dataObj);
             writeInLogFile(s, log);
             break;
         }
         case SensorList::Wind_speed:
         case SensorList::Wind_direction:
         {
-            // dataObj->values contains only one temperature value
+            // dataObj->values contains only one value
             double value = dataObj->getValues()[0].first.toDouble();
             // save it to database
             dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::WindLog), dataObj->getAddress(), dataObj->getTimestamp(), value);
+            // log it in log file
+            QString log = createLogText(dataObj);
+            writeInLogFile(s, log);
             break;
         }
         case SensorList::Radiometer:
         {
-            // dataObj->values contains only one temperature value
+            // dataObj->values contains only one value
             double value = dataObj->getValues()[0].first.toDouble();
             // save it to database
             dbManager->insertLogDoubleValue(dbManager->getTableName(Datastore::RadiometerLog), dataObj->getAddress(), dataObj->getTimestamp(), value);
+            // log it in log file
+            QString log = createLogText(dataObj);
+            writeInLogFile(s, log);
             break;
         }
         default:
@@ -358,6 +368,25 @@ void MessageConsumer::handleGetCommand(int address)
     }
 }
 
+QString MessageConsumer::createLogText(DataObject *dataObj)
+{
+    QString log;
+    QString valuesAsText;
+    QPair<QVariant, DataType::Types> val;
+    foreach (val, dataObj->getValues()) {
+        QMetaType::Type type = (QMetaType::Type)val.first.type();
+        switch (type) {
+        case QMetaType::Double:
+            valuesAsText += "\t"+ QString::number(val.first.toDouble(), 'f', 3);
+            break;
+        default:
+            break;
+        }
+    }
+    log = QString::number(dataObj->getAddress()) + "\t" + QString::number(dataObj->getTimestamp()) + valuesAsText;
+    return log;
+}
+
 /**
  * Write some text in log file
  * @brief MessageConsumer::writeInLogFile
@@ -371,4 +400,33 @@ void MessageConsumer::writeInLogFile(Sensor* s, QString logTxt)
     {
         fileHelper->appendToFile(logFile, logTxt);
     }
+}
+
+/**
+ * Apply a transformation to the value. Transformation is defined in external library (DLL)
+ * @brief MessageConsumer::applyTransformation
+ * @param dllName The name of the external library
+ * @param value The value to transform
+ * @return The transformed value
+ */
+QVariant MessageConsumer::applyTransformation(QString dllName, QVariant value)
+{
+    QVariant transformedValue = value;
+    if (dllName != "")
+    {
+        QString libFolderPath = QDir::currentPath() + "/lib";
+        QLibrary library(libFolderPath + "/"+ dllName);
+        bool okLoad = library.load(); // check load DLL file successful or not
+        //bool ok = library.isLoaded(); // check if DLL file loaded or not
+
+        typedef QVariant (*TransformFunction)(QVariant);
+
+        if (okLoad)
+        {
+            TransformFunction trsf = (TransformFunction) library.resolve("applyTransform");
+            if (trsf)
+                transformedValue = trsf(value);
+        }
+    }
+    return transformedValue;
 }

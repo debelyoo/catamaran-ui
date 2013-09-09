@@ -1,10 +1,11 @@
 #include "sensorType.h"
 
-SensorType::SensorType(int i, QString n, QString tn)
+SensorType::SensorType(int i, QString n, QString tn, QString dn)
 {
     id = i;
     name = n;
     dbTableName = tn;
+    dllName = dn;
 }
 
 /// getters
@@ -22,6 +23,11 @@ QString SensorType::getDbTableName()
     return dbTableName;
 }
 
+QString SensorType::getDllName()
+{
+    return dllName;
+}
+
 /// setters
 void SensorType::setId(int i)
 {
@@ -36,5 +42,10 @@ void SensorType::setName(QString n)
 void SensorType::setDbTableName(QString tn)
 {
     dbTableName = tn;
+}
+
+void SensorType::setDllName(QString dn)
+{
+    dllName = dn;
 }
 
