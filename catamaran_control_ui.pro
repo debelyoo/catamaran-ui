@@ -31,8 +31,12 @@ SOURCES += main.cpp\
     gui/qcustomplot.cpp \
     gui/dataPlot.cpp \
     model/sensorType.cpp \
+<<<<<<< HEAD
     gui/keyPressHandler.cpp \
     gui/mouseClickHandler.cpp
+=======
+    communication/prismemessage.cpp
+>>>>>>> Add PRismeMessage class to project
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -52,8 +56,12 @@ HEADERS  += sensorConfig.h\
     gui/qcustomplot.h \
     gui/dataPlot.h \
     model/sensorType.h \
+<<<<<<< HEAD
     gui/keyPressHandler.h \
     gui/mouseClickHandler.h
+=======
+    communication/prismemessage.h
+>>>>>>> Add PRismeMessage class to project
 
 FORMS    += mainwindow.ui
 
