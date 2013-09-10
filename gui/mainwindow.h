@@ -3,8 +3,8 @@
 
 #include "communication/server.h"
 #include "util/fileHelper.h"
-//#include "qcustomplot.h"
 #include "dataPlot.h"
+#include "mouseClickHandler.h"
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QPushButton>
@@ -21,6 +21,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void sendEngineCommand();
     
 public slots:
     void addStatusText(QString);
@@ -46,6 +47,10 @@ public slots:
     void on_filenameValueChanged(QString, int);
     void on_saveConfigClicked();
 
+protected:
+    void keyPressEvent(QKeyEvent* event);
+    //bool event(QEvent *event);
+
 private:
     Ui::MainWindow *ui;
     Server *s;
@@ -55,7 +60,6 @@ private:
     bool sliderIsMoving;
     int correctEngineCommandValue(int val);
     void updateLeftRightSliders();
-    void sendEngineCommand();
     void sendLeftEngineCommand();
     void sendRightEngineCommand();
     int zoomStep;

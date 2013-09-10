@@ -47,7 +47,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -67,6 +67,9 @@
       </property>
      </widget>
      <widget class="QSpinBox" name="rightSpinBox">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>730</x>
@@ -83,6 +86,9 @@
       </property>
      </widget>
      <widget class="QSlider" name="leftSlider">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>670</x>
@@ -108,6 +114,9 @@
       </property>
      </widget>
      <widget class="QSpinBox" name="leftSpinBox">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>650</x>
@@ -127,6 +136,9 @@
       </property>
      </widget>
      <widget class="QSlider" name="rightSlider">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>750</x>
@@ -503,8 +515,8 @@
        <string>...</string>
       </property>
       <property name="icon">
-       <iconset>
-        <normaloff>../../../../../Users/Ziad/Pictures/zoom.png</normaloff>../../../../../Users/Ziad/Pictures/zoom.png</iconset>
+       <iconset resource="images.qrc">
+        <normaloff>:/images/zoom.png</normaloff>:/images/zoom.png</iconset>
       </property>
       <property name="iconSize">
        <size>
@@ -526,8 +538,8 @@
        <string>...</string>
       </property>
       <property name="icon">
-       <iconset>
-        <normaloff>../../../../../Users/Ziad/Pictures/zoom.png</normaloff>../../../../../Users/Ziad/Pictures/zoom.png</iconset>
+       <iconset resource="images.qrc">
+        <normaloff>:/images/zoom.png</normaloff>:/images/zoom.png</iconset>
       </property>
      </widget>
      <widget class="QSlider" name="zoomSlider">
@@ -589,6 +601,8 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="images.qrc"/>
+ </resources>
  <connections/>
 </ui>

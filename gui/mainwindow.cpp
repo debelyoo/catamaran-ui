@@ -20,12 +20,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
+
     // load map in graphics view (for GPS points)
     QGraphicsScene *scene = new QGraphicsScene();
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap(":/images/Map.jpg"));
     item->setPos(0, 0);
     scene->addItem(item);
     ui->graphicsView->setScene(scene);
+
+    //ui->tabWidget->widget(0)->installEventFilter(new KeyPressHandler());
 
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
@@ -50,6 +53,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->directionSlider, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
     QObject::connect(ui->speedSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
     QObject::connect(ui->directionSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+    ui->speedSpinBox->installEventFilter(new MouseClickHandler(this));
+    ui->directionSpinBox->installEventFilter(new MouseClickHandler(this));
 
     QObject::connect(ui->speedSlider, SIGNAL(sliderPressed()), this, SLOT(on_sliderPressed()));
     QObject::connect(ui->directionSlider, SIGNAL(sliderPressed()), this, SLOT(on_sliderPressed()));
@@ -66,6 +71,11 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::keyPressEvent(QKeyEvent* event)
+{
+    qDebug() << event->text();
 }
 
 void MainWindow::addStatusText(QString msg)
@@ -112,7 +122,7 @@ void MainWindow::on_speedValueChanged(int val)
     ui->speedSlider->setValue(val);
     ui->speedSpinBox->setValue(val);
     updateLeftRightSliders();
-    sendEngineCommand();
+    //sendEngineCommand();
 }
 
 void MainWindow::on_directionValueChanged(int val)
@@ -120,7 +130,7 @@ void MainWindow::on_directionValueChanged(int val)
     ui->directionSlider->setValue(val);
     ui->directionSpinBox->setValue(val);
     updateLeftRightSliders();
-    sendEngineCommand();
+    //sendEngineCommand();
 }
 
 void MainWindow::on_saveConfigClicked()
@@ -233,10 +243,6 @@ void MainWindow::setupMatrix()
  */
 void MainWindow::drawPointOnMap(double x, double y)
 {
-    /*char str[128];
-    sprintf(str, "drawPointOnMap() [%f,%f]\n", x, y);
-    printf(str);
-    fflush(stdout);*/
     double rad = 1;
     QColor color = QColor(255, 90, 0); // orange
     ui->graphicsView->scene()->addEllipse(x-rad, y-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
@@ -244,22 +250,17 @@ void MainWindow::drawPointOnMap(double x, double y)
     ui->graphicsView->centerOn(x, y);
 }
 
-
-/// private methods
-
 void MainWindow::sendEngineCommand()
 {
     if (!sliderIsMoving)
     {
-        /*char str[128];
-        sprintf(str, "sendEngineCommand()\n");
-        printf(str);
-        fflush(stdout);*/
+        //qDebug() << "sendEngineCommand";
         sendLeftEngineCommand();
         sendRightEngineCommand();
     }
 }
 
+/// private methods
 void MainWindow::sendLeftEngineCommand()
 {
     // command (uint8) | length array (uint32) | length engine addr (uint32) |engine addr (uint8) | length value (uint32) | value (int8)
@@ -273,9 +274,8 @@ void MainWindow::sendLeftEngineCommand()
     data.push_back(converter->byteArrayForCmdParameterInt(val));
     s->sendCommandMessage(data);
     char str[128];
-    sprintf(str, "sendLeftEngineCommand() [%d]\n", correctEngineCommandValue(val));
-    printf(str);
-    fflush(stdout);
+    sprintf(str, "sendLeftEngineCommand() [%d]", correctEngineCommandValue(val));
+    qDebug() << str;
 }
 
 void MainWindow::sendRightEngineCommand()
@@ -290,9 +290,8 @@ void MainWindow::sendRightEngineCommand()
     data.push_back(converter->byteArrayForCmdParameterInt(val));
     s->sendCommandMessage(data);
     char str[128];
-    sprintf(str, "sendRightEngineCommand() [%d]\n", correctEngineCommandValue(val));
-    printf(str);
-    fflush(stdout);
+    sprintf(str, "sendRightEngineCommand() [%d]", correctEngineCommandValue(val));
+    qDebug() << str;
 }
 
 /**

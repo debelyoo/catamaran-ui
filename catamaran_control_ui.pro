@@ -30,7 +30,9 @@ SOURCES += main.cpp\
     communication/dataObject.cpp \
     gui/qcustomplot.cpp \
     gui/dataPlot.cpp \
-    model/sensorType.cpp
+    model/sensorType.cpp \
+    gui/keyPressHandler.cpp \
+    gui/mouseClickHandler.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -49,7 +51,9 @@ HEADERS  += sensorConfig.h\
     communication/dataObject.h \
     gui/qcustomplot.h \
     gui/dataPlot.h \
-    model/sensorType.h
+    model/sensorType.h \
+    gui/keyPressHandler.h \
+    gui/mouseClickHandler.h
 
 FORMS    += mainwindow.ui
 
