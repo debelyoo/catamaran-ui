@@ -18,50 +18,42 @@ SOURCES += main.cpp\
     util/byteArrayConverter.cpp\
     util/fileHelper.cpp\
     util/coordinateHelper.cpp\
-    model/sensor.cpp\
+    util/databaseManager.cpp \
     gui/mainwindow.cpp\
     gui/inRowCheckBox.cpp\
     gui/inRowComboBox.cpp\
     gui/inRowLineEdit.cpp\
-    communication/server.cpp\
-    communication/messageConsumer.cpp\
-    communication/messagePublisher.cpp \
-    util/databaseManager.cpp \
-    communication/dataObject.cpp \
     gui/qcustomplot.cpp \
     gui/dataPlot.cpp \
+    gui/mouseClickHandler.cpp \
     model/sensorType.cpp \
-<<<<<<< HEAD
-    gui/keyPressHandler.cpp \
-    gui/mouseClickHandler.cpp
-=======
-    communication/prismemessage.cpp
->>>>>>> Add PRismeMessage class to project
+    model/sensor.cpp\
+    communication/dataObject.cpp \
+    communication/server.cpp\
+    communication/messageConsumer.cpp\
+    communication/messagePublisher.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
     util/fileHelper.h\
     util/coordinateHelper.h\
+    util/definitions.h\
+    util/databaseManager.h \
+    util/timeHelper.h \
     model/sensor.h\
+    model/sensorType.h \
+    communication/server.h\
+    communication/messageConsumer.h\
+    communication/messagePublisher.h \
+    communication/dataObject.h \
     gui/mainwindow.h\
     gui/inRowCheckBox.h\
     gui/inRowComboBox.h\
     gui/inRowLineEdit.h\
-    communication/server.h\
-    communication/messageConsumer.h\
-    communication/messagePublisher.h \
-    util/databaseManager.h \
-    util/timeHelper.h \
-    communication/dataObject.h \
     gui/qcustomplot.h \
     gui/dataPlot.h \
-    model/sensorType.h \
-<<<<<<< HEAD
-    gui/keyPressHandler.h \
-    gui/mouseClickHandler.h
-=======
-    communication/prismemessage.h
->>>>>>> Add PRismeMessage class to project
+    gui/mouseClickHandler.h \
+    communication/idatamessagereceiver.h
 
 FORMS    += mainwindow.ui
 

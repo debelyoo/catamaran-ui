@@ -17,7 +17,7 @@ namespace DataType {
     } Types;
 }
 
-class DataObject;
-typedef void (*DataObjectInjectionFunction)(DataObject);
+//class DataObject;
+//typedef void (*DataObjectInjectionFunction)(DataObject);
 
 #endif // DEFINITIONS_H

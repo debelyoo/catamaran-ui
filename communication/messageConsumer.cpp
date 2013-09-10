@@ -103,17 +103,13 @@ void MessageConsumer::parseDataMessage()
     QString str;
     str = "[DATA] ";
     int address = converter->byteArrayToUInt8(readBytes(1));
-    Sensor *s = sensorConfig->getSensor(address);
     str += "address: "+ QString::number(address);
     int dataArrayLength = converter->byteArrayToUInt32(readBytes(4));
-    QVector< QPair<QVariant, DataType::Types> > values;
+    QVector<DataValue> values;
     for (int i = 0; i < dataArrayLength; i++) {
-        QPair<QVariant, DataType::Types> val = decodeDataValue();
-        QPair<QVariant, DataType::Types> transformedVal;
-        transformedVal.first = applyTransformation(s->getType()->getDllName(), val.first);
-        transformedVal.second = val.second;
-        values.push_back(transformedVal);
-        str += " " + transformedVal.first.toString();
+        DataValue val = decodeDataValue();
+        values.push_back(val);
+        str += " " + val.first.toString();
     }
     qint64 ts = decodeTimestamp2(); // TODO
     DataObject dataObj = DataObject(address, values, ts);
@@ -121,6 +117,16 @@ void MessageConsumer::parseDataMessage()
     handleMessageData(dataObj);
     emit messageParsed(str+"\n");
     checkQueue(false); // force checking queue to parse data that would have arrived meanwhile
+}
+
+/**
+ * @brief MessageConsumer::transformDataObject
+ * @param iobj object to transform
+ * @return transformed object
+ */
+const DataObject MessageConsumer::transformDataObject(DataObject iobj){
+    Sensor *s = sensorConfig->getSensor(iobj.getAddress());
+    return applyTransformation(s->getType()->getDllName(), iobj);
 }
 
 /**
@@ -231,10 +237,12 @@ qint64 MessageConsumer::decodeTimestamp2()
  * @param values The values of the log
  * @param ts The timestamp of the log
  */
-void MessageConsumer::handleMessageData(DataObject dataObj)
+void MessageConsumer::handleMessageData(DataObject idataObj)
 {
-    if (sensorConfig->containsSensor(dataObj.getAddress()))
+    if (sensorConfig->containsSensor(idataObj.getAddress()))
     {
+        DataObject dataObj = transformDataObject(idataObj);
+
         Sensor *s = sensorConfig->getSensor(dataObj.getAddress());
         // switch can not be used with QString
         switch (s->getType()->getId()) {
@@ -410,24 +418,22 @@ void MessageConsumer::writeInLogFile(Sensor* s, QString logTxt)
  * @param value The value to transform
  * @return The transformed value
  */
-QVariant MessageConsumer::applyTransformation(QString dllName, QVariant value)
+const DataObject MessageConsumer::applyTransformation(QString dllName, DataObject iobj) const
 {
-    QVariant transformedValue = value;
     if (dllName != "")
     {
         QString libFolderPath = QDir::currentPath() + "/lib";
         QLibrary library(libFolderPath + "/"+ dllName);
         bool okLoad = library.load(); // check load DLL file successful or not
-        //bool ok = library.isLoaded(); // check if DLL file loaded or not
 
-        typedef QVariant (*TransformFunction)(QVariant);
+        typedef DataObject (*TransformFunction)(DataObject, IDataMessageReceiver*);
 
         if (okLoad)
         {
             TransformFunction trsf = (TransformFunction) library.resolve("applyTransform");
             if (trsf)
-                transformedValue = trsf(value);
+                return trsf(iobj, (IDataMessageReceiver*)this);
         }
     }
-    return transformedValue;
+    return iobj;
 }

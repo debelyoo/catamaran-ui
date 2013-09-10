@@ -1,23 +1,23 @@
 #include "dataObject.h"
 
-DataObject::DataObject(int addr, QVector< QPair<QVariant, DataType::Types> > vals, qint64 ts)
+DataObject::DataObject(int addr, QVector<DataValue> vals, qint64 ts)
 {
     address = addr;
     values = vals;
     timestamp = ts;
 }
 
-int DataObject::getAddress()
+int DataObject::getAddress() const
 {
     return address;
 }
 
-QVector< QPair<QVariant, DataType::Types> > DataObject::getValues()
+QVector<DataValue> DataObject::getValues() const
 {
     return values;
 }
 
-qint64 DataObject::getTimestamp()
+qint64 DataObject::getTimestamp() const
 {
     return timestamp;
 }

@@ -8,10 +8,11 @@
 #include "util/timeHelper.h"
 #include "util/databaseManager.h"
 #include "dataObject.h"
+#include "idatamessagereceiver.h"
 #include <QObject>
 #include <QQueue>
 
-class MessageConsumer : public QObject
+class MessageConsumer : public QObject, public IDataMessageReceiver
 {
     Q_OBJECT
     public:
@@ -45,7 +46,8 @@ class MessageConsumer : public QObject
         void handleGetCommand(int address);
         QString createLogText(DataObject dataObj);
         void writeInLogFile(Sensor* s, QString logTxt);
-        QVariant applyTransformation(QString dllName, QVariant val);
+        const DataObject applyTransformation(QString dllName, DataObject val) const;
+        const DataObject transformDataObject(DataObject iobj);
 
 };
 

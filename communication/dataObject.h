@@ -15,10 +15,10 @@ typedef QPair<QVariant, DataType::Types> DataValue;
 class DataObject
 {
     public:
-        explicit DataObject(int address, DataValues values, qint64 ts);
-        int getAddress();
-        QVector<DataValue> getValues();
-        qint64 getTimestamp();
+        explicit DataObject(int address, QVector<DataValue> values, qint64 ts);
+        int getAddress() const;
+        QVector<DataValue> getValues() const;
+        qint64 getTimestamp() const;
 
     private:
         int address;
