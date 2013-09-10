@@ -447,17 +447,17 @@ void MainWindow::createPlotsPanel()
     QVBoxLayout *layout = new QVBoxLayout;
     viewport->setLayout(layout);
     int nbPlots = 3;
-    int plotHeight = round((ui->tabWidget->height() - 50) / (double)2);
+    // Need to use fixed sizes, because container is expandable, cannot use ui->tabWidget->width()
+    int plotHeight = 200;
+    int plotWidth = 900;
+    //viewport->setGeometry(0,0, 800, nbPlots * plotHeight);
     for (int i = 0; i < nbPlots; i++)
     {
-        //QLabel* l = new QLabel("Graph X");
-        //layout->addWidget(l);
         QWidget* plot;
-        QRect geom = QRect(0, i * plotHeight, viewport->width(), plotHeight);
+        QRect geom = QRect(0, i * plotHeight, plotWidth, plotHeight);
         plot = createPlotByDate(i, geom);
         layout->addWidget(plot);
     }
-    viewport->setGeometry(0,0,ui->tabWidget->width()-80, nbPlots * plotHeight);
     QVBoxLayout *plotsPanelLayout = new QVBoxLayout;
     plotsPanel->setLayout(plotsPanelLayout);
     scrollArea->setWidget(viewport);
@@ -514,7 +514,10 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
     {
         DataPlot* dataPlot = new DataPlot(this, sensorsToPlot);
         layout->addWidget(dataPlot);
-        dataPlot->setGeometry(geometry);
+        dataPlot->setFixedHeight(geometry.height());
+        dataPlot->setMinimumWidth(geometry.width());
+        dataPlot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        //dataPlot->setGeometry(geometry);
         QTimer *timer = new QTimer();
         timer->setInterval(3000);
         connect(timer, SIGNAL(timeout()), dataPlot, SLOT(updatePlot()));
