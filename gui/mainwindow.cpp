@@ -537,13 +537,16 @@ void MainWindow::createConfigurationPanel()
     fileHelper->createLogFiles(sensorConfig);
     QList<Sensor*> sensors = sensorConfig->getSensors();
 
-    QWidget *configurationPanel = ui->tabWidget->widget(2);
+    //QWidget *configurationPanel = ui->tabWidget->widget(2);
+    QWidget *configurationPanel = ui->addressesContainer;
     QScrollArea *scrollArea = new QScrollArea;
     QWidget *viewport = new QWidget;
     QGridLayout *layout = new QGridLayout;
     viewport->setLayout(layout);
-
-    //QGroupBox *addressGroupBox = new QGroupBox("Addresses");
+    ui->pt100_module1_comboBox->addItem("Low res.");
+    ui->pt100_module1_comboBox->addItem("High res.");
+    ui->pt100_module2_comboBox->addItem("Low res.");
+    ui->pt100_module2_comboBox->addItem("High res.");
 
     createLabelLine(layout);
     for (int i = 1; i <= sensors.length(); i++)
@@ -554,7 +557,7 @@ void MainWindow::createConfigurationPanel()
 
     QVBoxLayout *configurationPanelLayout = new QVBoxLayout;
     configurationPanel->setLayout(configurationPanelLayout);
-    QWidget *scrollAreaContainer = createSpacedWidget(scrollArea,0,300);
+    QWidget *scrollAreaContainer = createSpacedWidget(scrollArea,0,250);
     configurationPanelLayout->addWidget(scrollAreaContainer);
     saveBtn = new QPushButton("Save config");
     saveBtn->setStyleSheet("background-color: gray;border-style: outset;border-width: 2px;border-radius: 10px;border-color: black;font: 12px;min-width: 10em;padding: 6px;");
