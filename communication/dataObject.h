@@ -4,7 +4,11 @@
 #include <QVector>
 #include <QPair>
 #include <QVariant>
-#include "util/byteArrayConverter.h"
+#ifdef DLL_BUILD
+#include "../util/definitions.h"
+#else
+#include "util/definitions.h"
+#endif
 
 typedef QPair<QVariant, DataType::Types> DataValue;
 
