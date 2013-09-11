@@ -19,7 +19,7 @@ void MessagePublisher::sendCommandMessage(QByteArray data)
     int bytesWritten = socket->write(ba);
     bool bytesFlushed = socket->flush();
     char str[128];
-    sprintf(str, "Wrote [%d] bytes on wire - flushed: %d\n", bytesWritten, bytesFlushed);
+    sprintf(str, "Wrote [%d] bytes on wire - flushed: %d", bytesWritten, bytesFlushed);
     //sprintf(str, "Sent value [%d] \n", val);
     qDebug() << str;
 }
