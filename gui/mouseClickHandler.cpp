@@ -12,7 +12,7 @@ MouseClickHandler::~MouseClickHandler() {}
 bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonRelease) {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+        //QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
         //qDebug("mouse released");
         parent->sendEngineCommand();
         return false;

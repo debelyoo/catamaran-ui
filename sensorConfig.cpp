@@ -117,10 +117,9 @@ bool SensorConfig::qstringToBool(QString str)
 
 void SensorConfig::updateDisplayGraphList(int nb)
 {
-    nbOfGraphs = nb;
     displayGraphs.clear();
     displayGraphs.insert(0, "NO");
-    for (int i = 0; i < nbOfGraphs; i++)
+    for (int i = 0; i < nb; i++)
     {
         displayGraphs.insert(i+1, "G"+QString::number(i));
     }
