@@ -119,6 +119,27 @@ QByteArray ByteArrayConverter::byteArrayForCmdParameterInt(int val)
 }
 
 /**
+ * Create the byte array for a value (cluster of points) of a CMD message parameter
+ * @brief ByteArrayConverter::byteArrayForCmdParameterClusterOfPoints
+ * @param pts The list of points
+ * @return A QByteArray with length and value
+ */
+QByteArray ByteArrayConverter::byteArrayForCmdParameterClusterOfPoints(QList<QPointF> pts)
+{
+    QByteArray ba;
+    QByteArray clusterLength = intToByteArray(pts.length(), 4);
+    ba.push_back(clusterLength);
+    foreach (QPointF p, pts) {
+        QByteArray length = intToByteArray(8, 4);
+        ba.push_back(length);
+        ba.push_back(p.x());
+        ba.push_back(length);
+        ba.push_back(p.y());
+    }
+    return ba;
+}
+
+/**
  * Create the byte array for the array of values to send to the cRIO (addresses to stream)
  * @brief ByteArrayConverter::byteArrayForCmdParameterStreamArray
  * @param sensors The sensors in the config

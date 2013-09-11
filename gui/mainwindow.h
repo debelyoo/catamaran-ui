@@ -3,6 +3,7 @@
 
 #include "communication/server.h"
 #include "util/fileHelper.h"
+#include "util/coordinateHelper.h"
 #include "dataPlot.h"
 #include "mouseClickHandler.h"
 #include <QMainWindow>
@@ -61,7 +62,8 @@ private:
     Server *s;
     SensorConfig* sensorConfig; // singleton
     FileHelper* fileHelper;
-    ByteArrayConverter *converter; // singleton
+    ByteArrayConverter* converter; // singleton
+    CoordinateHelper* coordinateHelper;
     bool sliderIsMoving;
     int correctEngineCommandValue(int val);
     void updateLeftRightSliders();
@@ -89,6 +91,7 @@ private:
     };
     QList<PointOnMap> wayPoints;
     void removeLastWaypoint();
+    void sendWaypointCommand(quint8 command, QList<QPointF> points);
 };
 
 #endif // MAINWINDOW_H

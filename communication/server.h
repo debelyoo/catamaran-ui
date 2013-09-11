@@ -13,7 +13,9 @@ namespace MessageUtil {
     typedef enum {
         Stop = 0,
         Get = 1,
-        Set = 2
+        Set = 2,
+        Add = 3,
+        Delete = 4
     } Commands;
 
     typedef enum {

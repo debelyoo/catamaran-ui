@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     sensorConfig = SensorConfig::instance();
     fileHelper = FileHelper::instance();
     converter = ByteArrayConverter::instance();
+    coordinateHelper = CoordinateHelper::instance();
 
     ui->setupUi(this);
 
@@ -326,7 +327,37 @@ void MainWindow::drawWayPointOnMap(QPoint newPoint)
         else
             pom.line = 0;
         wayPoints.push_back(pom);
+        QList<QPointF> ptList;
+        ptList.push_back(coordinateHelper->UIMaptoLV03(pointFloat));
+        // send command to cRIO
+        sendWaypointCommand(MessageUtil::Add, ptList);
     }
+}
+
+void MainWindow::sendWaypointCommand(quint8 command, QList<QPointF> points)
+{
+    // command (uint8) | length array (uint32) | length engine addr (uint32) |engine addr (uint8) | length value (uint32) | value (int8)
+    quint8 waypointAddr = 16;
+    QByteArray data;
+    data.push_back(command);
+    switch (command) {
+    case MessageUtil::Set:
+    case MessageUtil::Add:
+        data.push_back(converter->intToByteArray(2, 4)); // array len, 2 because addr + cluster of points
+        data.push_back(converter->byteArrayForCmdParameterInt(waypointAddr));
+        data.push_back(converter->byteArrayForCmdParameterClusterOfPoints(points));
+        break;
+    case MessageUtil::Delete:
+        data.push_back(converter->intToByteArray(1, 4)); // array len, 1 because addr only
+        data.push_back(converter->byteArrayForCmdParameterInt(waypointAddr));
+        break;
+    default:
+        break;
+    }
+    s->sendCommandMessage(data);
+    char str[128];
+    //sprintf(str, "sendWaypointCommand() [%d]", correctEngineCommandValue(val));
+    qDebug() << "sendWaypointCommand()";
 }
 
 void MainWindow::sendEngineCommand()
@@ -698,4 +729,7 @@ void MainWindow::removeLastWaypoint()
     if (pom.line != 0)
         delete pom.line;
     wayPoints.removeLast();
+    // send command to cRIO (with empty point list)
+    QList<QPointF> ptList;
+    sendWaypointCommand(MessageUtil::Delete, ptList);
 }

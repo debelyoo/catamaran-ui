@@ -255,11 +255,11 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
             // convert to CH1903 coordinates (east, north, h)
             QVector<double> swissCoordinates = coordinateHelper->WGS84toLV03(lat, lon, elevation);
             // get x,y position for map in UI
-            QVector<double> mapPosition = coordinateHelper->LV03toUIMap(swissCoordinates[0], swissCoordinates[1]);
-            if (mapPosition[0] != 0.0 && mapPosition[1] != 0.0)
+            QPointF mapPosition = coordinateHelper->LV03toUIMap(swissCoordinates[0], swissCoordinates[1]);
+            if (mapPosition.x() != 0.0 && mapPosition.y() != 0.0)
             {
                 // notify GUI only if coordinates are plausible
-                emit gpsPointReceived(mapPosition[0], mapPosition[1]);
+                emit gpsPointReceived(mapPosition.x(), mapPosition.y());
             }
             //QString log = QString::number(s->getAddress()) + "\t" + QString::number(dataObj->getTimestamp(),'f',6) + "\t" + QString::number(lat,'f',6) + "\t" + QString::number(lon,'f',6) + "\t" + QString::number(elevation,'f',6);
             QString log = createLogText(dataObj);

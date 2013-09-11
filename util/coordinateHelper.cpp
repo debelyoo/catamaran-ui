@@ -1,4 +1,4 @@
-#include "coordinateHelper.h";
+#include "coordinateHelper.h"
 
 CoordinateHelper* CoordinateHelper::m_Instance = 0;
 
@@ -97,26 +97,41 @@ double CoordinateHelper::SexToDecAngle(double dms) {
  * @brief LV03toUIMap
  * @param chx
  * @param chy
- * @return a vector with x and y coordinates
+ * @return a QPointF with x and y coordinates (double)
  */
-QVector<double> CoordinateHelper::LV03toUIMap(int chx, int chy)
+QPointF CoordinateHelper::LV03toUIMap(int chx, int chy)
 {
-    QVector<double> d(2);
-    int xMax = 564446;
-    int xMin = 497605;
-    int yMax = 155320;
-    int yMin = 116755;
-    int imgWidth = 11349;
-    int imgHeight = 6548;
+    //QVector<double> d(2);
+    QPointF p;
     double xMap, yMap = 0.0;
     if (chx >= xMin && chx <= xMax && chy >= yMin && chy <= yMax)
     {
         xMap = ((double)(chx - xMin) / (xMax - xMin)) * imgWidth;
         yMap = imgHeight - (((double)(chy - yMin) / (yMax - yMin)) * imgHeight);
     }
-    d[0] = xMap;
-    d[1] = yMap;
-    return d;
+    //d[0] = xMap;
+    //d[1] = yMap;
+    p.setX(xMap);
+    p.setY(yMap);
+    return p;
+}
+
+/**
+ * Convert UI map coordiantes (x, y) to CH coordinates
+ * @brief CoordinateHelper::UIMaptoLV03
+ * @param xMap
+ * @param yMap
+ * @return A QPoint with x and y coordinates
+ */
+QPointF CoordinateHelper::UIMaptoLV03(QPointF point)
+{
+    QPoint p;
+    double chx, chy = 0;
+    chx = (point.x() * ((double)(xMax - xMin) / imgWidth)) + xMin;
+    chy = ((imgHeight - point.y()) * ((double)(yMax - yMin) / imgHeight)) + yMin;
+    p.setX(chx);
+    p.setY(chy);
+    return p;
 }
 
 /// Private functions

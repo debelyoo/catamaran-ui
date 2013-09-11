@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QDataStream>
 #include <QVector>
+#include <QPoint>
 
 /**
  * @brief The ByteArrayConverter class - Singleton
@@ -29,6 +30,7 @@ class ByteArrayConverter
         QByteArray getLastBytesOfArray(QByteArray ba, int n);
         QByteArray invertBytes(QByteArray ba);
         QByteArray byteArrayForCmdParameterInt(int val); // return a byte array with length and value
+        QByteArray byteArrayForCmdParameterClusterOfPoints(QList<QPointF> pts);
         QByteArray byteArrayForCmdParameterStreamArray(QList<Sensor*> sensors); // return a byte array with length and values (bool, address)
 
     public slots:
