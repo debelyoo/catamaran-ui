@@ -31,6 +31,7 @@ public slots:
     void updateRightSpinBox();
     void updateSpeedSpinBox();
     void updateDirectionSpinBox();
+    void on_navModeChanged(int);
     void on_sliderPressed();
     void on_sliderReleased();
     void on_speedValueChanged(int);
@@ -39,6 +40,8 @@ public slots:
     void zoomOut();
     void setupMatrix();
     void drawPointOnMap(double, double);
+    void on_removeWpClicked();
+    void on_clearWpClicked();
     /// config update
     void on_addressValueChanged(QString, int);
     void on_nameValueChanged(QString, int);
@@ -49,8 +52,6 @@ public slots:
     void on_filenameValueChanged(QString, int);
     void on_saveConfigClicked();
     void on_graphNbValueChanged(int);
-    void on_removeWpClicked();
-    void on_clearWpClicked();
 
 protected:
     void keyPressEvent(QKeyEvent* event);

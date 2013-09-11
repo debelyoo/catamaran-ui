@@ -20,8 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
-
-
     // load map in graphics view (for GPS points)
     QGraphicsScene *scene = new QGraphicsScene();
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap(":/images/Map.jpg"));
@@ -29,13 +27,12 @@ MainWindow::MainWindow(QWidget *parent) :
     scene->addItem(item);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->viewport()->setObjectName("mapViewport");
-
-    //ui->tabWidget->widget(0)->installEventFilter(new KeyPressHandler());
+    ui->navModeComboBox->addItem("Manual");
+    ui->navModeComboBox->addItem("Automatic");
+    ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
 
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
-
-    //wayPoints = new QList<int>();
 
     // start server
     s = new Server(this);
@@ -43,10 +40,8 @@ MainWindow::MainWindow(QWidget *parent) :
     s->listen();
     sliderIsMoving = false;
 
-
-
-    QObject::connect(s, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
-
+    connect(s, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
+    connect(ui->navModeComboBox, SIGNAL(activated(int)), this, SLOT(on_navModeChanged(int)));
     // engines' sliders & spinboxes
     QObject::connect(ui->leftSlider, SIGNAL(valueChanged(int)), ui->leftSpinBox, SLOT(setValue(int)));
     QObject::connect(ui->rightSlider, SIGNAL(valueChanged(int)), ui->rightSpinBox, SLOT(setValue(int)));
@@ -125,12 +120,37 @@ void MainWindow::on_sliderReleased()
     sendEngineCommand();
 }
 
+void MainWindow::on_navModeChanged(int modeId)
+{
+    if (modeId == 0)
+    {
+        // manual mode
+        ui->joystickCheckbox->setEnabled(true);
+        ui->speedSlider->setEnabled(true);
+        ui->speedSpinBox->setEnabled(true);
+        ui->directionSlider->setEnabled(true);
+        ui->directionSpinBox->setEnabled(true);
+        ui->waypointGroupBox->hide();
+        ui->stopBtn->show();
+    }
+    else
+    {
+        // automatic mode
+        ui->joystickCheckbox->setEnabled(false);
+        ui->speedSlider->setEnabled(false);
+        ui->speedSpinBox->setEnabled(false);
+        ui->directionSlider->setEnabled(false);
+        ui->directionSpinBox->setEnabled(false);
+        ui->stopBtn->hide();
+        ui->waypointGroupBox->show();
+    }
+}
+
 void MainWindow::on_speedValueChanged(int val)
 {
     ui->speedSlider->setValue(val);
     ui->speedSpinBox->setValue(val);
     updateLeftRightSliders();
-    //sendEngineCommand();
 }
 
 void MainWindow::on_directionValueChanged(int val)
@@ -138,7 +158,6 @@ void MainWindow::on_directionValueChanged(int val)
     ui->directionSlider->setValue(val);
     ui->directionSpinBox->setValue(val);
     updateLeftRightSliders();
-    //sendEngineCommand();
 }
 
 void MainWindow::on_saveConfigClicked()
@@ -290,21 +309,24 @@ void MainWindow::drawPointOnMap(double x, double y)
  */
 void MainWindow::drawWayPointOnMap(QPoint newPoint)
 {
-    QPoint previousPoint;
-    if (!wayPoints.empty())
-        previousPoint = ((PointOnMap)wayPoints.last()).p;
-    QPointF pointFloat = ui->graphicsView->mapToScene(newPoint);
-    QPoint pointOnMap = pointFloat.toPoint();
-    PointOnMap pom;
-    pom.p = pointOnMap;
-    double rad = 1;
-    QColor color = QColor(124, 252, 0); // green
-    pom.circle = ui->graphicsView->scene()->addEllipse(pointOnMap.x()-rad, pointOnMap.y()-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
-    if (!previousPoint.isNull())
-        pom.line = ui->graphicsView->scene()->addLine(previousPoint.x(), previousPoint.y(), pointOnMap.x(), pointOnMap.y(), QPen(color));
-    else
-        pom.line = 0;
-    wayPoints.push_back(pom);
+    if (ui->navModeComboBox->currentIndex() == 1)
+    {
+        QPoint previousPoint;
+        if (!wayPoints.empty())
+            previousPoint = ((PointOnMap)wayPoints.last()).p;
+        QPointF pointFloat = ui->graphicsView->mapToScene(newPoint);
+        QPoint pointOnMap = pointFloat.toPoint();
+        PointOnMap pom;
+        pom.p = pointOnMap;
+        double rad = 1;
+        QColor color = QColor(124, 252, 0); // green
+        pom.circle = ui->graphicsView->scene()->addEllipse(pointOnMap.x()-rad, pointOnMap.y()-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
+        if (!previousPoint.isNull())
+            pom.line = ui->graphicsView->scene()->addLine(previousPoint.x(), previousPoint.y(), pointOnMap.x(), pointOnMap.y(), QPen(color));
+        else
+            pom.line = 0;
+        wayPoints.push_back(pom);
+    }
 }
 
 void MainWindow::sendEngineCommand()

@@ -33,11 +33,11 @@
        <attribute name="title">
         <string>Navigation</string>
        </attribute>
-       <widget class="QCheckBox" name="checkBox">
+       <widget class="QCheckBox" name="joystickCheckbox">
         <property name="geometry">
          <rect>
-          <x>630</x>
-          <y>30</y>
+          <x>730</x>
+          <y>20</y>
           <width>91</width>
           <height>17</height>
          </rect>
@@ -449,9 +449,9 @@
        <widget class="QRadioButton" name="lightBtn">
         <property name="geometry">
          <rect>
-          <x>850</x>
-          <y>30</y>
-          <width>82</width>
+          <x>880</x>
+          <y>20</y>
+          <width>51</width>
           <height>17</height>
          </rect>
         </property>
@@ -462,8 +462,8 @@
        <widget class="QPushButton" name="honkBtn">
         <property name="geometry">
          <rect>
-          <x>920</x>
-          <y>30</y>
+          <x>950</x>
+          <y>20</y>
           <width>75</width>
           <height>23</height>
          </rect>
@@ -544,7 +544,7 @@
          <enum>QSlider::TicksAbove</enum>
         </property>
        </widget>
-       <widget class="QGroupBox" name="groupBox_4">
+       <widget class="QGroupBox" name="waypointGroupBox">
         <property name="geometry">
          <rect>
           <x>620</x>
@@ -615,6 +615,16 @@
           <string>Start</string>
          </property>
         </widget>
+       </widget>
+       <widget class="QComboBox" name="navModeComboBox">
+        <property name="geometry">
+         <rect>
+          <x>620</x>
+          <y>20</y>
+          <width>91</width>
+          <height>22</height>
+         </rect>
+        </property>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_3">
