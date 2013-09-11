@@ -4,6 +4,11 @@
 #include <QLibrary>
 #include <QDir>
 
+/**
+ * @brief MessageConsumer::MessageConsumer
+ * @param parent
+ * @param q
+ */
 MessageConsumer::MessageConsumer(QObject *parent, QQueue<char> *q) :
 QObject(parent)
 {
@@ -16,11 +21,18 @@ QObject(parent)
     waitingData = 0;
 }
 
+/**
+ * @brief MessageConsumer::on_dataReceived
+ */
 void MessageConsumer::on_dataReceived()
 {
     checkQueue(true);
 }
 
+/**
+ * @brief MessageConsumer::checkQueue
+ * @param checkIfConsuming
+ */
 void MessageConsumer::checkQueue(bool checkIfConsuming)
 {
     /*QString str = "[MessageConsumer] checkQueue() - check: "+ QString::number(checkIfConsuming) +", consuming: "+ QString::number(consuming) +", waitingData: "+ QString::number(waitingData) +" \n";
@@ -43,6 +55,9 @@ void MessageConsumer::checkQueue(bool checkIfConsuming)
     }
 }
 
+/**
+ * @brief MessageConsumer::readQueue
+ */
 void MessageConsumer::readQueue()
 {
     if (!queue->isEmpty()) {
@@ -76,6 +91,11 @@ void MessageConsumer::readQueue()
     }
 }
 
+/**
+ * @brief MessageConsumer::readBytes
+ * @param nbBytesToRead
+ * @return
+ */
 QByteArray MessageConsumer::readBytes(int nbBytesToRead)
 {
     QByteArray ba;
@@ -351,6 +371,10 @@ void MessageConsumer::parseCmdMessage()
     checkQueue(false); // force checking queue to parse data that would have arrived meanwhile
 }
 
+/**
+ * @brief MessageConsumer::handleGetCommand
+ * @param address
+ */
 void MessageConsumer::handleGetCommand(int address)
 {
     switch (address) {
@@ -377,6 +401,11 @@ void MessageConsumer::handleGetCommand(int address)
     }
 }
 
+/**
+ * @brief MessageConsumer::createLogText
+ * @param dataObj
+ * @return
+ */
 QString MessageConsumer::createLogText(DataObject dataObj)
 {
     QString log;
@@ -415,8 +444,8 @@ void MessageConsumer::writeInLogFile(Sensor* s, QString logTxt)
  * Apply a transformation to the value. Transformation is defined in external library (DLL)
  * @brief MessageConsumer::applyTransformation
  * @param dllName The name of the external library
- * @param value The value to transform
- * @return The transformed value
+ * @param iobj The object to transform
+ * @return The transformed object
  */
 const DataObject MessageConsumer::applyTransformation(QString dllName, DataObject iobj) const
 {

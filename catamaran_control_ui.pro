@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     communication/dataObject.cpp \
     communication/server.cpp\
     communication/messageConsumer.cpp\
-    communication/messagePublisher.cpp
+    communication/messagePublisher.cpp \
+    transformation/transformationbaseclass.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -53,7 +54,8 @@ HEADERS  += sensorConfig.h\
     gui/qcustomplot.h \
     gui/dataPlot.h \
     gui/mouseClickHandler.h \
-    communication/idatamessagereceiver.h
+    communication/idatamessagereceiver.h \
+    transformation/transformationbaseclass.h
 
 FORMS    += mainwindow.ui
 
