@@ -22,15 +22,13 @@ class SensorConfig
         QMap<int, SensorType*> getSensorTypes();
         QMap<int, QString> getDisplayValues();
         bool qstringToBool(QString str);
+        void updateDisplayGraphList(int nb);
 
     private:
         SensorConfig() {
             sensorTypes.insert(0, new SensorType(0, "Unknown", "")); // other tyes are loaded at launch from sensortypes.txt
 
-            displayGraphs.insert(0, "NO");
-            displayGraphs.insert(1, "G0");
-            displayGraphs.insert(2, "G1");
-            displayGraphs.insert(3, "G2");
+            updateDisplayGraphList(nbOfGraphs);
         }
         SensorConfig(const SensorConfig &);
         SensorConfig& operator=(const SensorConfig &);
@@ -39,6 +37,7 @@ class SensorConfig
 
         QHash<int, Sensor*> sensors;
         QMap<int, SensorType*> sensorTypes;
+        int nbOfGraphs = 3;
         QMap<int, QString> displayGraphs;
 
         static bool addressLessThan(Sensor* s1, Sensor* s2);

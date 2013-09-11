@@ -46,6 +46,7 @@ public slots:
     void on_streamValueChanged(bool, int);
     void on_filenameValueChanged(QString, int);
     void on_saveConfigClicked();
+    void on_graphNbValueChanged(int);
 
 protected:
     void keyPressEvent(QKeyEvent* event);
@@ -64,12 +65,14 @@ private:
     void sendRightEngineCommand();
     int zoomStep;
     /// plots panel
-    void createPlotsPanel();
     void clearPlotsPanel();
+    void createPlotsPanel();
     QWidget* createPlot(int xPos, int yPos, int width, int height);
     QWidget* createPlotByDate(int plotIndex, QRect geometry);
     /// configuration panel
+    void clearAddressesConfigPanel();
     void createConfigurationPanel();
+    void createAddressesConfigPanel();
     void createLabelLine(QGridLayout* l);
     void createAddressFormRow(QGridLayout* l, int rowIndex, Sensor* s);
     QWidget* createSpacedWidget(QWidget *w, int spaceBefore, int spaceAfter);

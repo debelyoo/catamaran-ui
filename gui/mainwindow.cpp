@@ -215,6 +215,18 @@ void MainWindow::on_filenameValueChanged(QString fn, int rowIndex)
     changeSaveBtnColor("red");
 }
 
+/**
+ * SLOT called when "nb of graphs" value has changed. Update this value in config and redraw addresses config
+ * @brief MainWindow::on_graphNbValueChanged
+ * @param nb The new value for graph number
+ */
+void MainWindow::on_graphNbValueChanged(int nb)
+{
+    sensorConfig->updateDisplayGraphList(nb);
+    clearAddressesConfigPanel();
+    createAddressesConfigPanel();
+}
+
 void MainWindow::zoomIn()
 {
     ui->zoomSlider->setValue(ui->zoomSlider->value() + zoomStep);
@@ -420,6 +432,10 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     connect(filenameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_filenameValueChanged(QString, int)));
 }
 
+/**
+ * Removes all widgets in the plots panel
+ * @brief MainWindow::clearPlotsPanel
+ */
 void MainWindow::clearPlotsPanel()
 {
     QWidget *plotsPanel = ui->tabWidget->widget(1);
@@ -446,7 +462,7 @@ void MainWindow::createPlotsPanel()
     QWidget *viewport = new QWidget;
     QVBoxLayout *layout = new QVBoxLayout;
     viewport->setLayout(layout);
-    int nbPlots = 3;
+    int nbPlots = sensorConfig->getDisplayValues().size();
     // Need to use fixed sizes, because container is expandable, cannot use ui->tabWidget->width()
     int plotHeight = 200;
     int plotWidth = 900;
@@ -527,7 +543,42 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
     return viewport;
 }
 
+/**
+ * Removes all widgets in the addresses panel
+ * @brief MainWindow::clearAddressesConfigPanel
+ */
+void MainWindow::clearAddressesConfigPanel()
+{
+    QWidget *addressesPanel = ui->addressesContainer;
+    if ( addressesPanel->layout() != NULL )
+    {
+        QLayoutItem* item;
+        while ( ( item = addressesPanel->layout()->takeAt( 0 ) ) != NULL )
+        {
+            delete item->widget();
+            delete item;
+        }
+        delete addressesPanel->layout();
+    }
+}
+
+/**
+ * Create the configuration panel
+ * @brief MainWindow::createConfigurationPanel
+ */
 void MainWindow::createConfigurationPanel()
+{
+
+    ui->pt100_module1_comboBox->addItem("Low res.");
+    ui->pt100_module1_comboBox->addItem("High res.");
+    ui->pt100_module2_comboBox->addItem("Low res.");
+    ui->pt100_module2_comboBox->addItem("High res.");
+    connect(ui->graphNbSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_graphNbValueChanged(int)));
+
+    createAddressesConfigPanel();
+}
+
+void MainWindow::createAddressesConfigPanel()
 {
     // load sensorTypes file
     fileHelper->loadSensorTypesFile(sensorConfig);
@@ -543,10 +594,6 @@ void MainWindow::createConfigurationPanel()
     QWidget *viewport = new QWidget;
     QGridLayout *layout = new QGridLayout;
     viewport->setLayout(layout);
-    ui->pt100_module1_comboBox->addItem("Low res.");
-    ui->pt100_module1_comboBox->addItem("High res.");
-    ui->pt100_module2_comboBox->addItem("Low res.");
-    ui->pt100_module2_comboBox->addItem("High res.");
 
     createLabelLine(layout);
     for (int i = 1; i <= sensors.length(); i++)
