@@ -27,7 +27,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -544,6 +544,78 @@
          <enum>QSlider::TicksAbove</enum>
         </property>
        </widget>
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="geometry">
+         <rect>
+          <x>620</x>
+          <y>360</y>
+          <width>411</width>
+          <height>80</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Waypoints</string>
+        </property>
+        <widget class="QLabel" name="label_20">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>20</y>
+           <width>311</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Right-click on map to set a way point (WP)</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="clearWpBtn">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>50</y>
+           <width>101</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Clear all WPs</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="removeWpBtn">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>50</y>
+           <width>101</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Remove last WP</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="startNavigationWpBtn">
+         <property name="geometry">
+          <rect>
+           <x>320</x>
+           <y>50</y>
+           <width>75</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Start</string>
+         </property>
+        </widget>
+       </widget>
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
@@ -624,14 +696,6 @@
                <string>200</string>
               </property>
              </widget>
-             <zorder>pt100_module1_comboBox</zorder>
-             <zorder>label_18</zorder>
-             <zorder>label_19</zorder>
-             <zorder>lineEdit</zorder>
-             <zorder>widget</zorder>
-             <zorder>widget</zorder>
-             <zorder>groupBox_2</zorder>
-             <zorder>groupBox_2</zorder>
             </widget>
            </item>
            <item>
@@ -688,12 +752,6 @@
                <string>200</string>
               </property>
              </widget>
-             <zorder>pt100_module2_comboBox</zorder>
-             <zorder>label_22</zorder>
-             <zorder>label_23</zorder>
-             <zorder>lineEdit_3</zorder>
-             <zorder>groupBox</zorder>
-             <zorder>groupBox</zorder>
             </widget>
            </item>
            <item>
@@ -733,13 +791,9 @@
                <number>3</number>
               </property>
              </widget>
-             <zorder>label_17</zorder>
-             <zorder>graphNbSpinBox</zorder>
-             <zorder>label_18</zorder>
             </widget>
            </item>
           </layout>
-          <zorder>groupBox</zorder>
           <zorder>groupBox_3</zorder>
           <zorder>groupBox_2</zorder>
           <zorder>groupBox</zorder>

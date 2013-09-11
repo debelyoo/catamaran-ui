@@ -9,6 +9,7 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include <QTimer>
+#include <QGraphicsEllipseItem>
 
 namespace Ui {
     class MainWindow;
@@ -22,6 +23,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void sendEngineCommand();
+    void drawWayPointOnMap(QPoint);
     
 public slots:
     void addStatusText(QString);
@@ -47,10 +49,11 @@ public slots:
     void on_filenameValueChanged(QString, int);
     void on_saveConfigClicked();
     void on_graphNbValueChanged(int);
+    void on_removeWpClicked();
+    void on_clearWpClicked();
 
 protected:
     void keyPressEvent(QKeyEvent* event);
-    //bool event(QEvent *event);
 
 private:
     Ui::MainWindow *ui;
@@ -78,7 +81,13 @@ private:
     QWidget* createSpacedWidget(QWidget *w, int spaceBefore, int spaceAfter);
     QPushButton* saveBtn;
     void changeSaveBtnColor(QString cssColor);
-    //QTimer *myTimer; // creates SEGFAULT
+    struct PointOnMap {
+        QPoint p;
+        QGraphicsEllipseItem* circle;
+        QGraphicsLineItem* line;
+    };
+    QList<PointOnMap> wayPoints;
+    void removeLastWaypoint();
 };
 
 #endif // MAINWINDOW_H

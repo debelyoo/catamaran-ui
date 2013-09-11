@@ -21,24 +21,29 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
 
+
     // load map in graphics view (for GPS points)
     QGraphicsScene *scene = new QGraphicsScene();
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap(":/images/Map.jpg"));
     item->setPos(0, 0);
     scene->addItem(item);
     ui->graphicsView->setScene(scene);
+    ui->graphicsView->viewport()->setObjectName("mapViewport");
 
     //ui->tabWidget->widget(0)->installEventFilter(new KeyPressHandler());
 
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
 
+    //wayPoints = new QList<int>();
 
     // start server
     s = new Server(this);
     QObject::connect(s, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
     s->listen();
     sliderIsMoving = false;
+
+
 
     QObject::connect(s, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
 
@@ -65,6 +70,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->zoomInBtn, SIGNAL(clicked()), this, SLOT(zoomIn()));
     connect(ui->zoomOutBtn, SIGNAL(clicked()), this, SLOT(zoomOut()));
     connect(ui->zoomSlider, SIGNAL(valueChanged(int)), this, SLOT(setupMatrix()));
+    ui->graphicsView->viewport()->installEventFilter(new MouseClickHandler(this));
+    connect(ui->removeWpBtn, SIGNAL(clicked()), this, SLOT(on_removeWpClicked()));
+    connect(ui->clearWpBtn, SIGNAL(clicked()), this, SLOT(on_clearWpClicked()));
 
 }
 
@@ -247,6 +255,19 @@ void MainWindow::setupMatrix()
     ui->graphicsView->setMatrix(matrix);
 }
 
+void MainWindow::on_removeWpClicked()
+{
+    removeLastWaypoint();
+}
+
+void MainWindow::on_clearWpClicked()
+{
+    while ( !wayPoints.isEmpty() )
+    {
+        removeLastWaypoint();
+    }
+}
+
 /**
  * Draw a GPS point on map, center map on this point
  * @brief MainWindow::drawPointOnMap
@@ -260,6 +281,30 @@ void MainWindow::drawPointOnMap(double x, double y)
     ui->graphicsView->scene()->addEllipse(x-rad, y-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
     // center view on new point
     ui->graphicsView->centerOn(x, y);
+}
+
+/**
+ * Draw a way point on map
+ * @brief MainWindow::drawWayPointOnMap
+ * @param newPoint The new way point to dram on map
+ */
+void MainWindow::drawWayPointOnMap(QPoint newPoint)
+{
+    QPoint previousPoint;
+    if (!wayPoints.empty())
+        previousPoint = ((PointOnMap)wayPoints.last()).p;
+    QPointF pointFloat = ui->graphicsView->mapToScene(newPoint);
+    QPoint pointOnMap = pointFloat.toPoint();
+    PointOnMap pom;
+    pom.p = pointOnMap;
+    double rad = 1;
+    QColor color = QColor(124, 252, 0); // green
+    pom.circle = ui->graphicsView->scene()->addEllipse(pointOnMap.x()-rad, pointOnMap.y()-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
+    if (!previousPoint.isNull())
+        pom.line = ui->graphicsView->scene()->addLine(previousPoint.x(), previousPoint.y(), pointOnMap.x(), pointOnMap.y(), QPen(color));
+    else
+        pom.line = 0;
+    wayPoints.push_back(pom);
 }
 
 void MainWindow::sendEngineCommand()
@@ -622,4 +667,13 @@ void MainWindow::changeSaveBtnColor(QString cssColor)
 {
     QString style = "background-color: gray;border-style: outset;border-width: 2px;border-radius: 10px;font: 12px;min-width: 10em;padding: 6px;";
     saveBtn->setStyleSheet(style + "border-color: "+cssColor+";");
+}
+
+void MainWindow::removeLastWaypoint()
+{
+    PointOnMap pom = (PointOnMap)wayPoints.last();
+    delete pom.circle;
+    if (pom.line != 0)
+        delete pom.line;
+    wayPoints.removeLast();
 }
