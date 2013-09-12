@@ -37,6 +37,7 @@ public slots:
     void on_sliderReleased();
     void on_speedValueChanged(int);
     void on_directionValueChanged(int);
+    void setSliderIsMoving(bool);
     void zoomIn();
     void zoomOut();
     void setupMatrix();
@@ -65,6 +66,7 @@ private:
     ByteArrayConverter* converter; // singleton
     CoordinateHelper* coordinateHelper;
     bool sliderIsMoving;
+    int previousSpeedValue, previousDirectionValue;
     int correctEngineCommandValue(int val);
     void updateLeftRightSliders();
     void sendLeftEngineCommand();

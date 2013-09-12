@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(s, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
     s->listen();
     sliderIsMoving = false;
+    previousSpeedValue, previousDirectionValue = 0;
 
     connect(s, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
     connect(ui->navModeComboBox, SIGNAL(activated(int)), this, SLOT(on_navModeChanged(int)));
@@ -80,7 +81,22 @@ MainWindow::~MainWindow()
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    qDebug() << event->text();
+    switch (event->key()) {
+    case 43:
+        // '+' key
+        if (ui->tabWidget->currentIndex() == 0)
+            ui->speedSlider->setValue(ui->speedSlider->value() + 1);
+        break;
+    case 45:
+        // '-' key
+        if (ui->tabWidget->currentIndex() == 0)
+            ui->speedSlider->setValue(ui->speedSlider->value() - 1);
+        break;
+    default:
+        break;
+    }
+    //qDebug() << QString::number(event->key());
+    //qDebug() << event->text();
 }
 
 void MainWindow::addStatusText(QString msg)
@@ -153,6 +169,11 @@ void MainWindow::on_speedValueChanged(int val)
     ui->speedSlider->setValue(val);
     ui->speedSpinBox->setValue(val);
     updateLeftRightSliders();
+    if (previousSpeedValue != val)
+    {
+        sendEngineCommand();
+        previousSpeedValue = val;
+    }
 }
 
 void MainWindow::on_directionValueChanged(int val)
@@ -160,6 +181,11 @@ void MainWindow::on_directionValueChanged(int val)
     ui->directionSlider->setValue(val);
     ui->directionSpinBox->setValue(val);
     updateLeftRightSliders();
+    if (previousDirectionValue != val)
+    {
+        sendEngineCommand();
+        previousDirectionValue = val;
+    }
 }
 
 void MainWindow::on_saveConfigClicked()
@@ -287,6 +313,11 @@ void MainWindow::on_clearWpClicked()
     {
         removeLastWaypoint();
     }
+}
+
+void MainWindow::setSliderIsMoving(bool b)
+{
+    sliderIsMoving = b;
 }
 
 /**

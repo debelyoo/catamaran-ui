@@ -825,6 +825,9 @@
     </item>
     <item>
      <widget class="QTextEdit" name="statusText">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
         <horstretch>0</horstretch>

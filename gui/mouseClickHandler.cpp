@@ -12,6 +12,20 @@ MouseClickHandler::~MouseClickHandler() {}
 bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
 {
     switch (event->type()) {
+    case QEvent::MouseButtonPress:
+    {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+        if(obj->objectName() == "directionSpinBox" || obj->objectName() == "speedSpinBox")
+        {
+            if ( mouseEvent->button() == Qt::LeftButton)
+            {
+                // left click on cat control (speed or direction)
+                parent->setSliderIsMoving(true);
+            }
+        }
+        return false;
+        break;
+    }
     case QEvent::MouseButtonRelease:
     {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
@@ -20,6 +34,7 @@ bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
             if ( mouseEvent->button() == Qt::LeftButton)
             {
                 // left click on cat control (speed or direction)
+                parent->setSliderIsMoving(false);
                 parent->sendEngineCommand();
             }
         }
