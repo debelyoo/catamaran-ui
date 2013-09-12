@@ -333,7 +333,7 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
 }
 
 /**
- * Parse a "CMD" message
+ * Parse a "CMD" message, detects command type and call the corresponding action
  * @brief MessageConsumer::parseCmdMessage
  */
 void MessageConsumer::parseCmdMessage()
@@ -372,8 +372,9 @@ void MessageConsumer::parseCmdMessage()
 }
 
 /**
+ * Handle a received GET command
  * @brief MessageConsumer::handleGetCommand
- * @param address
+ * @param address The address specified in the GET command
  */
 void MessageConsumer::handleGetCommand(int address)
 {
@@ -402,9 +403,10 @@ void MessageConsumer::handleGetCommand(int address)
 }
 
 /**
+ * Create a text line to go in logfile
  * @brief MessageConsumer::createLogText
- * @param dataObj
- * @return
+ * @param dataObj The log details
+ * @return The log as text line (String)
  */
 QString MessageConsumer::createLogText(DataObject dataObj)
 {

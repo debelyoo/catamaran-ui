@@ -17,17 +17,6 @@ DatabaseManager* DatabaseManager::instance()
     return m_Instance;
 }
 
-/*QString DatabaseManager::getTableName(Datastore::Tables t)
-{
-    return tables[t];
-}*/
-
-/*bool DatabaseManager::openDB()
-{
-    // open database
-    return db.open();
-}*/
-
 /**
  * Create a table in embedded Sqlite DB (id, sensor_address, timestamp (double), value (double))
  * @brief DatabaseManager::createLogTableForDoubleValue

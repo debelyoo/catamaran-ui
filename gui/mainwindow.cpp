@@ -334,6 +334,12 @@ void MainWindow::drawWayPointOnMap(QPoint newPoint)
     }
 }
 
+/**
+ * Send a waypoint command (Set/Add/Delete) to cRIO
+ * @brief MainWindow::sendWaypointCommand
+ * @param command The command id (Set/Add/Delete)
+ * @param points A list of points to send (empty with Delete command)
+ */
 void MainWindow::sendWaypointCommand(quint8 command, QList<QPointF> points)
 {
     // command (uint8) | length array (uint32) | length engine addr (uint32) |engine addr (uint8) | length value (uint32) | value (int8)
