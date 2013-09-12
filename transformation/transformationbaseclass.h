@@ -19,12 +19,13 @@ public:
         QString description;
     } TransformationDefinition;
 
-    TransformationBaseClass(){}
+    TransformationBaseClass();
     virtual const QVector<ParameterDescription> getParametersDefinition() const = 0;
     virtual const TransformationDefinition getTransformationDefinition() const = 0;
     virtual const DataObject applyTransform(DataObject val, IDataMessageReceiver* callback) = 0;
 
     void setParameters(const QVector<QVariant> params);
+    QVector<QVariant> getParameters() const;
 protected:
     QVector<QVariant> parameters;
 };
