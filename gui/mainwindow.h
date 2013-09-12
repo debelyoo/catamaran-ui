@@ -70,6 +70,7 @@ private:
     void sendLeftEngineCommand();
     void sendRightEngineCommand();
     int zoomStep;
+    bool viewportIsMoving;
     /// plots panel
     void clearPlotsPanel();
     void createPlotsPanel();

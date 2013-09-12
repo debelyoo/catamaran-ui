@@ -20,6 +20,7 @@ class MouseClickHandler : public QObject
 
     private:
         MainWindow *parent;
+        QPoint previousPos;
 };
 
 

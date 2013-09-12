@@ -14,22 +14,27 @@ bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
     switch (event->type()) {
     case QEvent::MouseButtonRelease:
     {
-
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-        if((obj->objectName() == "directionSpinBox" || obj->objectName() == "speedSpinBox") && mouseEvent->button() == Qt::LeftButton)
+        if(obj->objectName() == "directionSpinBox" || obj->objectName() == "speedSpinBox")
         {
-            // left click on cat control (speed or direction)
-            parent->sendEngineCommand();
+            if ( mouseEvent->button() == Qt::LeftButton)
+            {
+                // left click on cat control (speed or direction)
+                parent->sendEngineCommand();
+            }
         }
-        else if (obj->objectName() == "mapViewport" && mouseEvent->button() == Qt::RightButton)
+        else if (obj->objectName() == "mapViewport")
         {
-            // right click on map
-            // draw way point on map
-            parent->drawWayPointOnMap(mouseEvent->pos());
+            if (mouseEvent->button() == Qt::RightButton)
+            {
+                // right click on map
+                // draw way point on map
+                parent->drawWayPointOnMap(mouseEvent->pos());
+            }
         }
         else
         {
-            // no action
+            // no action on unspecified object
         }
         return false;
         break;

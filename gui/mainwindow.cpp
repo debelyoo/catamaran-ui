@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     scene->addItem(item);
     ui->graphicsView->setScene(scene);
     ui->graphicsView->viewport()->setObjectName("mapViewport");
+    ui->graphicsView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->navModeComboBox->addItem("Manual");
     ui->navModeComboBox->addItem("Automatic");
     ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
