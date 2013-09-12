@@ -19,7 +19,6 @@ class DataObject
         int getAddress() const;
         QVector<DataValue> getValues() const;
         qint64 getTimestamp() const;
-
     private:
         int address;
         QVector<DataValue> values;

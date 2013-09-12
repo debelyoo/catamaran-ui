@@ -24,7 +24,6 @@ public:
     virtual const TransformationDefinition getTransformationDefinition() const = 0;
     virtual const DataObject applyTransform(DataObject val, IDataMessageReceiver* callback) = 0;
 
-
     void setParameters(const QVector<QVariant> params);
 protected:
     QVector<QVariant> parameters;
