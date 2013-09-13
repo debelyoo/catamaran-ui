@@ -44,6 +44,7 @@ public slots:
     void drawPointOnMap(double, double);
     void on_removeWpClicked();
     void on_clearWpClicked();
+    void on_graphWheelEvent(QWheelEvent*);
     /// config update
     void on_addressValueChanged(QString, int);
     void on_nameValueChanged(QString, int);

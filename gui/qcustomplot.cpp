@@ -10351,11 +10351,12 @@ void QCustomPlot::mouseReleaseEvent(QMouseEvent *event)
 */
 void QCustomPlot::wheelEvent(QWheelEvent *event)
 {
-  emit mouseWheel(event);
+    emit mouseWheel(event);
   
   // call event of affected layout element:
   if (QCPLayoutElement *el = layoutElementAt(event->pos()))
     el->wheelEvent(event);
+
   
   QWidget::wheelEvent(event);
 }

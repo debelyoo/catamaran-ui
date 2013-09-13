@@ -17,6 +17,9 @@ signals:
 public slots:
     void updatePlot();
 
+protected:
+    //void wheelEvent(QWheelEvent *event);
+
 private:
     DatabaseManager* dbManager;
     QList<Sensor*> sensorsToPlot;

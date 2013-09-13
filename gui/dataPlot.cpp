@@ -89,6 +89,12 @@ void DataPlot::updatePlot()
     this->replot();
 }
 
+/*void DataPlot::wheelEvent(QWheelEvent *event)
+{
+    qDebug() << "scroll";
+    event->ignore();
+}*/
+
 /// for test only
 QPair< QVector<double>, QVector<double> > DataPlot::getData(int gi)
 {

@@ -5,6 +5,7 @@
 #include <QGroupBox>
 #include <QLineEdit>
 #include <QComboBox>
+#include <QScrollBar>
 #include "inRowLineEdit.h"
 #include "inRowComboBox.h"
 #include "inRowCheckBox.h"
@@ -41,7 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(s, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
     s->listen();
     sliderIsMoving = false;
-    previousSpeedValue, previousDirectionValue = 0;
+    previousSpeedValue = 0;
+    previousDirectionValue = 0;
 
     connect(s, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
     connect(ui->navModeComboBox, SIGNAL(activated(int)), this, SLOT(on_navModeChanged(int)));
@@ -315,6 +317,18 @@ void MainWindow::on_clearWpClicked()
     }
 }
 
+/**
+ * Scroll the plots container when scroll is triggered over a plot
+ * @brief MainWindow::on_graphWheelEvent
+ * @param ev The wheel event triggered on plot
+ */
+void MainWindow::on_graphWheelEvent(QWheelEvent* ev)
+{
+    QList<QWidget*> list = ui->tabWidget->findChildren<QWidget*>("scrollAreaPlotsPanel");
+    QScrollArea* sa = (QScrollArea*)list.first();
+    sa->verticalScrollBar()->setValue(sa->verticalScrollBar()->value() - ev->delta());
+}
+
 void MainWindow::setSliderIsMoving(bool b)
 {
     sliderIsMoving = b;
@@ -393,7 +407,7 @@ void MainWindow::sendWaypointCommand(quint8 command, QList<QPointF> points)
         break;
     }
     s->sendCommandMessage(data);
-    char str[128];
+    //char str[128];
     //sprintf(str, "sendWaypointCommand() [%d]", correctEngineCommandValue(val));
     qDebug() << "sendWaypointCommand()";
 }
@@ -598,7 +612,9 @@ void MainWindow::createPlotsPanel()
     QWidget *viewport = new QWidget;
     QVBoxLayout *layout = new QVBoxLayout;
     viewport->setLayout(layout);
+    scrollArea->setObjectName("scrollAreaPlotsPanel");
     int nbPlots = sensorConfig->getDisplayValues().size();
+    ui->graphNbSpinBox->setValue(nbPlots);
     // Need to use fixed sizes, because container is expandable, cannot use ui->tabWidget->width()
     int plotHeight = 200;
     int plotWidth = 900;
@@ -669,7 +685,7 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
         dataPlot->setFixedHeight(geometry.height());
         dataPlot->setMinimumWidth(geometry.width());
         dataPlot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        //dataPlot->setGeometry(geometry);
+        connect(dataPlot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(on_graphWheelEvent(QWheelEvent*)));
         QTimer *timer = new QTimer();
         timer->setInterval(3000);
         connect(timer, SIGNAL(timeout()), dataPlot, SLOT(updatePlot()));
