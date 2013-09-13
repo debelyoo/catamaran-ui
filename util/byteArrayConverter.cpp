@@ -151,8 +151,8 @@ QByteArray ByteArrayConverter::byteArrayForCmdParameterStreamArray(QList<Sensor*
     foreach (Sensor* s, sensors) {
         if (s->getStream())
         {
-            ba.push_back(s->getStream());
-            ba.push_back(s->getAddress());
+            ba.push_back(byteArrayForCmdParameterInt(s->getStream()));
+            ba.push_back(byteArrayForCmdParameterInt(s->getAddress()));
         }
     }
     // add array length (uint32) before array
