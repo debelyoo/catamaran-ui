@@ -18,11 +18,16 @@ public:
         QString name;
         QString description;
     } TransformationDefinition;
+    typedef struct{
+        QString name;
+        QString description;
+    } SubSensor;
 
     TransformationBaseClass();
     virtual const QVector<ParameterDescription> getParametersDefinition() const = 0;
     virtual const TransformationDefinition getTransformationDefinition() const = 0;
     virtual const DataObject applyTransform(DataObject val, IDataMessageReceiver* callback) = 0;
+    virtual const QVector<SubSensor> getSubSensors() const = 0;
 
     void setParameters(const QVector<QVariant> params);
     QVector<QVariant> getParameters() const;

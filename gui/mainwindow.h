@@ -11,6 +11,9 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QGraphicsEllipseItem>
+#include "gui/model/sensorinputsmodel.h"
+#include "gui/model/registeredsensorsmodel.h"
+
 
 namespace Ui {
     class MainWindow;
@@ -56,6 +59,9 @@ public slots:
     void on_saveConfigClicked();
     void on_graphNbValueChanged(int);
 
+    void on_availableSensorsValueChanged();
+    void on_addSensorFlClicked();
+
 protected:
     void keyPressEvent(QKeyEvent* event);
 
@@ -96,6 +102,7 @@ private:
     QList<PointOnMap> wayPoints;
     void removeLastWaypoint();
     void sendWaypointCommand(quint8 command, QList<QPointF> points);
+    void applyStyle();
 };
 
 #endif // MAINWINDOW_H

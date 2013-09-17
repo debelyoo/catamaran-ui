@@ -2,5 +2,10 @@
     <qresource prefix="/images">
         <file>zoom.png</file>
         <file>Map.jpg</file>
+        <file>ressources/style/stylesheet-branch-closed.png</file>
+        <file>ressources/style/stylesheet-branch-end.png</file>
+        <file>ressources/style/stylesheet-branch-more.png</file>
+        <file>ressources/style/stylesheet-branch-open.png</file>
+        <file>ressources/style/stylesheet-vline.png</file>
     </qresource>
 </RCC>

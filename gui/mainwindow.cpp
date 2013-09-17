@@ -74,6 +74,30 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->removeWpBtn, SIGNAL(clicked()), this, SLOT(on_removeWpClicked()));
     connect(ui->clearWpBtn, SIGNAL(clicked()), this, SLOT(on_clearWpClicked()));
 
+    SensorInputsModel *sensorsInputModel = new SensorInputsModel(this);
+    RegisteredSensorsModel *registeredSensorsModel = new RegisteredSensorsModel(this);
+
+    ui->availableSensorsInput->setModel(sensorsInputModel);
+    ui->registeredSensors->setModel(registeredSensorsModel);
+    connect(sensorsInputModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_availableSensorsValueChanged()));
+
+    SensorInputItem * sensor = new SensorInputItem("second");
+    sensor->disable();
+    sensorsInputModel->addInput(new SensorInputItem("first"));
+    sensorsInputModel->addInput(sensor);
+    sensorsInputModel->addInput(new SensorInputItem("third"));
+    sensorsInputModel->addInput(new SensorInputItem("first"), (SensorInputItem *)sensorsInputModel->index(1,0, QModelIndex()).internalPointer());
+    sensorsInputModel->addInput(new SensorInputItem("second"), (SensorInputItem *)sensorsInputModel->index(1,0, QModelIndex()).internalPointer());
+
+    sensor = (SensorInputItem *)sensorsInputModel->index(1,0, sensorsInputModel->index(1,0, QModelIndex())).internalPointer();
+    registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
+    sensor = (SensorInputItem *)sensorsInputModel->index(0,0, sensorsInputModel->index(1,0, QModelIndex())).internalPointer();
+    registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
+
+    connect(ui->addSensorFromList, SIGNAL(clicked()), this, SLOT(on_addSensorFlClicked()));
+
+    applyStyle();
+
 }
 
 MainWindow::~MainWindow()
@@ -284,6 +308,19 @@ void MainWindow::on_graphNbValueChanged(int nb)
     createAddressesConfigPanel();
 }
 
+void MainWindow::on_availableSensorsValueChanged()
+{
+    ui->availableSensorsInput->expandAll();
+}
+
+void MainWindow::on_addSensorFlClicked()
+{
+    //QModelIndexList indexes = ui->availableSensorsInput->selectedIndexes();
+    //for(int i=0;i<indexes.count(); ++i){
+
+    //}
+}
+
 void MainWindow::zoomIn()
 {
     ui->zoomSlider->setValue(ui->zoomSlider->value() + zoomStep);
@@ -410,6 +447,31 @@ void MainWindow::sendWaypointCommand(quint8 command, QList<QPointF> points)
     //char str[128];
     //sprintf(str, "sendWaypointCommand() [%d]", correctEngineCommandValue(val));
     qDebug() << "sendWaypointCommand()";
+}
+
+void MainWindow::applyStyle()
+{
+    ui->availableSensorsInput->setStyleSheet(
+        "QTreeView::branch:has-siblings:!adjoins-item {" \
+        "   border-image: url(:/images/ressources/style/stylesheet-vline.png) 0;" \
+        "}" \
+        "QTreeView::branch:has-siblings:adjoins-item {" \
+        "    border-image: url(:/images/ressources/style/stylesheet-branch-more.png) 0;" \
+        "}" \
+        "QTreeView::branch:!has-children:!has-siblings:adjoins-item {" \
+        "    border-image: url(:/images/ressources/style/stylesheet-branch-end.png) 0;" \
+        "}" \
+        "QTreeView::branch:has-children:!has-siblings:closed," \
+        "QTreeView::branch:closed:has-children:has-siblings {" \
+        "        border-image: none;" \
+        "        image: url(:/images/ressources/style/stylesheet-branch-closed.png);" \
+        "}" \
+        "QTreeView::branch:open:has-children:!has-siblings," \
+        "QTreeView::branch:open:has-children:has-siblings  {" \
+        "        border-image: none;" \
+        "        image: url(:/images/ressources/style/stylesheet-branch-open.png);" \
+        "}"
+    );
 }
 
 void MainWindow::sendEngineCommand()

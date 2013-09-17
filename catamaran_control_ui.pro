@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network sql printsupport
+QT += core gui network sql printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -26,13 +26,17 @@ SOURCES += main.cpp\
     gui/qcustomplot.cpp \
     gui/dataPlot.cpp \
     gui/mouseClickHandler.cpp \
+    gui/model/sensorinputsmodel.cpp \
+    gui/model/sensorinputitem.cpp \
+    gui/model/registeredsensoritem.cpp \
     model/sensorType.cpp \
     model/sensor.cpp\
     communication/dataObject.cpp \
     communication/server.cpp\
     communication/messageConsumer.cpp\
     communication/messagePublisher.cpp \
-    transformation/transformationbaseclass.cpp
+    transformation/transformationbaseclass.cpp \
+    gui/model/registeredsensorsmodel.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -54,8 +58,14 @@ HEADERS  += sensorConfig.h\
     gui/qcustomplot.h \
     gui/dataPlot.h \
     gui/mouseClickHandler.h \
+    gui/model/sensorinputsmodel.h \
+    gui/model/sensorinputitem.h \
+    gui/model/registeredsensoritem.h \
     communication/idatamessagereceiver.h \
-    transformation/transformationbaseclass.h
+    transformation/transformationbaseclass.h \
+    gui/model/registeredsensorsmodel.h
+
+
 
 FORMS    += mainwindow.ui
 
