@@ -117,9 +117,9 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
         QSqlQuery query(db);
         QString sqlQuery = "SELECT * FROM "+ s->getType()->getDbTableName() +" WHERE sensor_address = "+ QString::number(s->getAddress());
         sqlQuery += " AND timestamp > "+ QString::number(fromTs);
-        sqlQuery += " ORDER BY timestamp";
+        sqlQuery += " ORDER BY timestamp";// LIMIT 100";
         sqlQuery += ";";
-        //qDebug() << "SQL query: " << sqlQuery;
+        qDebug() << "SQL query: " << sqlQuery;
         if (query.exec(sqlQuery)) {
             while( query.next() )
             {

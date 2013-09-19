@@ -75,6 +75,7 @@ void DataPlot::updatePlot()
         // get data for sensor
         QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[i], fromTs);
         //QPair< QVector<double>, QVector<double> >* data = getData(i);
+        qDebug() << data.first.count();
         if (data.first.size() > 0)
         {
             this->graph(i)->setData(data.first, data.second);
@@ -84,7 +85,7 @@ void DataPlot::updatePlot()
     }
     // set axis ranges to show all data:
     this->xAxis->setRange(fromTs, now);
-    //this->yAxis->setRange(0, 60);
+    //this->yAxis->setRange(20, 30);
     // redraw plot
     this->replot();
 }

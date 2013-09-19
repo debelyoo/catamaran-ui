@@ -10,9 +10,14 @@ TransformationManager *TransformationManager::instance()
     return m_instance;
 }
 
-QList<TransformationBaseClass *> TransformationManager::getTransformations()
+QList<TransformationBaseClass *> TransformationManager::getTransformations() const
 {
     return m_transformations.values();
+}
+
+TransformationBaseClass *TransformationManager::getTransformation(const QString name) const
+{
+    return m_transformations.value(name);
 }
 
 int TransformationManager::load(QString path)

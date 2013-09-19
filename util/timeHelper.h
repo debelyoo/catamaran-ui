@@ -13,7 +13,7 @@ class TimeHelper
     public:
         static qint64 labviewTsToUnixTs(double labviewTs) {
             QDateTime labviewEpoch = QDateTime::fromString(QString("1904-01-01T00:00:00"), Qt::ISODate);
-            qint64 newTs = labviewEpoch.toMSecsSinceEpoch() + round(labviewTs * 1000) + (3600 * 1000); // add one hour for the time zone (UTC+01:00)
+            qint64 newTs = labviewEpoch.toMSecsSinceEpoch() + round(labviewTs * 1000);//+(3600 * 1000)-225000; // add one hour for the time zone (UTC+01:00)
             return newTs;
         }
 };

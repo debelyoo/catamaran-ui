@@ -131,7 +131,7 @@ void MessageConsumer::parseDataMessage()
         values.push_back(val);
         str += " " + val.first.toString();
     }
-    qint64 ts = decodeTimestamp2(); // TODO
+    qint64 ts = decodeTimestamp(); // TODO
     DataObject dataObj = DataObject(address, values, ts);
     waitingData = 0;
     handleMessageData(dataObj);
@@ -165,8 +165,8 @@ QPair<QVariant, DataType::Types> MessageConsumer::decodeDataValue()
     switch (valueType) {
     case DataType::Double: // double
     {
-        //QByteArray invertedBytes = converter->invertBytes(valueBytes); // invert bytes because for double type Labview sends the bytes in reverse order
-        double d = converter->byteArrayToDouble(valueBytes);
+        QByteArray invertedBytes = converter->invertBytes(valueBytes); // invert bytes because for double type Labview sends the bytes in reverse order
+        double d = converter->byteArrayToDouble(invertedBytes);
         valVar = QVariant(d);
         break;
     }
@@ -393,6 +393,7 @@ void MessageConsumer::handleGetCommand(int address)
         qDebug() << "send array of "+ QString::number(sensorConfig->getSensors().length()) +" sensors to stream";
         data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
         Server* s = (Server*)parent();
+
         s->sendCommandMessage(data);
         break;
     }
@@ -454,18 +455,26 @@ const DataObject MessageConsumer::applyTransformation(QString dllName, DataObjec
 {
     if (dllName != "")
     {
+        /*
         QString libFolderPath = QDir::currentPath() + "/lib";
         QLibrary library(libFolderPath + "/"+ dllName);
         bool okLoad = library.load(); // check load DLL file successful or not
 
         typedef DataObject (*TransformFunction)(DataObject, IDataMessageReceiver*);
+        */
+        TransformationBaseClass *tPtr = TransformationManager::instance()->getTransformation(dllName);
+        if(tPtr){
+            return tPtr->applyTransform(iobj, (IDataMessageReceiver*)this);
+        }
 
+        /*
         if (okLoad)
         {
             TransformFunction trsf = (TransformFunction) library.resolve("applyTransform");
             if (trsf)
                 return trsf(iobj, (IDataMessageReceiver*)this);
         }
+        */
     }
     return iobj;
 }

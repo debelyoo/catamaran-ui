@@ -9,6 +9,7 @@
 #include "util/databaseManager.h"
 #include "dataObject.h"
 #include "idatamessagereceiver.h"
+#include "transformation/transformationmanager.h"
 #include <QObject>
 #include <QQueue>
 

@@ -13,7 +13,8 @@ class TransformationManager
 public:
     static TransformationManager *instance();
 
-    QList<TransformationBaseClass *> getTransformations();
+    QList<TransformationBaseClass *> getTransformations() const;
+    TransformationBaseClass* getTransformation(const QString name) const;
     int load(QString path = "");
     bool unload(QString &name);
     int unloadAll();
