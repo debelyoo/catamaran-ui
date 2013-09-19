@@ -13,6 +13,7 @@
 #include <QGraphicsEllipseItem>
 #include "gui/model/sensorinputsmodel.h"
 #include "gui/model/registeredsensorsmodel.h"
+#include "gui/delegate/registeredSensorsDelegate.h"
 
 
 namespace Ui {
@@ -61,6 +62,7 @@ public slots:
 
     void on_availableSensorsValueChanged();
     void on_addSensorFlClicked();
+    void on_registeredSensorButtonClick(QModelIndex&);
 
 protected:
     void keyPressEvent(QKeyEvent* event);
@@ -103,6 +105,8 @@ private:
     void removeLastWaypoint();
     void sendWaypointCommand(quint8 command, QList<QPointF> points);
     void applyStyle();
+
+    RegisteredSensorsModel *m_registeredSensorsModel;
 };
 
 #endif // MAINWINDOW_H

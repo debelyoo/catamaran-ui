@@ -79,9 +79,20 @@ int SensorInputItem::childNumber() const
 {
     if(m_pParent){
         return m_pParent->childs().indexOf(const_cast<SensorInputItem *>(this));
-
     }
     return -1;
+}
+
+int SensorInputItem::sortId() const
+{
+    int id = childNumber();
+    if(id < 0){
+        id = 0;
+    }
+    if(m_pParent){
+        id += m_pParent->sortId()*100;
+    }
+    return id;
 }
 
 void SensorInputItem::enable()

@@ -26,6 +26,8 @@ public:
     int childCount() const;
     int childNumber() const;
 
+    int sortId() const;
+
     void enable();
     void disable();
     bool enabled() const;

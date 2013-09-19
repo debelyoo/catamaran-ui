@@ -10,6 +10,9 @@
 #include "inRowComboBox.h"
 #include "inRowCheckBox.h"
 
+#include "transformation/transformationmanager.h"
+#include "gui/sensortransformationconfig.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -75,10 +78,16 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->clearWpBtn, SIGNAL(clicked()), this, SLOT(on_clearWpClicked()));
 
     SensorInputsModel *sensorsInputModel = new SensorInputsModel(this);
-    RegisteredSensorsModel *registeredSensorsModel = new RegisteredSensorsModel(this);
-
+    m_registeredSensorsModel = new RegisteredSensorsModel(this);
+    ui->registeredSensors->sortByColumn(0);
     ui->availableSensorsInput->setModel(sensorsInputModel);
-    ui->registeredSensors->setModel(registeredSensorsModel);
+
+    RegisteredSensorsModel::Proxy* proxyModel = new RegisteredSensorsModel::Proxy();
+    proxyModel->setSourceModel(m_registeredSensorsModel);
+    ui->registeredSensors->setModel(proxyModel);
+    RegisteredSensorsDelegate * delegate = new RegisteredSensorsDelegate(2, ui->registeredSensors);
+    connect(delegate, SIGNAL(buttonClicked(QModelIndex&)), this, SLOT(on_registeredSensorButtonClick(QModelIndex&)));
+    ui->registeredSensors->setItemDelegateForColumn(2, delegate);
     connect(sensorsInputModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_availableSensorsValueChanged()));
 
     SensorInputItem * sensor = new SensorInputItem("second");
@@ -90,14 +99,16 @@ MainWindow::MainWindow(QWidget *parent) :
     sensorsInputModel->addInput(new SensorInputItem("second"), (SensorInputItem *)sensorsInputModel->index(1,0, QModelIndex()).internalPointer());
 
     sensor = (SensorInputItem *)sensorsInputModel->index(1,0, sensorsInputModel->index(1,0, QModelIndex())).internalPointer();
-    registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
+    m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
     sensor = (SensorInputItem *)sensorsInputModel->index(0,0, sensorsInputModel->index(1,0, QModelIndex())).internalPointer();
-    registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
+    m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
 
     connect(ui->addSensorFromList, SIGNAL(clicked()), this, SLOT(on_addSensorFlClicked()));
 
     applyStyle();
 
+
+    TransformationManager::instance()->load();
 }
 
 MainWindow::~MainWindow()
@@ -315,10 +326,24 @@ void MainWindow::on_availableSensorsValueChanged()
 
 void MainWindow::on_addSensorFlClicked()
 {
-    //QModelIndexList indexes = ui->availableSensorsInput->selectedIndexes();
-    //for(int i=0;i<indexes.count(); ++i){
+    QModelIndexList indexes = ui->availableSensorsInput->selectionModel()->selectedRows();
+    for(int i=0;i<indexes.count(); ++i){
+        SensorInputItem *sensor = static_cast<SensorInputItem *>(indexes[i].internalPointer());
+        if(sensor->enabled()){
+            sensor->disable();
+            //RegisteredSensorsModel * rModel = static_cast<RegisteredSensorsModel *>(ui->registeredSensors->model());
+            m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
+            ui->registeredSensors->sortByColumn(0);
+        }
+    }
+}
 
-    //}
+void MainWindow::on_registeredSensorButtonClick(QModelIndex &index)
+{
+    qDebug() << index;
+    SensorTransformationConfig *widget = new SensorTransformationConfig(static_cast<RegisteredSensorItem *>(index.internalPointer()), this);
+    widget->setWindowFlags(Qt::Tool);
+    widget->show();
 }
 
 void MainWindow::zoomIn()

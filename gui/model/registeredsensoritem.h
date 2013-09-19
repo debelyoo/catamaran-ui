@@ -26,6 +26,7 @@ public:
     int childCount() const;
     int childNumber() const;
     QVariant data(int col) const;
+    QString sortId();
 
 protected:
     RegisteredSensorItem *m_parent;
@@ -33,6 +34,7 @@ protected:
     QString m_name;
     TransformationBaseClass *m_transformation;
 
+    QString m_sortId;
 };
 
 #endif // REGISTEREDSENSORITEM_H

@@ -78,7 +78,7 @@ void RegisteredSensorsModel::addSensor(RegisteredSensorItem *newItem, Registered
     endInsertRows();
     QModelIndex index = createIndex(m_items.size()-1, 0, newItem);
     QModelIndex index2 = createIndex(m_items.size()-1, m_nColumn, newItem);
-    emit dataChanged(index, index2);
+    //emit dataChanged(index, index2);
 }
 
 RegisteredSensorItem *RegisteredSensorsModel::getItem(const QModelIndex &index) const
@@ -169,3 +169,20 @@ bool RegisteredSensorsModel::setData(const QModelIndex &index, const QVariant &v
     return false;
 }
 */
+
+bool RegisteredSensorsModel::Proxy::lessThan(const QModelIndex &left, const QModelIndex &right) const
+{
+    QString lsId, rsId;
+    lsId = static_cast<RegisteredSensorItem *>(left.internalPointer())->sortId();
+    rsId = static_cast<RegisteredSensorItem *>(right.internalPointer())->sortId();
+    int len = qMin(lsId.length(), rsId.length());
+    for(int i=0;i<len;++i){
+        //qDebug() << "sort : " << lsId[i] << " < " << rsId[i] << "?";
+        if(lsId[i] < rsId[i]){
+            return false;
+        }else if(lsId[i] > rsId[i]){
+            return true;
+        }
+    }
+    return true;
+}

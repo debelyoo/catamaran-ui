@@ -36,7 +36,10 @@ SOURCES += main.cpp\
     communication/messageConsumer.cpp\
     communication/messagePublisher.cpp \
     transformation/transformationbaseclass.cpp \
-    gui/model/registeredsensorsmodel.cpp
+    gui/model/registeredsensorsmodel.cpp \
+    gui/delegate/registeredSensorsDelegate.cpp \
+    gui/sensortransformationconfig.cpp \
+    transformation/transformationmanager.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
@@ -63,11 +66,15 @@ HEADERS  += sensorConfig.h\
     gui/model/registeredsensoritem.h \
     communication/idatamessagereceiver.h \
     transformation/transformationbaseclass.h \
-    gui/model/registeredsensorsmodel.h
+    gui/model/registeredsensorsmodel.h \
+    gui/delegate/registeredSensorsDelegate.h \
+    gui/sensortransformationconfig.h \
+    transformation/transformationmanager.h
 
 
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    gui/sensortransformationconfig.ui
 
 RESOURCES += \
     images.qrc

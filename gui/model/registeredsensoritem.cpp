@@ -3,7 +3,8 @@
 RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput, RegisteredSensorItem *parent):
     m_parent(parent),
     m_name(sensorInput->fullName()),
-    m_transformation(NULL)
+    m_transformation(NULL),
+    m_sortId(QString::number(sensorInput->sortId()))
 {
 }
 
@@ -101,6 +102,11 @@ QVariant RegisteredSensorItem::data(int col) const
     default:
         return QVariant();
     }
+}
+
+QString RegisteredSensorItem::sortId()
+{
+    return m_sortId;
 }
 
 
