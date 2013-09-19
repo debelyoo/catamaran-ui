@@ -148,17 +148,19 @@ QByteArray ByteArrayConverter::byteArrayForCmdParameterClusterOfPoints(QList<QPo
 QByteArray ByteArrayConverter::byteArrayForCmdParameterStreamArray(QList<Sensor*> sensors)
 {
     QByteArray ba;
+    int count = 0;
     foreach (Sensor* s, sensors) {
         if (s->getStream())
         {
             ba.push_back(s->getStream());
             ba.push_back(s->getAddress());
+            count++;
             //ba.push_back(byteArrayForCmdParameterInt(s->getStream()));
             //ba.push_back(byteArrayForCmdParameterInt(s->getAddress()));
         }
     }
     // add array length (uint32) before array
-    ba.prepend(intToByteArray(ba.length(), 4));
+    ba.prepend(intToByteArray(count, 4));
     // add string length (uint32) before (array len, array)
     ba.prepend(intToByteArray(ba.length(), 4));
     return ba;
