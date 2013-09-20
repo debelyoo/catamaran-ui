@@ -25,7 +25,7 @@ private:
     QList<Sensor*> sensorsToPlot;
     QPair< QVector<double>, QVector<double> > getData(int gi);
     int timeWindow;
-
+    int minValue, maxValue;
 };
 
 #endif // DATAPLOT_H

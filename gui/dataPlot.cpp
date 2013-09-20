@@ -8,6 +8,8 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
     timeWindow = 15 * 60; // 15 minutes in seconds
     double now = QDateTime::currentDateTime().toTime_t();
     int fromTs = now - timeWindow;
+    minValue = 99;
+    maxValue = 0;
 
     for (int gi=0; gi<sensorsToPlot.size(); ++gi)
     {
@@ -22,7 +24,7 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
         // get data
         QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[gi], fromTs);
         this->graph(gi)->setData(data.first, data.second);
-        this->graph(gi)->rescaleAxes(true);
+        this->graph(gi)->rescaleValueAxis(true);
     }
     // configure bottom axis to show date and time instead of number:
     this->xAxis->setTickLabelType(QCPAxis::ltDateTime);
@@ -68,33 +70,35 @@ void DataPlot::updatePlot()
 {
     //qDebug() << "DataPlot.updatePlot()";
     double now = QDateTime::currentDateTime().toTime_t();
-    int fromTs = now - timeWindow;
+    //int fromTs = now - timeWindow;
+    int fromTs = now - 1; // time window of 1 second
     //qDebug() << "Range: "+ QString::number(fromTs)+" -> "+ QString::number(now);
     for (int i=0; i<sensorsToPlot.size(); ++i)
     {
         // get data for sensor
         QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[i], fromTs);
         //QPair< QVector<double>, QVector<double> >* data = getData(i);
-        qDebug() << data.first.count();
+        //qDebug() << data.first.count();
         if (data.first.size() > 0)
         {
-            this->graph(i)->setData(data.first, data.second);
-            //QList<double> list = new QList<double>(data->second);
-            this->graph(i)->rescaleAxes(true);
+            //this->graph(i)->setData(data.first, data.second);
+            this->graph(i)->removeData(0, fromTs); // remove old data
+            this->graph(i)->addData(data.first, data.second); // add data from the last second
+            QVector<double> vVal = data.second;
+            qSort(vVal);
+            if (vVal.first() < minValue)
+                minValue = vVal.first() - (vVal.first() * 0.1);
+            if (vVal.last() > maxValue)
+                maxValue = vVal.last() + (vVal.last() * 0.1);
+            //this->graph(i)->rescaleValueAxis(false);
         }
     }
     // set axis ranges to show all data:
     this->xAxis->setRange(fromTs, now);
-    //this->yAxis->setRange(20, 30);
+    this->yAxis->setRange(minValue, maxValue);
     // redraw plot
     this->replot();
 }
-
-/*void DataPlot::wheelEvent(QWheelEvent *event)
-{
-    qDebug() << "scroll";
-    event->ignore();
-}*/
 
 /// for test only
 QPair< QVector<double>, QVector<double> > DataPlot::getData(int gi)
