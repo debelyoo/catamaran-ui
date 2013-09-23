@@ -1,6 +1,6 @@
 #include "mouseClickHandler.h"
 #include <QEvent>
-#include <QKeyEvent>
+//#include <QKeyEvent>
 
 MouseClickHandler::MouseClickHandler(MainWindow *p)
 {
@@ -11,6 +11,7 @@ MouseClickHandler::~MouseClickHandler() {}
 
 bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
 {
+    bool res = false;
     switch (event->type()) {
     case QEvent::MouseButtonPress:
     {
@@ -23,7 +24,6 @@ bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
                 parent->setSliderIsMoving(true);
             }
         }
-        return false;
         break;
     }
     case QEvent::MouseButtonRelease:
@@ -51,12 +51,30 @@ bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
         {
             // no action on unspecified object
         }
-        return false;
+        break;
+    }
+    case QEvent::Wheel:
+    {
+        QWheelEvent* ev = static_cast<QWheelEvent *>(event);
+        if (obj->objectName() == "mapViewport")
+        {
+            //qDebug() << "Wheel event handled";
+            if (ev->delta() > 0)
+            {
+                parent->zoomIn();
+            }
+            else
+            {
+                parent->zoomOut();
+            }
+            event->setAccepted(true);
+            res = true; // to stop propagating event
+        }
         break;
     }
     default:
         // standard event processing
-        return QObject::eventFilter(obj, event);
         break;
     }
+    return res;
 }

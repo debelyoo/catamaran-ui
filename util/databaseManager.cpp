@@ -119,7 +119,7 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
         sqlQuery += " AND timestamp > "+ QString::number(fromTs);
         sqlQuery += " ORDER BY timestamp";// LIMIT 100";
         sqlQuery += ";";
-        qDebug() << "SQL query: " << sqlQuery;
+        //qDebug() << "SQL query: " << sqlQuery;
         if (query.exec(sqlQuery)) {
             while( query.next() )
             {
