@@ -31,6 +31,7 @@ class Server : public QObject
         explicit Server(QObject *parent = 0);
         void listen();
         bool isConnected();
+        QByteArray prepareConfigMessage();
         void sendCommandMessage(QByteArray data);
 
     signals:
@@ -52,6 +53,7 @@ class Server : public QObject
         MessagePublisher* publisher;
         DatabaseManager* dbManager;
         SensorConfig* sensorConfig; // singleton
+        ByteArrayConverter *converter;
         QQueue<char> *queue;
         static const int BYTE_CHUNK_SIZE_TO_READ = 32; // in bytes
         bool connected;

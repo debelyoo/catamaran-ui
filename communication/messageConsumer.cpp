@@ -381,19 +381,9 @@ void MessageConsumer::handleGetCommand(int address)
     switch (address) {
     case 5:
     {
-        // send addresses array (config)
-        quint8 command = MessageUtil::Set;
-        quint8 addr = 5;
-        QByteArray data;
-        data.push_back(command);
-        data.push_back(converter->intToByteArray(2, 4));
-        // add address
-        data.push_back(converter->byteArrayForCmdParameterInt(addr));
-        // add stream array
-        qDebug() << "send array of "+ QString::number(sensorConfig->getSensors().length()) +" sensors to stream";
-        data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
+        // send addresses array (config)        
         Server* s = (Server*)parent();
-
+        QByteArray data = s->prepareConfigMessage();
         s->sendCommandMessage(data);
         break;
     }

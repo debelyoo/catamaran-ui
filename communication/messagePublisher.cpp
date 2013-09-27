@@ -7,6 +7,11 @@ QObject(parent)
     socket = sk;
 }
 
+/**
+ * Send a command message to cRIO
+ * @brief MessagePublisher::sendCommandMessage
+ * @param data
+ */
 void MessagePublisher::sendCommandMessage(QByteArray data)
 {
     // CMD(uint8) | length (4B) | params (bytes array)

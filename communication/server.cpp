@@ -14,6 +14,7 @@ QObject(parent)
     server = new QTcpServer(this);
     queue = new QQueue<char>();
     consumer = new MessageConsumer(this, queue);
+    converter = ByteArrayConverter::instance();
     connected = false;
     connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
     connect(this, SIGNAL(dataReceived()), consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
@@ -107,6 +108,21 @@ void Server::on_messageParsed(QString msg)
 void Server::on_gpsPointReceived(double x, double y)
 {
     emit gpsPointReceived(x, y);
+}
+
+QByteArray Server::prepareConfigMessage()
+{
+    quint8 command = MessageUtil::Set;
+    quint8 addr = 5;
+    QByteArray data;
+    data.push_back(command);
+    data.push_back(converter->intToByteArray(2, 4));
+    // add address
+    data.push_back(converter->byteArrayForCmdParameterInt(addr));
+    // add stream array
+    //qDebug() << "send array of "+ QString::number(sensorConfig->getSensors().length()) +" sensors to stream";
+    data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
+    return data;
 }
 
 void Server::sendCommandMessage(QByteArray msg)

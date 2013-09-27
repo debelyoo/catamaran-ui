@@ -232,6 +232,9 @@ void MainWindow::on_saveConfigClicked()
     fileHelper->createLogFiles(sensorConfig);
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");
+    // send config to cRio
+    QByteArray data = s->prepareConfigMessage();
+    s->sendCommandMessage(data);
     // recreate plots panel
     clearPlotsPanel();
     createPlotsPanel();
