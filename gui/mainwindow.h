@@ -4,6 +4,7 @@
 #include "communication/server.h"
 #include "util/fileHelper.h"
 #include "util/coordinateHelper.h"
+#include "util/criobytearray.h"
 #include "dataPlot.h"
 #include "mouseClickHandler.h"
 #include <QMainWindow>
@@ -60,9 +61,21 @@ public slots:
     void on_saveConfigClicked();
     void on_graphNbValueChanged(int);
 
+    /// sensor transformation and config tables events
     void on_availableSensorsValueChanged();
     void on_addSensorFlClicked();
     void on_registeredSensorButtonClick(QModelIndex&);
+
+    /// Honk and Light
+    void on_honkButtonPressed();
+    void on_honkButtonReleased();
+    void on_lightCheckBoxChange();
+
+    /// Navigation System config
+    void on_updateNSBtnClick();
+    void on_nsValueChange();
+    void on_getNSCongifBtnClick();
+    void on_defaultNSConfigClick();
 
 protected:
     void keyPressEvent(QKeyEvent* event);
@@ -85,7 +98,7 @@ private:
     /// plots panel
     void clearPlotsPanel();
     void createPlotsPanel();
-    QWidget* createPlot(int xPos, int yPos, int width, int height);
+    //QWidget* createPlot(int xPos, int yPos, int width, int height);
     QWidget* createPlotByDate(int plotIndex, QRect geometry);
     /// configuration panel
     void clearAddressesConfigPanel();

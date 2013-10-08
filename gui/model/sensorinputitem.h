@@ -3,11 +3,14 @@
 
 #include <QVector>
 #include <QString>
+#include <QObject>
 
-class SensorInputItem
+class SensorInputItem : public QObject
 {
+    Q_OBJECT
+
 public:
-    SensorInputItem(QString name, SensorInputItem *pParent = NULL);
+    SensorInputItem(QString name = "", SensorInputItem *pParent = NULL);
     SensorInputItem *parent() const;
     void setParent(SensorInputItem *pParent);
 
@@ -26,11 +29,13 @@ public:
     int childCount() const;
     int childNumber() const;
 
-    int sortId() const;
+    QString sortId() const;
 
     void enable();
     void disable();
     bool enabled() const;
+signals:
+    void itemChanged();
 
 protected:
     SensorInputItem *m_pParent;

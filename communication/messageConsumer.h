@@ -12,13 +12,15 @@
 #include "transformation/transformationmanager.h"
 #include <QObject>
 #include <QQueue>
+#include "util/criodatastream.h"
 
 class MessageConsumer : public QObject, public IDataMessageReceiver
 {
     Q_OBJECT
     public:
-        explicit MessageConsumer(QObject *parent = 0, QQueue<char> *q = 0);
+        explicit MessageConsumer(QObject *parent = 0, CRioDataStream* ds = 0);
         void handleMessageData(DataObject dataObj);
+        ~MessageConsumer();
 
     signals:
         void messageParsed(QString);
@@ -28,28 +30,18 @@ class MessageConsumer : public QObject, public IDataMessageReceiver
         void on_dataReceived();
 
     private:
-        QQueue<char> *queue;
         bool consuming;
-        int waitingData;
-        ByteArrayConverter *converter;
+        CRioDataStream *crioDataStream;
+        // end new datastream reader
         SensorConfig *sensorConfig;
         CoordinateHelper* coordinateHelper;
         FileHelper *fileHelper;
         DatabaseManager* dbManager;
-        void checkQueue(bool checkIfConsuming);
-        void readQueue();
-        QByteArray readBytes(int nbBytesToRead);
-        void parseDataMessage();
-        QPair<QVariant, DataType::Types> decodeDataValue();
-        qint64 decodeTimestamp();
-        qint64 decodeTimestamp2();
-        void parseCmdMessage();
         void handleGetCommand(int address);
         QString createLogText(DataObject dataObj);
         void writeInLogFile(Sensor* s, QString logTxt);
         const DataObject applyTransformation(QString dllName, DataObject val) const;
         const DataObject transformDataObject(DataObject iobj);
-
 };
 
 #endif // MESSAGECONSUMER_H

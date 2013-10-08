@@ -2,6 +2,7 @@
 #define SENSORINPUTSMODEL_H
 
 #include <QAbstractItemModel>
+#include <QDebug>
 #include "sensorinputitem.h"
 
 class SensorInputsModel : public QAbstractItemModel
@@ -14,7 +15,7 @@ public:
 signals:
 
 public slots:
-
+    void itemModified();
 
     // QAbstractItemModel interface
 public:

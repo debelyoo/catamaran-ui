@@ -119,7 +119,7 @@ QByteArray ByteArrayConverter::byteArrayForCmdParameterInt(int val)
 }
 
 /**
- * Create the byte array for a value (cluster of points) of a CMD message parameter
+ * Create the byte array for an array of points (cluster of two double) of a CMD message parameter
  * @brief ByteArrayConverter::byteArrayForCmdParameterClusterOfPoints
  * @param pts The list of points
  * @return A QByteArray with length and value
@@ -130,12 +130,28 @@ QByteArray ByteArrayConverter::byteArrayForCmdParameterClusterOfPoints(QList<QPo
     QByteArray clusterLength = intToByteArray(pts.length(), 4);
     ba.push_back(clusterLength);
     foreach (QPointF p, pts) {
-        QByteArray length = intToByteArray(8, 4);
+        QByteArray length = intToByteArray(16, 4);
         ba.push_back(length);
         ba.push_back(p.x());
-        ba.push_back(length);
         ba.push_back(p.y());
     }
+    return ba;
+}
+
+/**
+ * Create the byte array for a point (cluster of two double) of a CMD message parameter
+ * @brief ByteArrayConverter::byteArrayForCmdParameterClusterOfPoint
+ * @param pt The list of points
+ * @return A QByteArray with length and value
+ */
+QByteArray ByteArrayConverter::byteArrayForCmdParameterClusterOfPoint(QPointF pt)
+{
+    QByteArray ba;
+    QByteArray clusterLength = intToByteArray(8*2, 4);
+    ba.push_back(clusterLength);
+    ba.push_back(pt.x());
+    ba.push_back(pt.y());
+
     return ba;
 }
 

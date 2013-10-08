@@ -39,13 +39,18 @@ SOURCES += main.cpp\
     gui/model/registeredsensorsmodel.cpp \
     gui/delegate/registeredSensorsDelegate.cpp \
     gui/sensortransformationconfig.cpp \
-    transformation/transformationmanager.cpp
+    transformation/transformationmanager.cpp \
+    util/criobytearray.cpp \
+    util/criodefinitions.cpp \
+    util/criodatastream.cpp \
+    communication/criomessage.cpp \
+    communication/criocommand.cpp \
+    communication/criodata.cpp
 
 HEADERS  += sensorConfig.h\
     util/byteArrayConverter.h\
     util/fileHelper.h\
     util/coordinateHelper.h\
-    util/definitions.h\
     util/databaseManager.h \
     util/timeHelper.h \
     model/sensor.h\
@@ -69,7 +74,13 @@ HEADERS  += sensorConfig.h\
     gui/model/registeredsensorsmodel.h \
     gui/delegate/registeredSensorsDelegate.h \
     gui/sensortransformationconfig.h \
-    transformation/transformationmanager.h
+    transformation/transformationmanager.h \
+    util/criobytearray.h \
+    util/criodefinitions.h \
+    util/criodatastream.h \
+    communication/criomessage.h \
+    communication/criocommand.h \
+    communication/criodata.h
 
 
 

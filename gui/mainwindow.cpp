@@ -12,6 +12,9 @@
 
 #include "transformation/transformationmanager.h"
 #include "gui/sensortransformationconfig.h"
+#include "util/criodefinitions.h"
+#include "communication/criocommand.h"
+#include "communication/criodata.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -77,6 +80,23 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->removeWpBtn, SIGNAL(clicked()), this, SLOT(on_removeWpClicked()));
     connect(ui->clearWpBtn, SIGNAL(clicked()), this, SLOT(on_clearWpClicked()));
 
+    // Honk and Light
+    connect(ui->lightBtn, SIGNAL(clicked()), this, SLOT(on_lightCheckBoxChange()));
+    connect(ui->honkBtn, SIGNAL(pressed()), this, SLOT(on_honkButtonPressed()));
+    connect(ui->honkBtn, SIGNAL(released()), this, SLOT(on_honkButtonReleased()));
+
+    // Navigation System config
+    connect(ui->updateNSBtn, SIGNAL(clicked()), this, SLOT(on_updateNSBtnClick()));
+    connect(ui->defaultNSConfigBtn, SIGNAL(clicked()), this, SLOT(on_defaultNSConfigClick()));
+    connect(ui->c0, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+    connect(ui->c1, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+    connect(ui->c2, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+    connect(ui->c3, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+    connect(ui->c4, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+    connect(ui->l0, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+    connect(ui->l1, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+
+    // Sensor transformation view
     SensorInputsModel *sensorsInputModel = new SensorInputsModel(this);
     m_registeredSensorsModel = new RegisteredSensorsModel(this);
     ui->registeredSensors->sortByColumn(0);
@@ -187,6 +207,7 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSpinBox->setEnabled(true);
         ui->waypointGroupBox->hide();
         ui->stopBtn->show();
+        ((Server*)parent())->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_MANUAL));
     }
     else
     {
@@ -198,7 +219,9 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSpinBox->setEnabled(false);
         ui->stopBtn->hide();
         ui->waypointGroupBox->show();
+        ((Server*)parent())->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_AUTO));
     }
+
 }
 
 void MainWindow::on_speedValueChanged(int val)
@@ -343,10 +366,72 @@ void MainWindow::on_addSensorFlClicked()
 
 void MainWindow::on_registeredSensorButtonClick(QModelIndex &index)
 {
-    qDebug() << index;
-    SensorTransformationConfig *widget = new SensorTransformationConfig(static_cast<RegisteredSensorItem *>(index.internalPointer()), this);
-    widget->setWindowFlags(Qt::Tool);
+    QSortFilterProxyModel * proxyModel = static_cast<QSortFilterProxyModel *>(ui->registeredSensors->model());
+    QModelIndex realIndex = proxyModel->mapToSource(index);
+    SensorTransformationConfig *widget = new SensorTransformationConfig(static_cast<RegisteredSensorItem *>(realIndex.internalPointer()), this);
+
     widget->show();
+}
+
+void MainWindow::on_honkButtonPressed()
+{
+    s->sendMessage(CRIO::setHonk(CRIO::ON));
+}
+
+void MainWindow::on_honkButtonReleased()
+{
+    s->sendMessage(CRIO::setHonk(CRIO::OFF));
+}
+
+void MainWindow::on_lightCheckBoxChange()
+{
+    s->sendMessage(CRIO::setLight(ui->lightBtn->isChecked()?CRIO::ON:CRIO::OFF));
+}
+
+void MainWindow::on_updateNSBtnClick()
+{
+    s->sendMessage(CRIO::setNavSysConstants(ui->c0->value(), ui->c1->value(), ui->c2->value(), ui->c3->value(), ui->c4->value()));
+    s->sendMessage(CRIO::setNavSysLimits(ui->l0->value(), ui->l1->value()));
+
+    ui->updateNSBtn->setStyleSheet("QPushButton {" \
+                                   "    border: 2px solid #72A574;" \
+                                   "    border-radius: 4px;" \
+                                   "    border-style: ridge;" \
+                                   "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #C5F9C8, stop: 1 #AEE2B2);" \
+                                   "}" \
+                                   "QPushButton:pressed {" \
+                                   "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AEE2B2, stop: 1 #C5F9C8);" \
+                                   "}");
+}
+
+void MainWindow::on_nsValueChange()
+{
+    ui->updateNSBtn->setStyleSheet("QPushButton {" \
+                                   "    border: 2px solid #A57274;" \
+                                   "    border-radius: 4px;" \
+                                   "    border-style: ridge;" \
+                                   "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F8C6C8, stop: 1 #E1AFB2);" \
+                                   "}" \
+                                   "QPushButton:pressed {" \
+                                   "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E1AFB2, stop: 1 #F8C6C8);" \
+                                   "}");
+}
+
+void MainWindow::on_getNSCongifBtnClick()
+{
+    s->sendMessage(CRIO::getCommand(CRIO::ADDR_NS_CSTS));
+    s->sendMessage(CRIO::getCommand(CRIO::ADDR_NS_LIMITS));
+}
+
+void MainWindow::on_defaultNSConfigClick()
+{
+    ui->c0->setValue(4.89796);
+    ui->c1->setValue(9.79592);
+    ui->c2->setValue(66.3265);
+    ui->c3->setValue(21.9388);
+    ui->c4->setValue(11.2245);
+    ui->l0->setValue(25);
+    ui->l1->setValue(0.5);
 }
 
 void MainWindow::zoomIn()
@@ -453,27 +538,21 @@ void MainWindow::drawWayPointOnMap(QPoint newPoint)
  */
 void MainWindow::sendWaypointCommand(quint8 command, QList<QPointF> points)
 {
-    // command (uint8) | length array (uint32) | length engine addr (uint32) |engine addr (uint8) | length value (uint32) | value (int8)
-    quint8 waypointAddr = 16;
-    QByteArray data;
-    data.push_back(command);
     switch (command) {
     case MessageUtil::Set:
     case MessageUtil::Add:
-        data.push_back(converter->intToByteArray(2, 4)); // array len, 2 because addr + cluster of points
-        data.push_back(converter->byteArrayForCmdParameterInt(waypointAddr));
-        data.push_back(converter->byteArrayForCmdParameterClusterOfPoints(points));
+    {
+        s->sendMessage(CRIO::addWaypointCmd(points[0]));
+    }
         break;
     case MessageUtil::Delete:
-        data.push_back(converter->intToByteArray(1, 4)); // array len, 1 because addr only
-        data.push_back(converter->byteArrayForCmdParameterInt(waypointAddr));
+    {
+        s->sendMessage(CRIO::setWaypointsCmd(points));
+    }
         break;
     default:
         break;
     }
-    s->sendCommandMessage(data);
-    //char str[128];
-    //sprintf(str, "sendWaypointCommand() [%d]", correctEngineCommandValue(val));
     qDebug() << "sendWaypointCommand()";
 }
 
@@ -707,7 +786,7 @@ void MainWindow::createPlotsPanel()
     ui->graphNbSpinBox->setValue(nbPlots);
     // Need to use fixed sizes, because container is expandable, cannot use ui->tabWidget->width()
     int plotHeight = 200;
-    int plotWidth = 900;
+    int plotWidth = 1200;
     //viewport->setGeometry(0,0, 800, nbPlots * plotHeight);
     for (int i = 0; i < nbPlots; i++)
     {
@@ -721,7 +800,7 @@ void MainWindow::createPlotsPanel()
     scrollArea->setWidget(viewport);
     plotsPanelLayout->addWidget(scrollArea);
 }
-
+/*
 QWidget* MainWindow::createPlot(int xPos, int yPos, int width, int height)
 {
     QWidget *viewport = new QWidget;
@@ -753,7 +832,7 @@ QWidget* MainWindow::createPlot(int xPos, int yPos, int width, int height)
     plot1->replot();
     return viewport;
 }
-
+*/
 /**
  * Create a plot with date as x axis
  * @brief MainWindow::createPlotByDate

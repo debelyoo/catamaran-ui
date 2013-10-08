@@ -68,7 +68,7 @@ QVariant RegisteredSensorsModel::data(const QModelIndex &index, int role) const
 
 void RegisteredSensorsModel::addSensor(RegisteredSensorItem *newItem, RegisteredSensorItem *parent)
 {
-    qDebug() << "Add Sensor : " << m_items.count();
+    //() << "Add Sensor : " << m_items.count();
     beginInsertRows(QModelIndex(), m_items.count(), m_items.count());;
     if(parent){
         parent->addChild(newItem);
@@ -76,8 +76,8 @@ void RegisteredSensorsModel::addSensor(RegisteredSensorItem *newItem, Registered
 
     m_items.append(newItem);
     endInsertRows();
-    QModelIndex index = createIndex(m_items.size()-1, 0, newItem);
-    QModelIndex index2 = createIndex(m_items.size()-1, m_nColumn, newItem);
+    //QModelIndex index = createIndex(m_items.size()-1, 0, newItem);
+    //QModelIndex index2 = createIndex(m_items.size()-1, m_nColumn, newItem);
     //emit dataChanged(index, index2);
 }
 
@@ -85,6 +85,8 @@ RegisteredSensorItem *RegisteredSensorsModel::getItem(const QModelIndex &index) 
 {
     if (index.isValid()) {
         RegisteredSensorItem *item = static_cast<RegisteredSensorItem*>(index.internalPointer());
+        //RegisteredSensorItem *item = m_items[index.row()];
+        //() << "getItem : pointer = " << ((int) item);
         if (item) return item;
     }
     return NULL;
@@ -100,23 +102,22 @@ QVariant RegisteredSensorsModel::headerData(int section, Qt::Orientation orienta
     }
     return QVariant();
 }
-/*
-bool RegisteredSensorsModel::setHeaderData(int section, Qt::Orientation orientation,
-                              const QVariant &value, int role)
-{
-    if (role != Qt::EditRole || orientation != Qt::Horizontal)
-        return false;
-    if(section >= m_nColumn){
-        return false;
-    }
-    bool result = (m_headers[section] != value);
-    if (result){
-        qDebug() << "setHeader : " << section << " , " << value;
-        m_headers[section] = value;
-        emit headerDataChanged(orientation, section, section);
-    }
 
-    return result;
+bool RegisteredSensorsModel::Proxy::lessThan(const QModelIndex &left, const QModelIndex &right) const
+{
+    QString lsId, rsId;
+    lsId = static_cast<RegisteredSensorItem *>(left.internalPointer())->sortId();
+    rsId = static_cast<RegisteredSensorItem *>(right.internalPointer())->sortId();
+    int len = qMin(lsId.length(), rsId.length());
+    for(int i=0;i<len;++i){
+        //() << "sort : " << lsId[i] << " < " << rsId[i] << "?";
+        if(lsId[i] < rsId[i]){
+            return false;
+        }else if(lsId[i] > rsId[i]){
+            return true;
+        }
+    }
+    return false;
 }
 
 /*
@@ -145,44 +146,6 @@ bool RegisteredSensorsModel::removeRows(int position, int rows, const QModelInde
     endRemoveRows();
     return true;
 }
-
-bool RegisteredSensorsModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-    if (index.isValid() && role == Qt::EditRole) {
-        int row = index.row();
-
-        QPair<QString, QString> p = listOfPairs.value(row);
-
-        if (index.column() == 0)
-            p.first = value.toString();
-        else if (index.column() == 1)
-            p.second = value.toString();
-        else
-            return false;
-
-        listOfPairs.replace(row, p);
-        emit(dataChanged(index, index));
-
-        return true;
-    }
-
-    return false;
-}
 */
 
-bool RegisteredSensorsModel::Proxy::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    QString lsId, rsId;
-    lsId = static_cast<RegisteredSensorItem *>(left.internalPointer())->sortId();
-    rsId = static_cast<RegisteredSensorItem *>(right.internalPointer())->sortId();
-    int len = qMin(lsId.length(), rsId.length());
-    for(int i=0;i<len;++i){
-        //qDebug() << "sort : " << lsId[i] << " < " << rsId[i] << "?";
-        if(lsId[i] < rsId[i]){
-            return false;
-        }else if(lsId[i] > rsId[i]){
-            return true;
-        }
-    }
-    return true;
-}
+

@@ -1,6 +1,6 @@
 #include "sensorinputitem.h"
 
-SensorInputItem::SensorInputItem(QString name, SensorInputItem *pParent):m_pParent(pParent), m_name(name), m_enabled(true)
+SensorInputItem::SensorInputItem(QString name, SensorInputItem *pParent):QObject(), m_pParent(pParent), m_name(name), m_enabled(true)
 {
 }
 
@@ -27,6 +27,7 @@ void SensorInputItem::addChild(SensorInputItem *child)
 {
     m_childs.append(child);
     child->setParent(this);
+    emit itemChanged();
 }
 
 void SensorInputItem::insertChild(SensorInputItem *child, int pos)
@@ -83,16 +84,17 @@ int SensorInputItem::childNumber() const
     return -1;
 }
 
-int SensorInputItem::sortId() const
+QString SensorInputItem::sortId() const
 {
+    QString strId;
+    if(m_pParent){
+        strId = m_pParent->sortId();
+    }
     int id = childNumber();
     if(id < 0){
         id = 0;
     }
-    if(m_pParent){
-        id += m_pParent->sortId()*100;
-    }
-    return id;
+    return strId + QString::number(id);
 }
 
 void SensorInputItem::enable()

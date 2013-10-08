@@ -7,14 +7,14 @@
 #include <QDir>
 
 Server::Server(QObject *parent) :
-QObject(parent)
+    QObject(parent),
+    inputStream(NULL),
+    consumer(NULL)
 {
     sensorConfig = SensorConfig::instance();
     dbManager = DatabaseManager::instance();
     server = new QTcpServer(this);
     queue = new QQueue<char>();
-    consumer = new MessageConsumer(this, queue);
-    converter = ByteArrayConverter::instance();
     connected = false;
     connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
     connect(this, SIGNAL(dataReceived()), consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
@@ -48,9 +48,19 @@ void Server::on_newConnection()
         emit displayInGui("New connection established.\n");
         connected = true;
     }
+    //inputStream->setDevice(socket);
+    inputStream = new CRioDataStream(socket);
+    consumer = new MessageConsumer(this, inputStream);
     publisher = new MessagePublisher(this, socket);
+
+    connect(this, SIGNAL(dataReceived()), consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
+    /// signals to be relayed to GUI
+    connect(consumer, SIGNAL(messageParsed(QString)), this, SLOT(on_messageParsed(QString)));
+    connect(consumer, SIGNAL(gpsPointReceived(double,double)), this, SLOT(on_gpsPointReceived(double,double)));
+
     connect(socket, SIGNAL(disconnected()), this, SLOT(on_disconnected()));
-    connect(socket, SIGNAL(readyRead()), this, SLOT(on_readyRead()));
+    //connect(socket, SIGNAL(readyRead()), this, SLOT(on_readyRead()));
+    connect(socket, SIGNAL(readyRead()), this, SIGNAL(dataReceived()));
 }
 
 void Server::on_readyRead()
@@ -129,6 +139,12 @@ void Server::sendCommandMessage(QByteArray msg)
 {
     if (isConnected())
         publisher->sendCommandMessage(msg);
+}
+
+void Server::sendMessage(const CRioByteArray &cba)
+{
+    if (isConnected())
+        publisher->sendMessage(cba);
 }
 
 bool Server::isConnected()

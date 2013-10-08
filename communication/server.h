@@ -5,6 +5,8 @@
 #include <QQueue>
 #include "messageConsumer.h"
 #include "messagePublisher.h"
+#include "util/criobytearray.h"
+#include "util/criodatastream.h"
 
 class QTcpServer;
 class QTcpSocket;
@@ -33,6 +35,7 @@ class Server : public QObject
         bool isConnected();
         QByteArray prepareConfigMessage();
         void sendCommandMessage(QByteArray data);
+        void sendMessage(const CRioByteArray &cba);
 
     signals:
         void displayInGui(QString);
@@ -47,6 +50,7 @@ class Server : public QObject
         void on_gpsPointReceived(double, double);
 
     private:
+        CRioDataStream *inputStream;
         QTcpServer* server;
         QTcpSocket* socket;
         MessageConsumer* consumer;

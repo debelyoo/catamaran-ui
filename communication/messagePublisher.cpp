@@ -27,6 +27,13 @@ void MessagePublisher::sendCommandMessage(QByteArray data)
     sprintf(str, "Wrote [%d] bytes on wire - flushed: %d", bytesWritten, bytesFlushed);
     //sprintf(str, "Sent value [%d] \n", val);
     qDebug() << str;
-    qDebug() << ba;
+    //qDebug() << ba;
+}
+
+void MessagePublisher::sendMessage(const CRioByteArray &cba)
+{
+    int bytesWritten = socket->write(cba.byteArray());
+    bool bytesFlushed = socket->flush();
+    qDebug() << QString("Wrote [%] bytes on wire - flushed: %.").arg(bytesWritten).arg(bytesFlushed);
 }
 

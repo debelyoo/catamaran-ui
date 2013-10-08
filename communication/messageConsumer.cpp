@@ -4,21 +4,15 @@
 #include <QLibrary>
 #include <QDir>
 
-/**
- * @brief MessageConsumer::MessageConsumer
- * @param parent
- * @param q
- */
-MessageConsumer::MessageConsumer(QObject *parent, QQueue<char> *q) :
-QObject(parent)
+MessageConsumer::MessageConsumer(QObject *parent, CRioDataStream *ds):
+    //crioDataStream(&crioByteArrayIn, QIODevice::ReadWrite)
+    QObject(parent),
+    crioDataStream(ds)
 {
-    sensorConfig = SensorConfig::instance();
-    fileHelper = FileHelper::instance();
-    converter = ByteArrayConverter::instance();
-    dbManager = DatabaseManager::instance();
-    queue = q;
-    consuming = false;
-    waitingData = 0;
+  sensorConfig = SensorConfig::instance();
+  fileHelper = FileHelper::instance();
+  dbManager = DatabaseManager::instance();
+  consuming = false;
 }
 
 /**
@@ -26,117 +20,53 @@ QObject(parent)
  */
 void MessageConsumer::on_dataReceived()
 {
-    checkQueue(true);
-}
-
-/**
- * @brief MessageConsumer::checkQueue
- * @param checkIfConsuming
- */
-void MessageConsumer::checkQueue(bool checkIfConsuming)
-{
-    /*QString str = "[MessageConsumer] checkQueue() - check: "+ QString::number(checkIfConsuming) +", consuming: "+ QString::number(consuming) +", waitingData: "+ QString::number(waitingData) +" \n";
-    printf(str.toLatin1().data());
-    fflush(stdout);
-    */
-
-    if (checkIfConsuming && !consuming) {
+    //checkQueue(true);
+    if(!consuming){
         consuming = true;
-        if (waitingData > 0) {
-            // we are waiting for missing data so parse, so check if we have enough data and act accordingly
-            if (queue->size() >= waitingData) {
-                parseDataMessage();
+        while(crioDataStream->device()->bytesAvailable() >= 5){
+            //qDebug() << "Try to decode Message (buffer length:"<<crioDataStream->device()->bytesAvailable()<<")";
+            // New datastream reader
+            //qDebug() << "ba : " << crioByteArrayIn.toHex();
+            CRioMessage crioMessage(*crioDataStream);
+            //qDebug() << "New CRioMessage : type = " << crioMessage.type();
+            if(crioMessage.isValid()){
+
+                switch(crioMessage.type()){
+                case CRIO::CMD:
+                {
+                    CRioCommand *p = static_cast<CRioCommand *>(crioMessage.content());
+                    //qDebug() << "\tCommand: cmd = " << p->command() << ", addr = " << p->address();
+                    if(p->command() == CRIO::CMD_GET){
+                        handleGetCommand((int)p->address());
+                    }
+                }
+                    break;
+                case CRIO::DATA:
+                {
+                    CRioData *p = static_cast<CRioData *>(crioMessage.content());
+                    //qDebug() << "\tData: address = " << p->address << " ts = " << p->timestamp.timestamp << " datas :";
+                    QVector<DataValue> values;
+
+                    for (int i = 0; i < p->data.count(); i++) {
+                        CRIO::PolymorphicData &d = p->data[i];
+                        DataValue val(d.value, d.cRIOType());
+                        values.push_back(val);
+                        //str += " " + val.first.toString();
+                        //qDebug() << "\t\t"<<(i+1)<<") " << val;
+                    }
+                    DataObject dataObj = DataObject((quint8)p->address.toUShort(), values, p->timestamp.unixTimestamp);
+                    handleMessageData(dataObj);
+                }
+                    break;
+                default:
+                    break;
+                }
             }
-            consuming = false;
-        } else {
-            readQueue();
-            consuming = false;
         }
-    }
-}
-
-/**
- * @brief MessageConsumer::readQueue
- */
-void MessageConsumer::readQueue()
-{
-    if (!queue->isEmpty()) {
-        QString str;
-        int msgType = converter->byteArrayToUInt8(readBytes(1));
-        int msgLength = converter->byteArrayToUInt32(readBytes(4));
-        int qs = queue->size();
-        if (qs < msgLength) {
-            waitingData = msgLength;
-            //printf("[MessageConsumer] Wait data !\n");
-            //fflush(stdout);
-            return; // need to wait for more data
-        }
-        //str = "read >> DATA of length "+ QString::number(msgLength)+" \n";
-        switch (msgType) {
-        case 0:
-            parseDataMessage();
-            break;
-        case 1:
-            parseCmdMessage();
-            break;
-        default:
-            str = "read >> unknown message\n";
-            emit messageParsed(str);
-            break;
-        }
-    } else {
-        //str = "queue is empty !\n";
-        printf("[MessageConsumer] queue is empty !\n");
-        fflush(stdout);
-    }
-}
-
-/**
- * @brief MessageConsumer::readBytes
- * @param nbBytesToRead
- * @return
- */
-QByteArray MessageConsumer::readBytes(int nbBytesToRead)
-{
-    QByteArray ba;
-    int i = 0;
-    while(!queue->isEmpty() && nbBytesToRead > 0) {
-        //QString newChar = QString().sprintf("%c", queue->dequeue());
-        char c = queue->dequeue();
-        ba.append(c);
-        //ba[i] = queue->dequeue();
-        nbBytesToRead--;
-        i++;
+        consuming = false;
     }
 
-    return ba;
-}
-
-/**
- * Parse a "DATA" message
- * @brief MessageConsumer::parseDataMessage
- */
-void MessageConsumer::parseDataMessage()
-{
-    //printf("[MessageConsumer] parseDataMessage !\n");
-    //fflush(stdout);
-    QString str;
-    str = "[DATA] ";
-    int address = converter->byteArrayToUInt8(readBytes(1));
-    str += "address: "+ QString::number(address);
-    int dataArrayLength = converter->byteArrayToUInt32(readBytes(4));
-    QVector<DataValue> values;
-    for (int i = 0; i < dataArrayLength; i++) {
-        DataValue val = decodeDataValue();
-        values.push_back(val);
-        str += " " + val.first.toString();
-    }
-    qint64 ts = decodeTimestamp(); // TODO
-    DataObject dataObj = DataObject(address, values, ts);
-    waitingData = 0;
-    handleMessageData(dataObj);
-    emit messageParsed(str+"\n");
-    checkQueue(false); // force checking queue to parse data that would have arrived meanwhile
+    // end new datastream reader
 }
 
 /**
@@ -147,107 +77,6 @@ void MessageConsumer::parseDataMessage()
 const DataObject MessageConsumer::transformDataObject(DataObject iobj){
     Sensor *s = sensorConfig->getSensor(iobj.getAddress());
     return applyTransformation(s->getType()->getDllName(), iobj);
-}
-
-/**
- * Decode the value from Byte array according to its type.
- * @brief MessageConsumer::decodeDataValue
- * @return
- */
-QPair<QVariant, DataType::Types> MessageConsumer::decodeDataValue()
-{
-    QPair<QVariant, DataType::Types> pair;
-    int valueLength = converter->byteArrayToUInt32(readBytes(4));
-    QByteArray valueBytes = readBytes(valueLength);
-    int valueType = converter->byteArrayToUInt8(readBytes(1));
-    //QString valStr;
-    QVariant valVar;
-    switch (valueType) {
-    case DataType::Double: // double
-    {
-        QByteArray invertedBytes = converter->invertBytes(valueBytes); // invert bytes because for double type Labview sends the bytes in reverse order
-        double d = converter->byteArrayToDouble(invertedBytes);
-        valVar = QVariant(d);
-        break;
-    }
-    case DataType::UInt32: // uint32
-    {
-        quint32 v = converter->byteArrayToUInt32(valueBytes);
-        valVar = QVariant(v);
-        break;
-    }
-    case DataType::UInt16:
-    {
-        quint16 v = converter->byteArrayToUInt16(valueBytes);
-        valVar = QVariant(v);
-        break;
-    }
-    case DataType::UInt8:
-    {
-        quint8 v = converter->byteArrayToUInt8(valueBytes);
-        valVar = QVariant(v);
-        break;
-    }
-    case DataType::Int32:
-    {
-        qint32 v = converter->byteArrayToInt32(valueBytes);
-        valVar = QVariant(v);
-        break;
-    }
-    case DataType::Int16:
-    {
-        qint16 v = converter->byteArrayToInt16(valueBytes);
-        valVar = QVariant(v);
-        break;
-    }
-    case DataType::Int8:
-    {
-        qint8 v = converter->byteArrayToInt8(valueBytes);
-        valVar = QVariant(v);
-        break;
-    }
-    default:
-        //valStr = "NaN";
-        valVar = QVariant();
-        break;
-    }
-    pair.first = valVar;
-    pair.second = (DataType::Types)valueType;
-    return pair;
-}
-
-/**
- * Decode the timestamp from Byte array.
- * @brief MessageConsumer::decodeTimestamp
- * @return
- */
-qint64 MessageConsumer::decodeTimestamp()
-{
-    QByteArray tsBytes = readBytes(16);
-    qint64 seconds = converter->byteArrayToInt64(converter->getFirstBytesOfArray(tsBytes, 8));
-    quint64 fraction = converter->byteArrayToUInt64(converter->getLastBytesOfArray(tsBytes, 8));
-    quint64 divider = 18446744073709551615; // 2^64 -1
-    double decimal = (double)fraction / divider;
-    double ts = seconds + decimal; // labview timestamp: seconds since the epoch 01/01/1904 00:00:00.00 UTC
-    qint64 tsUnix = TimeHelper::labviewTsToUnixTs(ts);
-    char str[128];
-    sprintf(str, "TS: %f, TS unix: %lld\n", ts, tsUnix);
-    qDebug() << str;
-    return tsUnix;
-}
-
-/// For test only
-qint64 MessageConsumer::decodeTimestamp2()
-{
-    QByteArray tsBytes = readBytes(16);
-    double seconds = converter->byteArrayToDouble(converter->getFirstBytesOfArray(tsBytes, 8));
-    double fraction = converter->byteArrayToDouble(converter->getLastBytesOfArray(tsBytes, 8)); // always 0 in test
-    double ts = seconds + fraction;
-    qint64 tsUnix = round(ts * 1000); // milliseconds from epoch
-    char str[128];
-    sprintf(str, "TS: %f, TS unix: %lld", ts, tsUnix);
-    qDebug() << str;
-    return tsUnix;
 }
 
 /**
@@ -332,44 +161,11 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
     }
 }
 
-/**
- * Parse a "CMD" message, detects command type and call the corresponding action
- * @brief MessageConsumer::parseCmdMessage
- */
-void MessageConsumer::parseCmdMessage()
+MessageConsumer::~MessageConsumer()
 {
-    QString str;
-    str = "[CMD] ";
-    int cmd = converter->byteArrayToUInt8(readBytes(1));
-    str += QString::number(cmd);
-    int paramArrayLength = converter->byteArrayToUInt32(readBytes(4));
-    switch (cmd) {
-    case MessageUtil::Get:
-    {
-        // only one param (address)
-        int paramLength = converter->byteArrayToUInt32(readBytes(4));
-        int address = converter->byteArrayToUInt8(readBytes(paramLength));
-        str += " " + QString::number(address);
-        handleGetCommand(address);
-        break;
-    }
-    case MessageUtil::Set:
-    {
-        // only when cRIO sends reference timestamp, params: address, timestamp
-        int param1Length = converter->byteArrayToUInt32(readBytes(4));
-        int param1 = converter->byteArrayToUInt32(readBytes(param1Length));
-        int param2Length = converter->byteArrayToUInt32(readBytes(4));
-        int param2 = converter->byteArrayToDouble(readBytes(param2Length));
-        str += " " + QString::number(param1) + " " + QString::number(param2, 'f', 8);
-        break;
-    }
-    default:
-        break;
-    }
-    waitingData = 0;
-    emit messageParsed(str+"\n");
-    checkQueue(false); // force checking queue to parse data that would have arrived meanwhile
+
 }
+
 
 /**
  * Handle a received GET command
@@ -381,10 +177,8 @@ void MessageConsumer::handleGetCommand(int address)
     switch (address) {
     case 5:
     {
-        // send addresses array (config)        
         Server* s = (Server*)parent();
-        QByteArray data = s->prepareConfigMessage();
-        s->sendCommandMessage(data);
+        s->sendMessage(CRIO::setSensorsConfig(sensorConfig->getSensors()));
         break;
     }
     default:
@@ -445,26 +239,10 @@ const DataObject MessageConsumer::applyTransformation(QString dllName, DataObjec
 {
     if (dllName != "")
     {
-        /*
-        QString libFolderPath = QDir::currentPath() + "/lib";
-        QLibrary library(libFolderPath + "/"+ dllName);
-        bool okLoad = library.load(); // check load DLL file successful or not
-
-        typedef DataObject (*TransformFunction)(DataObject, IDataMessageReceiver*);
-        */
         TransformationBaseClass *tPtr = TransformationManager::instance()->getTransformation(dllName);
         if(tPtr){
             return tPtr->applyTransform(iobj, (IDataMessageReceiver*)this);
         }
-
-        /*
-        if (okLoad)
-        {
-            TransformFunction trsf = (TransformFunction) library.resolve("applyTransform");
-            if (trsf)
-                return trsf(iobj, (IDataMessageReceiver*)this);
-        }
-        */
     }
     return iobj;
 }

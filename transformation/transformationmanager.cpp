@@ -15,9 +15,31 @@ QList<TransformationBaseClass *> TransformationManager::getTransformations() con
     return m_transformations.values();
 }
 
-TransformationBaseClass *TransformationManager::getTransformation(const QString name) const
+TransformationBaseClass *TransformationManager::getTransformation(const QString &name) const
 {
     return m_transformations.value(name);
+}
+
+void TransformationManager::assignTransformationToSensor(const QString &sensor, const QString &transformationName)
+{
+    if(m_assignedTransformations.contains(sensor)){
+        if(m_assignedTransformations[sensor]){
+            delete m_assignedTransformations[sensor];
+        }
+        if(m_transformations.contains(transformationName)){
+            m_assignedTransformations[sensor] = m_transformations[transformationName]->newInstance();
+        }else{
+            m_assignedTransformations.remove(sensor);
+        }
+    }
+}
+
+TransformationBaseClass *TransformationManager::sensorTransformation(const QString &sensor)
+{
+    if(m_assignedTransformations[sensor]){
+        return m_assignedTransformations[sensor];
+    }
+    return NULL;
 }
 
 int TransformationManager::load(QString path)
@@ -34,6 +56,7 @@ int TransformationManager::load(QString path)
 
     QStringList list = dir.entryList();
     qDebug() << "TransformationManager::load(" << dir.path() << "):";
+    int c = 0;
     for(int i=0; i<list.size(); ++i){
         QLibrary library(dir.path() + "/"+ list[i]);
         qDebug() << "Try to load lib: " << (dir.path() + "/"+ list[i]);
@@ -46,11 +69,14 @@ int TransformationManager::load(QString path)
                 TransformationBaseClass* instance = trsf();
                 QString name = instance->getTransformationDefinition().name;
                 m_transformations.insert(name, instance);
+                ++c;
             }
         }else{
             qDebug() << "Loading failed";
         }
     }
+
+    return c;
 }
 
 bool TransformationManager::unload(QString &name)
@@ -80,4 +106,10 @@ int TransformationManager::unloadAll()
 
 TransformationManager::TransformationManager()
 {
+}
+
+TransformationManager::~TransformationManager()
+{
+    qDeleteAll(m_transformations);
+    qDeleteAll(m_assignedTransformations);
 }

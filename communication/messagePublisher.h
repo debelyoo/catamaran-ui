@@ -4,6 +4,7 @@
 #include "util/byteArrayConverter.h"
 #include <QObject>
 #include <QTcpSocket>
+#include "util/criobytearray.h"
 
 class MessagePublisher : public QObject
 {
@@ -14,6 +15,7 @@ class MessagePublisher : public QObject
 
     public slots:
         void sendCommandMessage(QByteArray data);
+        void sendMessage(const CRioByteArray &cba);
 
     private:
         QTcpSocket* socket;

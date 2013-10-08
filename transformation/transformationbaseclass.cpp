@@ -3,6 +3,10 @@
 TransformationBaseClass::TransformationBaseClass(): parameters(){
 }
 
+TransformationBaseClass::~TransformationBaseClass()
+{
+}
+
 void TransformationBaseClass::setParameters(const QVector<QVariant> params){
     parameters = params;
 }

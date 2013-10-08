@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "sensorType.h"
+#include <QList>
 
 namespace SensorList {
     typedef enum {
@@ -53,5 +54,8 @@ class Sensor
         QString logFilePrefix;
         QString currentLogFilename;
 };
+
+Q_DECLARE_METATYPE(Sensor)
+Q_DECLARE_METATYPE(QList<Sensor *>)
 
 #endif // SENSOR_H

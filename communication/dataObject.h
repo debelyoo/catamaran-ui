@@ -7,7 +7,7 @@
 #ifdef DLL_BUILD
 #include "../util/definitions.h"
 #else
-#include "util/definitions.h"
+#include "util/criodefinitions.h"
 #endif
 
 typedef QPair<QVariant, DataType::Types> DataValue;

@@ -11,6 +11,19 @@ SensorInputsModel::~SensorInputsModel()
     delete m_rootItem;
 }
 
+void SensorInputsModel::itemModified()
+{
+    const SensorInputItem *item = static_cast<const SensorInputItem *>(sender());
+    //qDebug() << "item modified at row " << item->childNumber() << " of " << item->parent()->name();
+    if(item){
+        QModelIndex index = createIndex(item->childNumber(), 0, item->parent());
+        emit dataChanged(index, index);
+    }
+    foreach(SensorInputItem * i, item->childs()){
+        connect(i, SIGNAL(itemChanged()), SLOT(itemModified()));
+    }
+}
+
 
 QModelIndex SensorInputsModel::index(int row, int column, const QModelIndex &parent) const
 {
@@ -36,7 +49,7 @@ QModelIndex SensorInputsModel::parent(const QModelIndex &child) const
     SensorInputItem *childItem = getItem(child);
     SensorInputItem *parentItem = childItem->parent();
 
-    if (parentItem == m_rootItem)
+    if (parentItem == m_rootItem || !parentItem)
         return QModelIndex();
 
     return createIndex(parentItem->childNumber(), 0, parentItem);
@@ -76,7 +89,7 @@ void SensorInputsModel::addInput(SensorInputItem *newItem, SensorInputItem *pare
         parent = m_rootItem;
     }
     parent->addChild(newItem);
-
+    connect(newItem, SIGNAL(itemChanged()), SLOT(itemModified()));
 
     QModelIndex index = createIndex(newItem->childNumber(), 0, newItem);
     emit dataChanged(index, index);

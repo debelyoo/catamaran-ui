@@ -26,10 +26,13 @@ public:
     int childCount() const;
     int childNumber() const;
     QVariant data(int col) const;
-    QString sortId();
+    QString sortId() const;
+    TransformationBaseClass *transformation() const;
+    bool setTransformation(TransformationBaseClass *transformation);
 
 protected:
     RegisteredSensorItem *m_parent;
+    SensorInputItem *m_sensorInput;
     QVector<RegisteredSensorItem *> m_childs;
     QString m_name;
     TransformationBaseClass *m_transformation;

@@ -20,7 +20,7 @@ RegisteredSensorsDelegate::RegisteredSensorsDelegate(int column, QObject *parent
 void RegisteredSensorsDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     //if( index.model()->headerData(index.column(), Qt::Horizontal, Qt::UserRole).toInt() == 1 )
-    if(true)
+    if(!(m_isOneCellInEditMode && m_currentEditedCellIndex == index))
     {
         m_button->setGeometry(option.rect);
         m_button->setText(index.data().toString());
@@ -30,18 +30,16 @@ void RegisteredSensorsDelegate::paint(QPainter *painter, const QStyleOptionViewI
         QPixmap map = m_button->grab();
         painter->drawPixmap(option.rect.x(),option.rect.y(),map);
     } else {
-        QStyledItemDelegate::paint(painter,option, index);
+        //QStyledItemDelegate::paint(painter,option, index);
     }
 }
-
-
 
 QWidget *RegisteredSensorsDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Q_UNUSED(option)
     QPushButton *bt = new QPushButton("", parent);
     bt->setFlat(true);
-    bt->setStyleSheet( "background-color: transparent; color: blue; text-decoration: underline;" );
+    bt->setStyleSheet( "background-color: transparent; color: blue; text-decoration: none; font-weight: bold;" );
     bt->setProperty("index", QVariant(index));
     connect(bt, SIGNAL(clicked()), this, SLOT(on_buttonClicked()));
     return bt;
@@ -82,7 +80,7 @@ void RegisteredSensorsDelegate::cellEntered(const QModelIndex &index)
 void RegisteredSensorsDelegate::on_buttonClicked()
 {
     QPushButton *bt = static_cast<QPushButton *>(sender());
-    qDebug() << "Delegate : bt click " << bt->property("index").toModelIndex();
+    //qDebug() << "Delegate : bt click " << bt->property("index").toModelIndex();
     QModelIndex index = bt->property("index").toModelIndex();
     emit buttonClicked(index);
 }
