@@ -474,9 +474,16 @@ void MainWindow::on_clearWpClicked()
     }
 }
 
+/**
+ * Remove all GPS points on map
+ * @brief MainWindow::on_cleanGPSClicked
+ */
 void MainWindow::on_cleanGPSClicked()
 {
-
+    while (!gpsPoints.isEmpty())
+    {
+        delete gpsPoints.first();
+    }
 }
 
 /**
@@ -512,7 +519,8 @@ void MainWindow::drawPointOnMap(double x, double y)
 {
     double rad = 1;
     QColor color = QColor(255, 90, 0); // orange
-    ui->graphicsView->scene()->addEllipse(x-rad, y-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
+    QGraphicsEllipseItem* pt = ui->graphicsView->scene()->addEllipse(x-rad, y-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
+    gpsPoints.push_back(pt); // add the point in array to be remove when click on "clean GPS points" button
     // center view on new point
     ui->graphicsView->centerOn(x, y);
 }

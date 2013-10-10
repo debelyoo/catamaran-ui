@@ -121,6 +121,7 @@ private:
         QGraphicsLineItem* line;
     };
     QList<PointOnMap> wayPoints;
+    QList<QGraphicsEllipseItem*> gpsPoints;
     void removeLastWaypoint();
     void sendWaypointCommand(quint8 command, QList<QPointF> points);
     void applyStyle();
