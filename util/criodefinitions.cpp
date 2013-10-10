@@ -28,7 +28,7 @@ CRIO::Timestamp::Timestamp(CRioDataStream &ds)
     qint64 secs;
     quint64 fracs;
     ds >> secs;
-    (*(QDataStream *) &ds) >> fracs;
+    ds >> fracs;
     timestamp = secs + ((double) fracs) / Q_UINT64_C(18446744073709551615);
     unixTimestamp = toUnixMsTimestamp(timestamp);
 }

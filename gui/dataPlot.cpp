@@ -70,9 +70,9 @@ void DataPlot::updatePlot()
 {
     //qDebug() << "DataPlot.updatePlot()";
     double now = QDateTime::currentDateTime().toTime_t();
-    //int fromTs = now - timeWindow;
+    int fromTsAxis = now - timeWindow;
     int fromTs = now - 1; // time window of 1 second
-    //qDebug() << "Range: "+ QString::number(fromTs)+" -> "+ QString::number(now);
+    //qDebug() << "Range axis Y: " << minValue << " -> " << maxValue;
     for (int i=0; i<sensorsToPlot.size(); ++i)
     {
         // get data for sensor
@@ -81,20 +81,23 @@ void DataPlot::updatePlot()
         //qDebug() << data.first.count();
         if (data.first.size() > 0)
         {
-            //this->graph(i)->setData(data.first, data.second);
-            this->graph(i)->removeData(0, fromTs); // remove old data
+            this->graph(i)->removeData(0, fromTsAxis); // remove old data
             this->graph(i)->addData(data.first, data.second); // add data from the last second
             QVector<double> vVal = data.second;
             qSort(vVal);
-            if (vVal.first() < minValue)
-                minValue = vVal.first() - (vVal.first() * 0.1);
-            if (vVal.last() > maxValue)
-                maxValue = vVal.last() + (vVal.last() * 0.1);
+            if (vVal.first() < minValue){
+                minValue = vVal.first();
+                minValue *= (minValue < 0)?1.1:0.9;
+            }
+            if (vVal.last() > maxValue){
+                maxValue = vVal.last();
+                maxValue *= (maxValue > 0)?1.1:0.9;
+            }
             //this->graph(i)->rescaleValueAxis(false);
         }
     }
     // set axis ranges to show all data:
-    this->xAxis->setRange(fromTs, now);
+    this->xAxis->setRange(fromTsAxis, now);
     this->yAxis->setRange(minValue, maxValue);
     // redraw plot
     this->replot();

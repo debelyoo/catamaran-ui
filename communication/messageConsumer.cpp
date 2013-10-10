@@ -55,6 +55,7 @@ void MessageConsumer::on_dataReceived()
                         //qDebug() << "\t\t"<<(i+1)<<") " << val;
                     }
                     DataObject dataObj = DataObject((quint8)p->address.toUShort(), values, p->timestamp.unixTimestamp);
+                    //qDebug() << "crioData.ts="<<QDateTime::fromMSecsSinceEpoch(p->timestamp.unixTimestamp)<<" dataObject.ts="<<QDateTime::fromMSecsSinceEpoch(dataObj.getTimestamp());
                     handleMessageData(dataObj);
                 }
                     break;
@@ -90,7 +91,18 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
 {
     if (sensorConfig->containsSensor(idataObj.getAddress()))
     {
+        // Temporary modification for test on 09.10.2013
+        if(idataObj.getAddress() == 53){
+            QVector<DataValue> tmpV; tmpV.append(idataObj.getValues()[1]);
+            idataObj = DataObject(idataObj.getAddress(), tmpV, idataObj.getTimestamp());
+        }
+        // End of temporary modification for 09.10.2013
+
         DataObject dataObj = transformDataObject(idataObj);
+//        qDebug() << "New data: addr=" << dataObj.getAddress() << " TS=" << QDateTime::fromMSecsSinceEpoch(dataObj.getTimestamp());
+//        foreach(DataValue dv, dataObj.getValues()){
+//            qDebug() << "\t" << dv.first;
+//        }
 
         Sensor *s = sensorConfig->getSensor(dataObj.getAddress());
         // switch can not be used with QString
@@ -154,6 +166,13 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
             qDebug() << "[MessageConsumer] Unknown sensor type !\n";
             break;
         }
+        QString outputStr = QDateTime::fromMSecsSinceEpoch(dataObj.getTimestamp()).toString("hh:mm:ss.zzz") + ": Addr(%1)=";
+        outputStr = outputStr.arg(dataObj.getAddress());
+        foreach(DataValue dv, dataObj.getValues()){
+            outputStr += QString("[%1]").arg(dv.first.toDouble());
+        }
+        outputStr += "\r\n";
+        emit messageParsed(outputStr);
     }
     else
     {

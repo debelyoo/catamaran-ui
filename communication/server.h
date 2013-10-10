@@ -33,7 +33,7 @@ class Server : public QObject
         explicit Server(QObject *parent = 0);
         void listen();
         bool isConnected();
-        QByteArray prepareConfigMessage();
+        //QByteArray prepareConfigMessage();
         void sendCommandMessage(QByteArray data);
         void sendMessage(const CRioByteArray &cba);
 
@@ -41,10 +41,11 @@ class Server : public QObject
         void displayInGui(QString);
         void dataReceived();
         void gpsPointReceived(double, double);
+        void newConnection();
 
     public slots:
         void on_newConnection();
-        void on_readyRead();
+        //void on_readyRead();
         void on_disconnected();
         void on_messageParsed(QString);
         void on_gpsPointReceived(double, double);
@@ -57,8 +58,6 @@ class Server : public QObject
         MessagePublisher* publisher;
         DatabaseManager* dbManager;
         SensorConfig* sensorConfig; // singleton
-        ByteArrayConverter *converter;
-        QQueue<char> *queue;
         static const int BYTE_CHUNK_SIZE_TO_READ = 32; // in bytes
         bool connected;
 };

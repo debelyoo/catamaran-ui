@@ -89,6 +89,22 @@ namespace CRIO {
         Object(){}
     };
 
+    namespace Memory {
+        typedef enum {
+        NI9217_1_SAMPLING_PERIOD = 0,          //	25-65535	[ms] (Multiple of 25ms ex. 25, 100, 575)
+        NI9217_1_SAMPLING_MODE = 4,            //	0-65535	0=>Low Res. (2.5ms), otherwise=>High Res. (200ms)
+        NI9217_2_SAMPLING_PERIOD = 5,          //	25-65535	[ms] (Multiple of 25ms ex. 25, 100, 575)
+        NI9217_2_SAMPLING_MODE = 9,            //	0-65535	0=>Low Res. (2.5ms), otherwise=>High Res. (200ms)
+        FPGA_COUNTER_1_SAMPLING_TIME = 10      //	0-65535	[ms]
+        //FPGA Counter-1/Bound port	0-8	0=>Disabled, [1-8] => [DIO0, DIO7]
+        }ADDR_16B_BLOC;
+    }
+
+    typedef enum {
+        LOW_RES = 0,
+        HIGH_RES = 1
+    }PT100_SAMPLEING_RESOLUTION;
+
     struct Timestamp{
         static qint64 toUnixMsTimestamp(double timestamp);
         double timestamp;

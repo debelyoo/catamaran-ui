@@ -14,13 +14,9 @@ Server::Server(QObject *parent) :
     sensorConfig = SensorConfig::instance();
     dbManager = DatabaseManager::instance();
     server = new QTcpServer(this);
-    queue = new QQueue<char>();
+    //queue = new QQueue<char>();
     connected = false;
     connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
-    connect(this, SIGNAL(dataReceived()), consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
-    /// signals to be relayed to GUI
-    connect(consumer, SIGNAL(messageParsed(QString)), this, SLOT(on_messageParsed(QString)));
-    connect(consumer, SIGNAL(gpsPointReceived(double,double)), this, SLOT(on_gpsPointReceived(double,double)));
 }
 
 void Server::listen()
@@ -61,8 +57,9 @@ void Server::on_newConnection()
     connect(socket, SIGNAL(disconnected()), this, SLOT(on_disconnected()));
     //connect(socket, SIGNAL(readyRead()), this, SLOT(on_readyRead()));
     connect(socket, SIGNAL(readyRead()), this, SIGNAL(dataReceived()));
+    emit newConnection();
 }
-
+/*
 void Server::on_readyRead()
 {
     while(socket->bytesAvailable() > 0)
@@ -87,7 +84,7 @@ void Server::on_readyRead()
         emit dataReceived();
     }
 }
-
+*/
 void Server::on_disconnected()
 {
     //printf("Connection disconnected.\n");
@@ -119,7 +116,7 @@ void Server::on_gpsPointReceived(double x, double y)
 {
     emit gpsPointReceived(x, y);
 }
-
+/*
 QByteArray Server::prepareConfigMessage()
 {
     quint8 command = MessageUtil::Set;
@@ -134,7 +131,7 @@ QByteArray Server::prepareConfigMessage()
     data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
     return data;
 }
-
+*/
 void Server::sendCommandMessage(QByteArray msg)
 {
     if (isConnected())

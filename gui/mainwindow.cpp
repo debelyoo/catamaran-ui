@@ -46,6 +46,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // start server
     s = new Server(this);
     QObject::connect(s, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
+    connect(s, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
     s->listen();
     sliderIsMoving = false;
     previousSpeedValue = 0;
@@ -79,6 +80,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->graphicsView->viewport()->installEventFilter(new MouseClickHandler(this));
     connect(ui->removeWpBtn, SIGNAL(clicked()), this, SLOT(on_removeWpClicked()));
     connect(ui->clearWpBtn, SIGNAL(clicked()), this, SLOT(on_clearWpClicked()));
+    connect(ui->startNavigationWpBtn, SIGNAL(clicked()), this, SLOT(on_navSysStart()));
 
     // Honk and Light
     connect(ui->lightBtn, SIGNAL(clicked()), this, SLOT(on_lightCheckBoxChange()));
@@ -207,7 +209,7 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSpinBox->setEnabled(true);
         ui->waypointGroupBox->hide();
         ui->stopBtn->show();
-        ((Server*)parent())->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_MANUAL));
+        s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_MANUAL));
     }
     else
     {
@@ -219,7 +221,7 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSpinBox->setEnabled(false);
         ui->stopBtn->hide();
         ui->waypointGroupBox->show();
-        ((Server*)parent())->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_AUTO));
+
     }
 
 }
@@ -256,8 +258,9 @@ void MainWindow::on_saveConfigClicked()
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");
     // send config to cRio
-    QByteArray data = s->prepareConfigMessage();
-    s->sendCommandMessage(data);
+    //QByteArray data = s->prepareConfigMessage();
+    //s->sendCommandMessage(data);
+    s->sendMessage(CRIO::setSensorsConfig(sensorConfig->getSensors()));
     // recreate plots panel
     clearPlotsPanel();
     createPlotsPanel();
@@ -479,6 +482,13 @@ void MainWindow::on_graphWheelEvent(QWheelEvent* ev)
     sa->verticalScrollBar()->setValue(sa->verticalScrollBar()->value() - ev->delta());
 }
 
+void MainWindow::on_newConnection()
+{
+    s->sendMessage(CRIO::setFpgaCounterSamplingTime(2250));
+    s->sendMessage(CRIO::setSabertoothState(CRIO::ON));
+    //qDebug() << "Send setFpgaCounterSamplingTime(2250), ba=" << CRIO::setFpgaCounterSamplingTime(2250).byteArray().toHex();
+}
+
 void MainWindow::setSliderIsMoving(bool b)
 {
     sliderIsMoving = b;
@@ -530,6 +540,11 @@ void MainWindow::drawWayPointOnMap(QPoint newPoint)
     }
 }
 
+void MainWindow::on_navSysStart()
+{
+    s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_AUTO));
+}
+
 /**
  * Send a waypoint command (Set/Add/Delete) to cRIO
  * @brief MainWindow::sendWaypointCommand
@@ -540,20 +555,18 @@ void MainWindow::sendWaypointCommand(quint8 command, QList<QPointF> points)
 {
     switch (command) {
     case MessageUtil::Set:
+        s->sendMessage(CRIO::setWaypointsCmd(points));
+        break;
     case MessageUtil::Add:
-    {
         s->sendMessage(CRIO::addWaypointCmd(points[0]));
-    }
         break;
     case MessageUtil::Delete:
-    {
-        s->sendMessage(CRIO::setWaypointsCmd(points));
-    }
+        s->sendMessage(CRIO::delWaypointCmd());
         break;
     default:
         break;
     }
-    qDebug() << "sendWaypointCommand()";
+    //qDebug() << "sendWaypointCommand()";
 }
 
 void MainWindow::applyStyle()
@@ -947,6 +960,9 @@ void MainWindow::changeSaveBtnColor(QString cssColor)
 
 void MainWindow::removeLastWaypoint()
 {
+    if(wayPoints.empty()){
+        return;
+    }
     PointOnMap pom = (PointOnMap)wayPoints.last();
     delete pom.circle;
     if (pom.line != 0)

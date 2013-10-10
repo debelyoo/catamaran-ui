@@ -124,7 +124,9 @@ CRioDataStream &CRioDataStream::operator >>(CRIO::Timestamp &ts)
     quint64 fracs;
     (*this) >> secs;
     (*this) >> fracs;
-    ts.timestamp = CRIO::Timestamp(secs, fracs).timestamp;
+    CRIO::Timestamp tmp(secs, fracs);
+    ts.timestamp = tmp.timestamp;
+    ts.unixTimestamp = tmp.unixTimestamp;
     return *this;
 }
 

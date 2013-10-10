@@ -27,8 +27,7 @@ class CRioByteArray;
 namespace CRIO {
     CRioByteArray setEngineCmd(const Engines engine, const qint8 value);
     CRioByteArray stopCmd();
-    CRioByteArray addWaypointCmd(const QPointF &p, int index = -1);
-    CRioByteArray setWaypointsCmd(const QList<QPointF> &points);
+
     CRioByteArray setSensorsConfig(const QList<Sensor *> &sensors);
     CRioByteArray setNavSysMode(const CRIO::NAV_SYS_MODE &mode);
     CRioByteArray setNavSysConstants(const double C_perp, const double C_point, const double C_aheadD, const double Kp_Y, const double Kp_V);
@@ -38,7 +37,20 @@ namespace CRIO {
     CRioByteArray setSabertoothState(const CRIO::ON_OFF &mode);
     CRioByteArray setSabertoothConfig(const quint8 &configAddr, const quint8 &value);
 
+    CRioByteArray addWaypointCmd(const QPointF &p, int index = -1);
+    CRioByteArray setWaypointsCmd(const QList<QPointF> &points);
+    CRioByteArray delWaypointCmd();
+
     CRioByteArray getCommand(const CRIO::CommandAddresses &addr);
+
+    // Memories
+    CRioByteArray get16bMemory(const CRIO::Memory::ADDR_16B_BLOC &addr);
+    CRioByteArray set16bMemory(const CRIO::Memory::ADDR_16B_BLOC &addr, const quint16 &value);
+
+    // PT100 config
+
+    // FGPA counter config
+    CRioByteArray setFpgaCounterSamplingTime(const quint16 &ms);
 }
 
 

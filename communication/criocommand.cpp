@@ -113,11 +113,13 @@ void CRioCommand::addParameter(QVariant p){
 CRioByteArray CRIO::setEngineCmd(const Engines engine, const qint8 value){
     CRioCommand cmd(CMD_SET, (engine==LEFT)?ADDR_LEFT_ENGINE:ADDR_RIGHT_ENGINE);
     cmd.addParameter(QVariant::fromValue(value));
+    qDebug() << "Send Engine Cmd";
     return CRioByteArray(cmd);
 }
 
 CRioByteArray CRIO::stopCmd(){
     CRioCommand cmd(CMD_STOP);
+    qDebug() << "Send STOP Cmd";
     return CRioByteArray(cmd);
 }
 
@@ -127,6 +129,7 @@ CRioByteArray CRIO::addWaypointCmd(const QPointF &p, int index){
     if(index >= 0){
         cmd.addParameter(QVariant::fromValue((quint16) index));
     }
+    qDebug() << "Send addWayPoint Cmd";
     return CRioByteArray(cmd);
 }
 
@@ -135,6 +138,7 @@ CRioByteArray CRIO::setWaypointsCmd(const QList<QPointF> &points){
     foreach(QPointF p, points){
         cmd.addParameter(QVariant(p));
     }
+    qDebug() << "Send setWaypoints Cmd";
     return CRioByteArray(cmd);
 }
 
@@ -142,6 +146,7 @@ CRioByteArray CRIO::setSensorsConfig(const QList<Sensor *> &sensors)
 {
     CRioCommand cmd(CMD_SET, ADDR_SENSOR_CONFIG);
     cmd.addParameter(QVariant::fromValue(sensors));
+    qDebug() << "Send SensorConfig Cmd";
     return CRioByteArray(cmd);
 }
 
@@ -149,6 +154,7 @@ CRioByteArray CRIO::setNavSysMode(const CRIO::NAV_SYS_MODE &mode)
 {
     CRioCommand cmd(CMD_SET, ADDR_ENGINE_MODE);
     cmd.addParameter(QVariant::fromValue((quint8) mode));
+    qDebug() << "Send Nav mode Cmd";
     return CRioByteArray(cmd);
 }
 
@@ -168,8 +174,8 @@ CRioByteArray CRIO::setNavSysConstants(const double C_perp, const double C_point
 CRioByteArray CRIO::setNavSysLimits(const double delta, const double epsilon)
 {
     CRioCommand cmd(CMD_SET, ADDR_NS_LIMITS);
-    cmd.addParameter(QVariant::fromValue(delta));
     cmd.addParameter(QVariant::fromValue(epsilon));
+    cmd.addParameter(QVariant::fromValue(delta));
     return CRioByteArray(cmd);
 }
 
@@ -210,5 +216,38 @@ CRioByteArray CRIO::setSabertoothConfig(const quint8 &configAddr, const quint8 &
 CRioByteArray CRIO::getCommand(const CRIO::CommandAddresses &addr)
 {
     CRioCommand cmd(CMD_GET, addr);
+    return CRioByteArray(cmd);
+}
+
+
+CRioByteArray CRIO::get16bMemory(const CRIO::Memory::ADDR_16B_BLOC &addr)
+{
+    CRioCommand cmd(CMD_GET, CRIO::ADDR_MEMORY_16BIT);
+    cmd.addParameter(QVariant::fromValue((quint8) addr));
+    return CRioByteArray(cmd);
+}
+
+
+CRioByteArray CRIO::set16bMemory(const CRIO::Memory::ADDR_16B_BLOC &addr, const quint16 &value)
+{
+    CRioCommand cmd(CMD_SET, CRIO::ADDR_MEMORY_16BIT);
+    cmd.addParameter(QVariant::fromValue((quint8) addr));
+    cmd.addParameter(QVariant::fromValue(value));
+    return CRioByteArray(cmd);
+}
+
+
+CRioByteArray CRIO::setFpgaCounterSamplingTime(const quint16 &ms)
+{
+    CRioCommand cmd(CMD_SET, CRIO::ADDR_MEMORY_16BIT);
+    cmd.addParameter(QVariant::fromValue((quint8) CRIO::Memory::FPGA_COUNTER_1_SAMPLING_TIME));
+    cmd.addParameter(QVariant::fromValue(ms));
+    return CRioByteArray(cmd);
+}
+
+
+CRioByteArray CRIO::delWaypointCmd()
+{
+    CRioCommand cmd(CMD_DEL, CRIO::ADDR_NS_WAYPOINTS);
     return CRioByteArray(cmd);
 }

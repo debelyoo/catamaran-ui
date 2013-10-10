@@ -32,6 +32,7 @@ public:
     void drawWayPointOnMap(QPoint);
     
 public slots:
+    void on_navSysStart();
     void addStatusText(QString);
     void updateLeftSpinBox();
     void updateRightSpinBox();
@@ -50,6 +51,8 @@ public slots:
     void on_removeWpClicked();
     void on_clearWpClicked();
     void on_graphWheelEvent(QWheelEvent*);
+    /// server event
+    void on_newConnection();
     /// config update
     void on_addressValueChanged(QString, int);
     void on_nameValueChanged(QString, int);

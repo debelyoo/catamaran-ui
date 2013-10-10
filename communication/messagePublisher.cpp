@@ -34,6 +34,6 @@ void MessagePublisher::sendMessage(const CRioByteArray &cba)
 {
     int bytesWritten = socket->write(cba.byteArray());
     bool bytesFlushed = socket->flush();
-    qDebug() << QString("Wrote [%] bytes on wire - flushed: %.").arg(bytesWritten).arg(bytesFlushed);
+    qDebug() << QString("Wrote [%1] bytes on wire - flushed: %2. ba=").arg(bytesWritten).arg(bytesFlushed) << cba.byteArray().toHex();
 }
 
