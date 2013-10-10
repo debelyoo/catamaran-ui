@@ -24,6 +24,7 @@ private:
     DatabaseManager* dbManager;
     QList<Sensor*> sensorsToPlot;
     QPair< QVector<double>, QVector<double> > getData(int gi);
+    void updateMinMaxValues(QVector<double> vVal);
     int timeWindow;
     int minValue, maxValue;
 };

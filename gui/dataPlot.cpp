@@ -15,16 +15,12 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
     {
         this->addGraph();
         QPen pen;
-        //before: 0, 0, 255, 200
-        QColor color = new QColor(QColor::Hsl);
         int hueOffset = 30; // the offset for the first color (30° -> orange)
-        color.setHsl(hueOffset + (25*gi), 100, 70, 200);
-        pen.setColor(color);
+        pen.setColor(QColor::fromHsl(hueOffset + (25*gi), 255, 150));
         //pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
         this->graph(gi)->setLineStyle(QCPGraph::lsLine);
         this->graph(gi)->setPen(pen);
         this->graph(gi)->setName(sensorsToPlot[gi]->getName());
-        //customPlot->graph()->setBrush(QBrush(QColor(255/4.0*gi,160,50,150)));
         // get data
         QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[gi], fromTs);
         this->graph(gi)->setData(data.first, data.second);
@@ -98,15 +94,17 @@ void DataPlot::updatePlot()
 
 void DataPlot::updateMinMaxValues(QVector<double> values)
 {
-    QVector<double> vVal = values; // copy vector to sort it
-    qSort(vVal); // sort values from smallest to highest
-    if (vVal.first() < minValue){
-        minValue = vVal.first();
-        minValue *= (minValue < 0)?1.1:0.9;
-    }
-    if (vVal.last() > maxValue){
-        maxValue = vVal.last();
-        maxValue *= (maxValue > 0)?1.1:0.9;
+    if (!values.isEmpty()) {
+        QVector<double> vVal = values; // copy vector to sort it
+        qSort(vVal); // sort values from smallest to highest
+        if (vVal.first() < minValue){
+            minValue = vVal.first();
+            minValue *= (minValue < 0)?1.1:0.9;
+        }
+        if (vVal.last() > maxValue){
+            maxValue = vVal.last();
+            maxValue *= (maxValue > 0)?1.1:0.9;
+        }
     }
 }
 
