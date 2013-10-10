@@ -25,7 +25,7 @@ protected:
 
 class CRioByteArray;
 namespace CRIO {
-    CRioByteArray setEngineCmd(const Engines engine, const qint8 value);
+    CRioByteArray setEngine(const Engines engine, const qint8 value);
     CRioByteArray stop();
 
     CRioByteArray setSensorsConfig(const QList<Sensor *> &sensors);

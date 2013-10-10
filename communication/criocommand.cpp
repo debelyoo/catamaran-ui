@@ -110,7 +110,7 @@ void CRioCommand::addParameter(QVariant p){
 /*
  *  Command factory method
  */
-CRioByteArray CRIO::setEngineCmd(const Engines engine, const qint8 value){
+CRioByteArray CRIO::setEngine(const Engines engine, const qint8 value){
     CRioCommand cmd(CMD_SET, (engine==LEFT)?ADDR_LEFT_ENGINE:ADDR_RIGHT_ENGINE);
     cmd.addParameter(QVariant::fromValue(value));
     qDebug() << "Send Engine Cmd";

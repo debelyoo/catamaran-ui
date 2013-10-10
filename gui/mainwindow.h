@@ -81,6 +81,7 @@ public slots:
     void on_nsValueChange();
     void on_getNSCongifBtnClick();
     void on_defaultNSConfigClick();
+    void on_engineValueAutoUpdate();
 
 protected:
     void keyPressEvent(QKeyEvent* event);

@@ -126,7 +126,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButton">
+                 <widget class="QPushButton" name="cleanGPSBtn">
                   <property name="text">
                    <string>Clean GPS points</string>
                   </property>

@@ -436,6 +436,11 @@ void MainWindow::on_defaultNSConfigClick()
     ui->l1->setValue(0.5);
 }
 
+void MainWindow::on_engineValueAutoUpdate()
+{
+
+}
+
 void MainWindow::zoomIn()
 {
     ui->zoomSlider->setValue(ui->zoomSlider->value() + zoomStep);
