@@ -44,12 +44,14 @@ public slots:
     void on_speedValueChanged(int);
     void on_directionValueChanged(int);
     void setSliderIsMoving(bool);
+    /// Map
     void zoomIn();
     void zoomOut();
     void setupMatrix();
     void drawPointOnMap(double, double);
     void on_removeWpClicked();
     void on_clearWpClicked();
+    void on_cleanGPSClicked();
     void on_graphWheelEvent(QWheelEvent*);
     /// server event
     void on_newConnection();
@@ -88,7 +90,7 @@ private:
     Server *s;
     SensorConfig* sensorConfig; // singleton
     FileHelper* fileHelper;
-    ByteArrayConverter* converter; // singleton
+    //ByteArrayConverter* converter; // singleton
     CoordinateHelper* coordinateHelper;
     bool sliderIsMoving;
     int previousSpeedValue, previousDirectionValue;

@@ -117,7 +117,7 @@ CRioByteArray CRIO::setEngineCmd(const Engines engine, const qint8 value){
     return CRioByteArray(cmd);
 }
 
-CRioByteArray CRIO::stopCmd(){
+CRioByteArray CRIO::stop(){
     CRioCommand cmd(CMD_STOP);
     qDebug() << "Send STOP Cmd";
     return CRioByteArray(cmd);

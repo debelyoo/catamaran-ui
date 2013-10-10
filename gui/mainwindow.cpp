@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     zoomStep = 10;
     sensorConfig = SensorConfig::instance();
     fileHelper = FileHelper::instance();
-    converter = ByteArrayConverter::instance();
+    //converter = ByteArrayConverter::instance();
     coordinateHelper = CoordinateHelper::instance();
 
     ui->setupUi(this);
@@ -55,23 +55,23 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(s, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
     connect(ui->navModeComboBox, SIGNAL(activated(int)), this, SLOT(on_navModeChanged(int)));
     // engines' sliders & spinboxes
-    QObject::connect(ui->leftSlider, SIGNAL(valueChanged(int)), ui->leftSpinBox, SLOT(setValue(int)));
-    QObject::connect(ui->rightSlider, SIGNAL(valueChanged(int)), ui->rightSpinBox, SLOT(setValue(int)));
-    QObject::connect(ui->leftSpinBox, SIGNAL(valueChanged(int)), ui->leftSlider, SLOT(setValue(int)));
-    QObject::connect(ui->rightSpinBox, SIGNAL(valueChanged(int)), ui->rightSlider, SLOT(setValue(int)));
+    connect(ui->leftSlider, SIGNAL(valueChanged(int)), ui->leftSpinBox, SLOT(setValue(int)));
+    connect(ui->rightSlider, SIGNAL(valueChanged(int)), ui->rightSpinBox, SLOT(setValue(int)));
+    connect(ui->leftSpinBox, SIGNAL(valueChanged(int)), ui->leftSlider, SLOT(setValue(int)));
+    connect(ui->rightSpinBox, SIGNAL(valueChanged(int)), ui->rightSlider, SLOT(setValue(int)));
 
     // speed and direction sliders & spinboxes
-    QObject::connect(ui->speedSlider, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
-    QObject::connect(ui->directionSlider, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
-    QObject::connect(ui->speedSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
-    QObject::connect(ui->directionSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+    connect(ui->speedSlider, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
+    connect(ui->directionSlider, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+    connect(ui->speedSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
+    connect(ui->directionSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
     ui->speedSpinBox->installEventFilter(new MouseClickHandler(this));
     ui->directionSpinBox->installEventFilter(new MouseClickHandler(this));
 
-    QObject::connect(ui->speedSlider, SIGNAL(sliderPressed()), this, SLOT(on_sliderPressed()));
-    QObject::connect(ui->directionSlider, SIGNAL(sliderPressed()), this, SLOT(on_sliderPressed()));
-    QObject::connect(ui->speedSlider, SIGNAL(sliderReleased()), this, SLOT(on_sliderReleased()));
-    QObject::connect(ui->directionSlider, SIGNAL(sliderReleased()), this, SLOT(on_sliderReleased()));
+    connect(ui->speedSlider, SIGNAL(sliderPressed()), this, SLOT(on_sliderPressed()));
+    connect(ui->directionSlider, SIGNAL(sliderPressed()), this, SLOT(on_sliderPressed()));
+    connect(ui->speedSlider, SIGNAL(sliderReleased()), this, SLOT(on_sliderReleased()));
+    connect(ui->directionSlider, SIGNAL(sliderReleased()), this, SLOT(on_sliderReleased()));
 
     // map view
     connect(ui->zoomInBtn, SIGNAL(clicked()), this, SLOT(zoomIn()));
@@ -81,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->removeWpBtn, SIGNAL(clicked()), this, SLOT(on_removeWpClicked()));
     connect(ui->clearWpBtn, SIGNAL(clicked()), this, SLOT(on_clearWpClicked()));
     connect(ui->startNavigationWpBtn, SIGNAL(clicked()), this, SLOT(on_navSysStart()));
+    connect(ui->cleanGPSBtn, SIGNAL(clicked()), this, SLOT(on_cleanGPSClicked()));
 
     // Honk and Light
     connect(ui->lightBtn, SIGNAL(clicked()), this, SLOT(on_lightCheckBoxChange()));
@@ -210,6 +211,8 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->waypointGroupBox->hide();
         ui->stopBtn->show();
         s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_MANUAL));
+        ui->startNavigationWpBtn->setText("Start");
+        ui->startNavigationWpBtn->setProperty("started", false);
     }
     else
     {
@@ -257,11 +260,7 @@ void MainWindow::on_saveConfigClicked()
     fileHelper->createLogFiles(sensorConfig);
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");
-    // send config to cRio
-    //QByteArray data = s->prepareConfigMessage();
-    //s->sendCommandMessage(data);
     s->sendMessage(CRIO::setSensorsConfig(sensorConfig->getSensors()));
-    // recreate plots panel
     clearPlotsPanel();
     createPlotsPanel();
 }
@@ -470,6 +469,11 @@ void MainWindow::on_clearWpClicked()
     }
 }
 
+void MainWindow::on_cleanGPSClicked()
+{
+
+}
+
 /**
  * Scroll the plots container when scroll is triggered over a plot
  * @brief MainWindow::on_graphWheelEvent
@@ -486,7 +490,6 @@ void MainWindow::on_newConnection()
 {
     s->sendMessage(CRIO::setFpgaCounterSamplingTime(2250));
     s->sendMessage(CRIO::setSabertoothState(CRIO::ON));
-    //qDebug() << "Send setFpgaCounterSamplingTime(2250), ba=" << CRIO::setFpgaCounterSamplingTime(2250).byteArray().toHex();
 }
 
 void MainWindow::setSliderIsMoving(bool b)
@@ -542,7 +545,17 @@ void MainWindow::drawWayPointOnMap(QPoint newPoint)
 
 void MainWindow::on_navSysStart()
 {
-    s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_AUTO));
+    QVariant started = ui->startNavigationWpBtn->property("started");
+    if(!started.isValid() || !started.toBool()){
+        s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_AUTO));
+        ui->startNavigationWpBtn->setText("Stop");
+        ui->startNavigationWpBtn->setProperty("started", true);
+    }else{
+        s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_MANUAL));
+        s->sendMessage(CRIO::stop());
+        ui->startNavigationWpBtn->setText("Start");
+        ui->startNavigationWpBtn->setProperty("started", false);
+    }
 }
 
 /**
@@ -609,33 +622,33 @@ void MainWindow::sendLeftEngineCommand()
 {
     // command (uint8) | length array (uint32) | length engine addr (uint32) |engine addr (uint8) | length value (uint32) | value (int8)
     int val = ui->leftSlider->value();
-    quint8 command = MessageUtil::Set;
-    quint8 engineAddr = 7;
-    QByteArray data;
-    data.push_back(command);
-    data.push_back(converter->intToByteArray(2, 4)); // array len
-    data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
-    data.push_back(converter->byteArrayForCmdParameterInt(val));
-    s->sendCommandMessage(data);
-    char str[128];
-    sprintf(str, "sendLeftEngineCommand() [%d]", correctEngineCommandValue(val));
-    qDebug() << str;
+//    quint8 command = MessageUtil::Set;
+//    quint8 engineAddr = 7;
+//    QByteArray data;
+//    data.push_back(command);
+//    data.push_back(converter->intToByteArray(2, 4)); // array len
+//    data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
+//    data.push_back(converter->byteArrayForCmdParameterInt(val));
+//    s->sendCommandMessage(data);
+
+    s->sendMessage(CRIO::setEngine(CRIO::LEFT, (qint8) correctEngineCommandValue(val)));
+    qDebug() << "sendLeftEngineCommand() [" << correctEngineCommandValue(val) << "]";
 }
 
 void MainWindow::sendRightEngineCommand()
 {
     int val = ui->rightSlider->value();
-    quint8 command = MessageUtil::Set;
-    quint8 engineAddr = 8;
-    QByteArray data;
-    data.push_back(command);
-    data.push_back(converter->intToByteArray(2, 4));
-    data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
-    data.push_back(converter->byteArrayForCmdParameterInt(val));
-    s->sendCommandMessage(data);
-    char str[128];
-    sprintf(str, "sendRightEngineCommand() [%d]", correctEngineCommandValue(val));
-    qDebug() << str;
+//    quint8 command = MessageUtil::Set;
+//    quint8 engineAddr = 8;
+//    QByteArray data;
+//    data.push_back(command);
+//    data.push_back(converter->intToByteArray(2, 4));
+//    data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
+//    data.push_back(converter->byteArrayForCmdParameterInt(val));
+//    s->sendCommandMessage(data);
+
+    s->sendMessage(CRIO::setEngine(CRIO::RIGHT, (qint8) correctEngineCommandValue(val)));
+    qDebug() << "sendRightEngineCommand() [" << correctEngineCommandValue(val) << "]";
 }
 
 /**

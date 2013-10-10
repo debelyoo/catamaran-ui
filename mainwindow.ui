@@ -106,7 +106,35 @@
              </layout>
             </item>
             <item>
-             <widget class="QGraphicsView" name="graphicsView"/>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <item>
+               <widget class="QGraphicsView" name="graphicsView"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <item>
+                 <spacer name="horizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pushButton">
+                  <property name="text">
+                   <string>Clean GPS points</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </item>
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -131,7 +159,7 @@
                  </size>
                 </property>
                 <property name="title">
-                 <string>GroupBox</string>
+                 <string>Controls</string>
                 </property>
                 <widget class="QPushButton" name="stopBtn">
                  <property name="geometry">
@@ -582,53 +610,6 @@
                   <string>100</string>
                  </property>
                 </widget>
-                <zorder>navModeComboBox</zorder>
-                <zorder>leftSpinBox</zorder>
-                <zorder>rightSpinBox</zorder>
-                <zorder>label_16</zorder>
-                <zorder>lightBtn</zorder>
-                <zorder>joystickCheckbox</zorder>
-                <zorder>leftSlider</zorder>
-                <zorder>directionSpinBox</zorder>
-                <zorder>label_14</zorder>
-                <zorder>stopBtn</zorder>
-                <zorder>honkBtn</zorder>
-                <zorder>label_13</zorder>
-                <zorder>directionSlider</zorder>
-                <zorder>speedSpinBox</zorder>
-                <zorder>rightSlider</zorder>
-                <zorder>speedSlider</zorder>
-                <zorder>label_15</zorder>
-                <zorder>stopBtn</zorder>
-                <zorder>rightSpinBox</zorder>
-                <zorder>label_16</zorder>
-                <zorder>label_15</zorder>
-                <zorder>label_7</zorder>
-                <zorder>rightSlider</zorder>
-                <zorder>navModeComboBox</zorder>
-                <zorder>label_14</zorder>
-                <zorder>label_2</zorder>
-                <zorder>label_6</zorder>
-                <zorder>label_12</zorder>
-                <zorder>label_10</zorder>
-                <zorder>label_4</zorder>
-                <zorder>speedSpinBox</zorder>
-                <zorder>label_5</zorder>
-                <zorder>label_13</zorder>
-                <zorder>lightBtn</zorder>
-                <zorder>speedSlider</zorder>
-                <zorder>label_9</zorder>
-                <zorder>label_8</zorder>
-                <zorder>directionSpinBox</zorder>
-                <zorder>label</zorder>
-                <zorder>directionSlider</zorder>
-                <zorder>joystickCheckbox</zorder>
-                <zorder>leftSlider</zorder>
-                <zorder>honkBtn</zorder>
-                <zorder>label_11</zorder>
-                <zorder>leftSpinBox</zorder>
-                <zorder>label_3</zorder>
-                <zorder>waypointGroupBox</zorder>
                </widget>
               </item>
               <item>
@@ -725,9 +706,6 @@
              </layout>
             </item>
            </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4"/>
           </item>
          </layout>
         </item>
