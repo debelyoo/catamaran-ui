@@ -16,7 +16,11 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
         this->addGraph();
         QPen pen;
         //before: 0, 0, 255, 200
-        pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
+        QColor color = new QColor(QColor::Hsl);
+        int hueOffset = 30; // the offset for the first color (30° -> orange)
+        color.setHsl(hueOffset + (25*gi), 100, 70, 200);
+        pen.setColor(color);
+        //pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
         this->graph(gi)->setLineStyle(QCPGraph::lsLine);
         this->graph(gi)->setPen(pen);
         this->graph(gi)->setName(sensorsToPlot[gi]->getName());
@@ -24,6 +28,7 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
         // get data
         QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[gi], fromTs);
         this->graph(gi)->setData(data.first, data.second);
+        updateMinMaxValues(data.second);
         this->graph(gi)->rescaleValueAxis(true);
     }
     // configure bottom axis to show date and time instead of number:
@@ -55,7 +60,7 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
     this->yAxis2->setTickLabels(false);
     // set axis ranges to show all data:
     this->xAxis->setRange(fromTs, now);
-    //this->yAxis->setRange(0, 30);
+    this->yAxis->setRange(minValue, maxValue);
     // show legend:
     this->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft);
     this->legend->setVisible(true);
@@ -77,23 +82,11 @@ void DataPlot::updatePlot()
     {
         // get data for sensor
         QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[i], fromTs);
-        //QPair< QVector<double>, QVector<double> >* data = getData(i);
-        //qDebug() << data.first.count();
         if (data.first.size() > 0)
         {
             this->graph(i)->removeData(0, fromTsAxis); // remove old data
             this->graph(i)->addData(data.first, data.second); // add data from the last second
-            QVector<double> vVal = data.second;
-            qSort(vVal);
-            if (vVal.first() < minValue){
-                minValue = vVal.first();
-                minValue *= (minValue < 0)?1.1:0.9;
-            }
-            if (vVal.last() > maxValue){
-                maxValue = vVal.last();
-                maxValue *= (maxValue > 0)?1.1:0.9;
-            }
-            //this->graph(i)->rescaleValueAxis(false);
+            updateMinMaxValues(data.second);
         }
     }
     // set axis ranges to show all data:
@@ -101,6 +94,20 @@ void DataPlot::updatePlot()
     this->yAxis->setRange(minValue, maxValue);
     // redraw plot
     this->replot();
+}
+
+void DataPlot::updateMinMaxValues(QVector<double> values)
+{
+    QVector<double> vVal = values; // copy vector to sort it
+    qSort(vVal); // sort values from smallest to highest
+    if (vVal.first() < minValue){
+        minValue = vVal.first();
+        minValue *= (minValue < 0)?1.1:0.9;
+    }
+    if (vVal.last() > maxValue){
+        maxValue = vVal.last();
+        maxValue *= (maxValue > 0)?1.1:0.9;
+    }
 }
 
 /// for test only
