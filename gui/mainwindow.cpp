@@ -262,7 +262,7 @@ void MainWindow::on_saveConfigClicked()
 {
     // write config file
     fileHelper->writeFile("config2.txt", sensorConfig->getSensorsAsTabSeparatedText(), false);
-    fileHelper->createLogFiles(sensorConfig);
+    fileHelper->createLogFiles();
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");
     s->sendMessage(CRIO::setSensorsConfig(sensorConfig->getSensors()));
@@ -951,9 +951,9 @@ void MainWindow::createAddressesConfigPanel()
     // load sensorTypes file
     fileHelper->loadSensorTypesFile();
     // load config file
-    fileHelper->loadConfigFile(sensorConfig);
+    fileHelper->loadConfigFile();
     // create log files
-    fileHelper->createLogFiles(sensorConfig);
+    fileHelper->createLogFiles();
     QList<Sensor*> sensors = sensorConfig->getSensors();
 
     //QWidget *configurationPanel = ui->tabWidget->widget(2);
