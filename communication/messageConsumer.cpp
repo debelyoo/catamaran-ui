@@ -44,19 +44,16 @@ void MessageConsumer::on_dataReceived()
                 case CRIO::DATA:
                 {
                     CRioData *p = static_cast<CRioData *>(crioMessage.content());
-                    //qDebug() << "\tData: address = " << p->address << " ts = " << p->timestamp.timestamp << " datas :";
+                    /*
                     QVector<DataValue> values;
-
                     for (int i = 0; i < p->data.count(); i++) {
                         CRIO::PolymorphicData &d = p->data[i];
                         DataValue val(d.value, d.cRIOType());
                         values.push_back(val);
-                        //str += " " + val.first.toString();
-                        //qDebug() << "\t\t"<<(i+1)<<") " << val;
                     }
                     DataObject dataObj = DataObject((quint8)p->address.toUShort(), values, p->timestamp.unixTimestamp);
-                    //qDebug() << "crioData.ts="<<QDateTime::fromMSecsSinceEpoch(p->timestamp.unixTimestamp)<<" dataObject.ts="<<QDateTime::fromMSecsSinceEpoch(dataObj.getTimestamp());
-                    handleMessageData(dataObj);
+                    */
+                    handleMessageData(*p);
                 }
                     break;
                 default:
@@ -75,9 +72,9 @@ void MessageConsumer::on_dataReceived()
  * @param iobj object to transform
  * @return transformed object
  */
-const DataObject MessageConsumer::transformDataObject(DataObject iobj){
-    Sensor *s = sensorConfig->getSensor(iobj.getAddress());
-    return applyTransformation(s->getType()->getDllName(), iobj);
+CRioData MessageConsumer::transformDataObject(CRioData &iobj){
+    Sensor *s = sensorConfig->getSensor(iobj.address);
+    return applyTransformation(s->type()->getDllName(), iobj);
 }
 
 /**
@@ -87,32 +84,34 @@ const DataObject MessageConsumer::transformDataObject(DataObject iobj){
  * @param values The values of the log
  * @param ts The timestamp of the log
  */
-void MessageConsumer::handleMessageData(DataObject idataObj)
+void MessageConsumer::handleMessageData(CRioData &idataObj)
 {
-    if (sensorConfig->containsSensor(idataObj.getAddress()))
+    bool valid;
+    quint8 intAddress = idataObj.address.toInt(&valid);
+    if (valid & sensorConfig->containsSensor(idataObj.address))
     {
         // Temporary modification for test on 09.10.2013
-        if(idataObj.getAddress() == 53){
-            QVector<DataValue> tmpV; tmpV.append(idataObj.getValues()[1]);
-            idataObj = DataObject(idataObj.getAddress(), tmpV, idataObj.getTimestamp());
+        if(idataObj.address == "53"){
+            QVariantList tmp; tmp.append(idataObj.data()[1]);
+            idataObj = CRioData(intAddress, tmp, idataObj.timestamp);
         }
         // End of temporary modification for 09.10.2013
 
-        DataObject dataObj = transformDataObject(idataObj);
+        CRioData dataObj = transformDataObject(idataObj);
 //        qDebug() << "New data: addr=" << dataObj.getAddress() << " TS=" << QDateTime::fromMSecsSinceEpoch(dataObj.getTimestamp());
 //        foreach(DataValue dv, dataObj.getValues()){
 //            qDebug() << "\t" << dv.first;
 //        }
 
-        Sensor *s = sensorConfig->getSensor(dataObj.getAddress());
+        Sensor *s = sensorConfig->getSensor(idataObj.address);
         // switch can not be used with QString
-        switch (s->getType()->getId()) {
+        switch (s->type()->getId()) {
         case SensorList::GPS_position:
         {
             // GPS position
-            double lat = dataObj.getValues()[0].first.toDouble();
-            double lon = dataObj.getValues()[1].first.toDouble();
-            double elevation = dataObj.getValues()[2].first.toDouble();
+            double lat = dataObj.data()[0].toDouble();
+            double lon = dataObj.data()[1].toDouble();
+            double elevation = dataObj.data()[2].toDouble();
             // convert to CH1903 coordinates (east, north, h)
             QVector<double> swissCoordinates = coordinateHelper->WGS84toLV03(lat, lon, elevation);
             // get x,y position for map in UI
@@ -130,9 +129,9 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
         case SensorList::PT100:
         {
             // dataObj->values contains only one temperature value
-            double temp = dataObj.getValues()[0].first.toDouble();
+            double temp = dataObj.data()[0].toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(s->getType()->getDbTableName(), dataObj.getAddress(), dataObj.getTimestamp(), temp);
+            dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, temp);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -142,9 +141,9 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
         case SensorList::Wind_direction:
         {
             // dataObj->values contains only one value
-            double value = dataObj.getValues()[0].first.toDouble();
+            double value = dataObj.data()[0].toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(s->getType()->getDbTableName(), dataObj.getAddress(), dataObj.getTimestamp(), value);
+            dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -153,9 +152,9 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
         case SensorList::Radiometer:
         {
             // dataObj->values contains only one value
-            double value = dataObj.getValues()[0].first.toDouble();
+            double value = dataObj.data()[0].toDouble();
             // save it to database
-            dbManager->insertLogDoubleValue(s->getType()->getDbTableName(), dataObj.getAddress(), dataObj.getTimestamp(), value);
+            dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
@@ -166,10 +165,10 @@ void MessageConsumer::handleMessageData(DataObject idataObj)
             qDebug() << "[MessageConsumer] Unknown sensor type !\n";
             break;
         }
-        QString outputStr = QDateTime::fromMSecsSinceEpoch(dataObj.getTimestamp()).toString("hh:mm:ss.zzz") + ": Addr(%1)=";
-        outputStr = outputStr.arg(dataObj.getAddress());
-        foreach(DataValue dv, dataObj.getValues()){
-            outputStr += QString("[%1]").arg(dv.first.toDouble());
+        QString outputStr = QDateTime::fromMSecsSinceEpoch(dataObj.timestamp.unixTimestamp).toString("hh:mm:ss.zzz") + ": Addr(%1)=";
+        outputStr = outputStr.arg(dataObj.address);
+        foreach(QVariant dv, dataObj.data()){
+            outputStr += QString("[%1]").arg(dv.toDouble());
         }
         outputStr += "\r\n";
         emit messageParsed(outputStr);
@@ -213,22 +212,21 @@ void MessageConsumer::handleGetCommand(int address)
  * @param dataObj The log details
  * @return The log as text line (String)
  */
-QString MessageConsumer::createLogText(DataObject dataObj)
+QString MessageConsumer::createLogText(const CRioData &dataObj)
 {
     QString log;
     QString valuesAsText;
-    QPair<QVariant, DataType::Types> val;
-    foreach (val, dataObj.getValues()) {
-        QMetaType::Type type = (QMetaType::Type)val.first.type();
+    foreach (CRIO::PolymorphicData val, dataObj.data()) {
+        QMetaType::Type type = (QMetaType::Type)val.value.type();
         switch (type) {
         case QMetaType::Double:
-            valuesAsText += "\t"+ QString::number(val.first.toDouble(), 'f', 6);
+            valuesAsText += "\t"+ QString::number(val.value.toDouble(), 'f', 6);
             break;
         default:
             break;
         }
     }
-    log = QString::number(dataObj.getAddress()) + "\t" + QString::number(dataObj.getTimestamp()) + valuesAsText;
+    log = dataObj.address + "\t" + QDateTime::fromMSecsSinceEpoch(dataObj.timestamp.unixTimestamp).toString("hh:mm:ss:zzz: ") + valuesAsText;
     return log;
 }
 
@@ -240,7 +238,7 @@ QString MessageConsumer::createLogText(DataObject dataObj)
  */
 void MessageConsumer::writeInLogFile(Sensor* s, QString logTxt)
 {
-    QString logFile = s->getCurrentLogFilename();
+    QString logFile = s->currentLogFilename();
     if (logFile != "")
     {
         fileHelper->appendToFile(logFile, logTxt);
@@ -254,13 +252,13 @@ void MessageConsumer::writeInLogFile(Sensor* s, QString logTxt)
  * @param iobj The object to transform
  * @return The transformed object
  */
-const DataObject MessageConsumer::applyTransformation(QString dllName, DataObject iobj) const
+CRioData MessageConsumer::applyTransformation(QString dllName, CRioData &iobj) const
 {
     if (dllName != "")
     {
         TransformationBaseClass *tPtr = TransformationManager::instance()->getTransformation(dllName);
         if(tPtr){
-            return tPtr->applyTransform(iobj, (IDataMessageReceiver*)this);
+            return tPtr->applyTransform(iobj, (IDataMessageReceiver*)this, NULL, NULL);
         }
     }
     return iobj;

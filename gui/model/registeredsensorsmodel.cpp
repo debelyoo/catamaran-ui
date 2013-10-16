@@ -2,15 +2,17 @@
 
 RegisteredSensorsModel::RegisteredSensorsModel(QObject *parent) :
     QAbstractTableModel(parent),
-    m_nColumn(3),
+    m_nColumn(7),
     m_headers(),
     m_items()
 {
+    m_headers.append("Address");
     m_headers.append("Name");
     m_headers.append("Transformation");
     m_headers.append(" ");
-
-    //emit headerDataChanged(Qt::Horizontal, 0, m_nColumn-1);
+    m_headers.append("Stream");
+    m_headers.append("Record");
+    m_headers.append(" ");
 }
 
 RegisteredSensorsModel::~RegisteredSensorsModel()
@@ -43,23 +45,50 @@ int RegisteredSensorsModel::columnCount(const QModelIndex &parent) const
 
 QVariant RegisteredSensorsModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.column() >= m_nColumn)
-        return QVariant();
-
-    if (role != Qt::DisplayRole && role != Qt::EditRole)
-        return QVariant();
+    if (!index.isValid() || index.column() >= m_nColumn){
+        return QVariant::Invalid;
+    }
     RegisteredSensorItem *item = getItem(index);
-    switch(index.column()){
-    case 0:
-    case 1:
-        if(item){
-            return item->data(index.column());
-        }else{
-            return QVariant();
+    if(!item){
+        return QVariant::Invalid;
+    }
+    switch(role){
+    case Qt::DisplayRole:
+    case Qt::EditRole:
+    {
+        switch(index.column()){
+        case AddressCol:
+            return item->sensor()->address();
+        case NameEditCol:
+            return item->sensor()->name();
+        case TransfCol:
+            if(!item->transformation()){
+                return QVariant("None");
+            }
+            return item->transformation()->getTransformationDefinition().name;
+        case ConfigCol:
+            return QVariant("Configure");
+        case StreamCol:
+            return item->sensor()->stream();
+        case RecordCol:
+            return item->sensor()->record();
+        default:
+            return QVariant::Invalid;
         }
-    case 2:
-        return QVariant("Configure");
-    case 3:
+    }
+        break;
+    case Qt::CheckStateRole:
+    {
+        switch(index.column()){
+        case StreamCol:
+            return item->sensor()->stream()?Qt::Checked:Qt::Unchecked;
+        case RecordCol:
+            return item->sensor()->record()?Qt::Checked:Qt::Unchecked;
+        default:
+            break;
+        }
+    }
+        break;
     default:
         break;
     }
@@ -68,7 +97,6 @@ QVariant RegisteredSensorsModel::data(const QModelIndex &index, int role) const
 
 void RegisteredSensorsModel::addSensor(RegisteredSensorItem *newItem, RegisteredSensorItem *parent)
 {
-    //() << "Add Sensor : " << m_items.count();
     beginInsertRows(QModelIndex(), m_items.count(), m_items.count());;
     if(parent){
         parent->addChild(newItem);
@@ -76,17 +104,13 @@ void RegisteredSensorsModel::addSensor(RegisteredSensorItem *newItem, Registered
 
     m_items.append(newItem);
     endInsertRows();
-    //QModelIndex index = createIndex(m_items.size()-1, 0, newItem);
-    //QModelIndex index2 = createIndex(m_items.size()-1, m_nColumn, newItem);
-    //emit dataChanged(index, index2);
 }
 
 RegisteredSensorItem *RegisteredSensorsModel::getItem(const QModelIndex &index) const
 {
     if (index.isValid()) {
         RegisteredSensorItem *item = static_cast<RegisteredSensorItem*>(index.internalPointer());
-        //RegisteredSensorItem *item = m_items[index.row()];
-        //() << "getItem : pointer = " << ((int) item);
+
         if (item) return item;
     }
     return NULL;
@@ -103,6 +127,56 @@ QVariant RegisteredSensorsModel::headerData(int section, Qt::Orientation orienta
     return QVariant();
 }
 
+Qt::ItemFlags RegisteredSensorsModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags returnFlags = QAbstractTableModel::flags(index);
+
+    if (index.column() == StreamCol || index.column() == RecordCol)
+    {
+        returnFlags |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
+    }
+    if (index.column() == NameEditCol){
+        returnFlags |= Qt::ItemIsEditable;
+    }
+
+    return returnFlags;
+}
+
+
+bool RegisteredSensorsModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    RegisteredSensorItem *item = getItem(index);
+    if(item){
+       if (role == Qt::CheckStateRole)
+       {
+           switch(index.column()){
+           case StreamCol:
+               item->setStream(value.toBool());
+               emit dataChanged(index, index);
+               return true;
+           case RecordCol:
+               item->setRecord(value.toBool());
+               emit dataChanged(index, index);
+               return true;
+           default:
+               break;
+           }
+       }
+       if(role == Qt::EditRole){
+           switch(index.column()){
+           case NameEditCol:
+               item->setName(value.toString());
+               emit dataChanged(index, index);
+               return true;
+           default:
+               break;
+           }
+       }
+   }
+
+    return false;
+}
+
 bool RegisteredSensorsModel::Proxy::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
     QString lsId, rsId;
@@ -110,7 +184,6 @@ bool RegisteredSensorsModel::Proxy::lessThan(const QModelIndex &left, const QMod
     rsId = static_cast<RegisteredSensorItem *>(right.internalPointer())->sortId();
     int len = qMin(lsId.length(), rsId.length());
     for(int i=0;i<len;++i){
-        //() << "sort : " << lsId[i] << " < " << rsId[i] << "?";
         if(lsId[i] < rsId[i]){
             return false;
         }else if(lsId[i] > rsId[i]){
@@ -119,33 +192,3 @@ bool RegisteredSensorsModel::Proxy::lessThan(const QModelIndex &left, const QMod
     }
     return false;
 }
-
-/*
-bool RegisteredSensorsModel::insertRows(int position, int rows, const QModelIndex &index)
-{
-    Q_UNUSED(index);
-    beginInsertRows(QModelIndex(), position, position+rows-1);
-
-    for (int row=0; row < rows; row++) {
-        m_items.insert(position, NULL);
-    }
-
-    endInsertRows();
-    return true;
-}
-
-bool RegisteredSensorsModel::removeRows(int position, int rows, const QModelIndex &index)
-{
-    Q_UNUSED(index);
-    beginRemoveRows(QModelIndex(), position, position+rows-1);
-
-    for (int row=0; row < rows; ++row) {
-        m_items.removeAt(position);
-    }
-
-    endRemoveRows();
-    return true;
-}
-*/
-
-

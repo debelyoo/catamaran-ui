@@ -12,6 +12,7 @@ QObject(parent)
  * @brief MessagePublisher::sendCommandMessage
  * @param data
  */
+/*
 void MessagePublisher::sendCommandMessage(QByteArray data)
 {
     // CMD(uint8) | length (4B) | params (bytes array)
@@ -29,7 +30,7 @@ void MessagePublisher::sendCommandMessage(QByteArray data)
     qDebug() << str;
     //qDebug() << ba;
 }
-
+*/
 void MessagePublisher::sendMessage(const CRioByteArray &cba)
 {
     int bytesWritten = socket->write(cba.byteArray());

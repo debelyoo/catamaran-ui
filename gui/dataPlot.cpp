@@ -20,7 +20,9 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp) :
         //pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
         this->graph(gi)->setLineStyle(QCPGraph::lsLine);
         this->graph(gi)->setPen(pen);
-        this->graph(gi)->setName(sensorsToPlot[gi]->getName());
+
+        this->graph(gi)->setName(sensorsToPlot[gi]->name());
+
         // get data
         QPair< QVector<double>, QVector<double> > data = dbManager->getData(sensorsToPlot[gi], fromTs);
         this->graph(gi)->setData(data.first, data.second);

@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QDebug>
+#include "manager/sensortypemanager.h"
 
 FileHelper* FileHelper::m_Instance = 0;
 
@@ -74,8 +75,9 @@ void FileHelper::appendToFile(QString filename, QString text)
  * @brief MainWindow::loadConfigFile
  * @param sensorConfig The sensor configuration object
  */
-bool FileHelper::loadConfigFile(SensorConfig* sensorConfig)
+bool FileHelper::loadConfigFile()
 {
+    SensorConfig* sensorConfig = SensorConfig::instance();
     bool res = false;
     QString configFilename = "config2.txt";
     QString filePath = QDir::currentPath() + "/"+ configFilename;
@@ -92,17 +94,17 @@ bool FileHelper::loadConfigFile(SensorConfig* sensorConfig)
         QStringList fields = line.split("\t"); // separated by tab
         if (fields.length() == 7 && count > 0 && fields.at(0) != "")
         {
-            int addr = QString(fields.at(0)).toInt();
+            QString addr = fields.at(0);
             //int sType = QString(fields.at(2)).toInt();
-            SensorType* sType = sensorConfig->getSensorTypes().value(QString(fields.at(2)).toInt());
+            const SensorType* sType = SensorTypeManager::instance()->type(fields.at(2));
             int displayInd = sensorConfig->getDisplayIndexForGraphName(fields.at(3));
             QString dateStr = QDateTime::currentDateTime().toString("ddMMyyyy_hhmmss");
             bool record = sensorConfig->qstringToBool(fields.at(4));
             QString currentLogFilename = "";
-            Sensor *s = new Sensor(addr, fields.at(1), sType,
-                                   displayInd, record,
-                                   sensorConfig->qstringToBool(fields.at(5)), fields.at(6), currentLogFilename);
-            sensorConfig->addSensor(s);
+//            Sensor *s = new Sensor(addr, fields.at(1), sType,
+//                                   displayInd, record,
+//                                   sensorConfig->qstringToBool(fields.at(5)), fields.at(6), currentLogFilename);
+            //sensorConfig->addSensor(s);
             res = true;
         }
         count++;
@@ -117,22 +119,23 @@ bool FileHelper::loadConfigFile(SensorConfig* sensorConfig)
  * @brief FileHelper::createLogFiles
  * @param sensorConfig The config object
  */
-void FileHelper::createLogFiles(SensorConfig* sensorConfig)
+void FileHelper::createLogFiles()
 {
+    SensorConfig* sensorConfig = SensorConfig::instance();
     //qDebug() << "createLogFiles()";
     foreach(Sensor* s, sensorConfig->getSensors())
     {
-        if (s->getRecord() && s->getLogFilePrefix() != "" && s->getCurrentLogFilename() == "")
+        if (s->record() && s->logFilePrefix() != "" && s->currentLogFilename() == "")
         {
-            QString currentLogFilename = getLogFileName(s->getLogFilePrefix());
+            QString currentLogFilename = getLogFileName(s->logFilePrefix());
             //qDebug() << currentLogFilename;
             s->setCurrentLogFilename(currentLogFilename);
-            writeFile(s->getCurrentLogFilename(), "", true);
+            writeFile(s->currentLogFilename(), "", true);
         }
     }
 }
 
-bool FileHelper::loadSensorTypesFile(SensorConfig* sensorConfig)
+bool FileHelper::loadSensorTypesFile()
 {
     bool res = false;
     QString sensorTypesFile = "sensortypes.txt";
@@ -151,9 +154,10 @@ bool FileHelper::loadSensorTypesFile(SensorConfig* sensorConfig)
         QStringList fields = line.split("\t"); // separated by tab
         if (count > 0 && fields.at(0) != "")
         {
-            int id = QString(fields.at(0)).toInt();
-            SensorType* st = new SensorType(id, fields.at(1), fields.at(2), fields.at(3));
-            sensorConfig->addSensorType(st);
+            //int id = QString(fields.at(0)).toInt();
+            //SensorType* st = new SensorType(fields.at(1), fields.at(2), fields.at(3).toInt());
+            //sensorConfig->addSensorType(st);
+            SensorTypeManager::instance()->createType(fields.at(1), fields.at(2), fields.at(3).toInt());
             dbManager->createLogTableForDoubleValue(fields.at(2));
             res = true;
         }

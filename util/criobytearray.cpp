@@ -1,5 +1,6 @@
 #include "criobytearray.h"
 #include <QDebug>
+#include "model/sensor.h"
 
 CRioByteArray::CRioByteArray():
     m_byteArray()
@@ -219,10 +220,10 @@ void CRioByteArray::push(const QList<Sensor *> sensors, bool flatten)
 
     quint32 len = 0;
     foreach (Sensor* s, sensors) {
-        if (s->getStream())
+        if (s->stream())
         {
-            cba.push(s->getStream());
-            cba.push((quint8)s->getAddress());
+            cba.push(true);
+            cba.push((quint8)s->address().toInt());
             ++len;
         }
     }
@@ -247,11 +248,11 @@ void CRioByteArray::push(const CRioCommand &cmd){
 
 void CRioByteArray::push(const CRioData &data){
     CRioByteArray cba;
-    uint np = data.data.count();
+    uint np = data.data().count();
     cba.push((quint8)data.address.toUShort());
     cba.push((quint32)(np));
-    foreach(CRIO::PolymorphicData d, data.data){
-        cba.push(d, false);
+    foreach(QVariant d, data.data()){
+        cba.push(CRIO::PolymorphicData(d), false);
     }
     cba.push(data.timestamp);
 

@@ -5,16 +5,19 @@
 #include <QString>
 #include "transformation/transformationbaseclass.h"
 #include "sensorinputitem.h"
+#include "model/sensor.h"
+#include "sensorConfig.h"
 
 class RegisteredSensorItem
 {
 public:
     RegisteredSensorItem(SensorInputItem *sensorInput, RegisteredSensorItem *parent = NULL);
+    ~RegisteredSensorItem();
+
     RegisteredSensorItem *parent() const;
     void setParent(RegisteredSensorItem *parent);
 
     QVector<RegisteredSensorItem *> childs() const;
-    void setChilds(const QVector<RegisteredSensorItem *> &childs);
     void addChild(RegisteredSensorItem *child);
     void insertChild(RegisteredSensorItem *child, int pos);
     RegisteredSensorItem *removeChild(RegisteredSensorItem *child);
@@ -30,6 +33,11 @@ public:
     TransformationBaseClass *transformation() const;
     bool setTransformation(TransformationBaseClass *transformation);
 
+    void setStream(bool stream);
+    void setRecord(bool rec);
+    void setType(const QString &type);
+
+    const Sensor *sensor() const;
 protected:
     RegisteredSensorItem *m_parent;
     SensorInputItem *m_sensorInput;
@@ -38,6 +46,8 @@ protected:
     TransformationBaseClass *m_transformation;
 
     QString m_sortId;
+
+    Sensor *m_model;
 };
 
 #endif // REGISTEREDSENSORITEM_H

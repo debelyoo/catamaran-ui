@@ -1,17 +1,15 @@
 #ifndef CRIOCOMMAND_H
 #define CRIOCOMMAND_H
 
-#include "util/criodatastream.h"
 #include "util/criobytearray.h"
 #include "util/criodefinitions.h"
-#include "model/sensor.h"
 
+class Sensor;
 class CRioCommand : public CRIO::Object
 {
 public:
     CRioCommand(CRIO::CommandTypes cmd, CRIO::CommandAddresses address, const QList<QVariant> &parameters);
-    CRioCommand(CRIO::CommandTypes cmd, CRIO::CommandAddresses address = CRIO::ADDR_NO_ADDRESS);
-    static Object *create(CRioDataStream &ds);
+    CRioCommand(CRIO::CommandTypes cmd, CRIO::CommandAddresses address = CRIO::CMD_ADDR_NO_ADDRESS);
 
     CRIO::CommandTypes command() const;
     CRIO::CommandAddresses address() const;
@@ -23,6 +21,7 @@ protected:
     CRIO::CommandAddresses m_address;
 };
 
+class Sensor;
 class CRioByteArray;
 namespace CRIO {
     CRioByteArray setEngine(const Engines engine, const qint8 value);
@@ -44,8 +43,8 @@ namespace CRIO {
     CRioByteArray getCommand(const CRIO::CommandAddresses &addr);
 
     // Memories
-    CRioByteArray get16bMemory(const CRIO::Memory::ADDR_16B_BLOC &addr);
-    CRioByteArray set16bMemory(const CRIO::Memory::ADDR_16B_BLOC &addr, const quint16 &value);
+    CRioByteArray get16bMemory(const CRIO::Memory::CMD_ADDR_16B_BLOC &addr);
+    CRioByteArray set16bMemory(const CRIO::Memory::CMD_ADDR_16B_BLOC &addr, const quint16 &value);
 
     // PT100 config
 

@@ -3,6 +3,8 @@
 
 #include "util/criodefinitions.h"
 #include "util/criodatastream.h"
+#include "communication/criocommand.h"
+#include "communication/criodata.h"
 
 class CRioMessage{
 public:
@@ -12,6 +14,9 @@ public:
     CRIO::MessageType type() const;
     bool isValid() const;
     CRIO::Object *content();
+protected:
+    CRioCommand *createCommand(CRioDataStream &ds);
+    CRioData *createData(CRioDataStream &ds);
 private:
     CRIO::MessageType m_type;
     CRIO::Object *m_pContent;

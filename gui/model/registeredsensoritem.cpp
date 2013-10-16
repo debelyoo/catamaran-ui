@@ -8,7 +8,16 @@ RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput, Registe
     m_transformation(NULL),
     m_sortId(sensorInput->sortId())
 {
-    //qDebug() << "regSensor.name = " << m_name << " parent.fullname = " << sensorInput->fullName() << " pointer = " << ((int) this);
+    m_model = new Sensor(sensorInput->fullName(), sensorInput->name());
+}
+
+RegisteredSensorItem::~RegisteredSensorItem()
+{
+    SensorConfig::instance()->removeSensor(m_model->address());
+    if(m_parent){
+        m_parent->removeChild(this);
+    }
+    delete m_model;
 }
 
 RegisteredSensorItem *RegisteredSensorItem::parent() const
@@ -20,14 +29,10 @@ void RegisteredSensorItem::setParent(RegisteredSensorItem *parent)
 {
     m_parent = parent;
 }
+
 QVector<RegisteredSensorItem *> RegisteredSensorItem::childs() const
 {
     return m_childs;
-}
-
-void RegisteredSensorItem::setChilds(const QVector<RegisteredSensorItem *> &childs)
-{
-    m_childs = childs;
 }
 
 void RegisteredSensorItem::addChild(RegisteredSensorItem *child)
@@ -39,6 +44,7 @@ void RegisteredSensorItem::addChild(RegisteredSensorItem *child)
 void RegisteredSensorItem::insertChild(RegisteredSensorItem *child, int pos)
 {
     m_childs.insert(pos, child);
+    child->setParent(this);
 }
 
 RegisteredSensorItem *RegisteredSensorItem::removeChild(RegisteredSensorItem *child)
@@ -68,12 +74,13 @@ RegisteredSensorItem *RegisteredSensorItem::child(int index) const
 
 QString RegisteredSensorItem::name() const
 {
-    return m_name;
+    return m_model->name();
 }
 
 void RegisteredSensorItem::setName(QString name)
 {
-    m_name = name;
+    //m_name = name;
+    m_model->setName(name);
 }
 
 int RegisteredSensorItem::childCount() const
@@ -94,7 +101,7 @@ QVariant RegisteredSensorItem::data(int col) const
 {
     switch(col){
     case 0:
-        return m_name + ", " + m_sortId;
+        return m_name;
     case 1:
         if(m_transformation){
             return QVariant(m_transformation->getTransformationDefinition().name);
@@ -102,6 +109,10 @@ QVariant RegisteredSensorItem::data(int col) const
         return QVariant("None");
     case 2:
         return QVariant();
+    case 3:
+        return QVariant(m_model->stream());
+    case 4:
+        return QVariant(m_model->record());
     default:
         return QVariant();
     }
@@ -120,19 +131,50 @@ TransformationBaseClass *RegisteredSensorItem::transformation() const
 bool RegisteredSensorItem::setTransformation(TransformationBaseClass *transformation)
 {
     bool deleted = false;
-    if(!m_transformation || (transformation && m_transformation->getTransformationDefinition().name != transformation->getTransformationDefinition().name)){
-        foreach(TransformationBaseClass::SubSensor s, transformation->getSubSensors()){
-            SensorInputItem *subsensor = new SensorInputItem(s.name);
-            m_sensorInput->addChild(subsensor);
-            //qDebug() << "New subsensor : " << s.name;
+    if(!m_transformation){
+        if(transformation){
+            m_transformation = transformation;
+            m_model->setTransformation(m_transformation);
+            foreach(TransformationBaseClass::SubSensor s, transformation->getSubSensors()){
+                SensorInputItem *subsensor = new SensorInputItem(s.name);
+                m_sensorInput->addChild(subsensor);
+            }
+        }
+    }else{
+        if(transformation){
+            if(m_transformation->getTransformationDefinition().name != transformation->getTransformationDefinition().name){
+                delete m_transformation;
+                deleted = true;
+                m_transformation = transformation;
+                m_model->setTransformation(m_transformation);
+                foreach(TransformationBaseClass::SubSensor s, transformation->getSubSensors()){
+                    SensorInputItem *subsensor = new SensorInputItem(s.name);
+                    m_sensorInput->addChild(subsensor);
+                }
+            }
+        }else{
+            delete m_transformation;
+            m_transformation = NULL;
+            m_model->setTransformation(m_transformation);
+            deleted = true;
         }
     }
-    if(m_transformation){
-        delete m_transformation;
-        deleted = true;
-    }
-    m_transformation = transformation;
     return deleted;
+}
+
+void RegisteredSensorItem::setStream(bool stream)
+{
+    m_model->setStream(stream);
+}
+
+void RegisteredSensorItem::setRecord(bool rec)
+{
+    m_model->setRecord(rec);
+}
+
+const Sensor *RegisteredSensorItem::sensor() const
+{
+    return m_model;
 }
 
 

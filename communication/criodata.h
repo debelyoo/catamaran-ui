@@ -4,19 +4,21 @@
 #include "util/criodefinitions.h"
 #include <QString>
 
-struct CRioData : public CRIO::Object
+class CRioData : public CRIO::Object
 {
 public:
     QString address;
-    QList<CRIO::PolymorphicData> data;
+
     CRIO::Timestamp timestamp;
 
     CRioData(quint8 address, QVariantList data = QVariantList(), CRIO::Timestamp timestamp = CRIO::Timestamp());
     CRioData(QString identifier, QVariantList data = QVariantList(), CRIO::Timestamp timestamp = CRIO::Timestamp());
-    static CRIO::Object *create(CRioDataStream &ds);
     // Object interface
-protected:
 
+    const QVariantList &data() const;
+    QList<CRIO::PolymorphicData> polymorphicData() const;
+protected:
+    QVariantList m_data;
 };
 
 #endif // CRIODATA_H

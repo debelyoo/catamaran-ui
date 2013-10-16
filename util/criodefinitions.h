@@ -7,7 +7,6 @@
 #include <QDataStream>
 #include <QPointF>
 #include <QList>
-//#include "util/criodatastream.h"
 
 
 namespace DataType {
@@ -55,22 +54,22 @@ namespace CRIO {
 
 
     typedef enum {  // cast to quint8
-        ADDR_NO_ADDRESS = 0,            // Reserved (Error Check)
-        ADDR_MEMORY_8BIT = 1,           // Memory8b
-        ADDR_MEMORY_16BIT = 2,          // Memory16b
-        ADDR_MEMORY_32BIT = 3,          // Memory32b
-        ADDR_SENSOR_CONFIG = 5,         // Address Conf & LUT	P1 Array{{(bool) stream, (uint8) addr}, ...}
-        ADDR_ENGINE_MODE = 6,           // Motors Mode	P1 (uint8) Mode [0: Auto, 1: Manual]
-        ADDR_LEFT_ENGINE = 7,           // Left Motor Value  P1 (int 8) value [-127, 127]
-        ADDR_RIGHT_ENGINE = 8,          // Right Motor Value P1 (int 8) value [-127, 127]
-        ADDR_HONK = 9,                  // Honk	 P1 (bool) On/Off
-        ADDR_LIGHT = 10,                // Light P1 (bool) On/Off
-        ADDR_SABERTOOTH_ENABLE = 11,    // Sabertooth Enable	P1 (bool) On/Off
-        ADDR_SABERTOOTH_CONFIG = 12,    // Sabertooth Config	P1 (uint8) Addr , P2 (8bits) Value
-        ADDR_PRISME_TS_SYNC = 13,       // PRisme Sync Timestamp	[GET] (uint8) Prisme addr, [SET] P1 Timestamp
-        ADDR_NS_LIMITS = 14,            // Nav.Sys. Limits   : (double)	Delta, (double) Epsilon
-        ADDR_NS_CSTS = 15,              // Nav.Sys. Constant : (double) C_perp, (double) C_point, (double) C_aheahD, (double) P
-        ADDR_NS_WAYPOINTS = 16          // Nav.Sys. Waypoints	P1…n waypoint {{(double) X, (double) Y}, ...}
+        CMD_ADDR_NO_ADDRESS = 0,            // Reserved (Error Check)
+        CMD_ADDR_MEMORY_8BIT = 1,           // Memory8b
+        CMD_ADDR_MEMORY_16BIT = 2,          // Memory16b
+        CMD_ADDR_MEMORY_32BIT = 3,          // Memory32b
+        CMD_ADDR_SENSOR_CONFIG = 5,         // Address Conf & LUT	P1 Array{{(bool) stream, (uint8) addr}, ...}
+        CMD_ADDR_ENGINE_MODE = 6,           // Motors Mode	P1 (uint8) Mode [0: Auto, 1: Manual]
+        CMD_ADDR_LEFT_ENGINE = 7,           // Left Motor Value  P1 (int 8) value [-127, 127]
+        CMD_ADDR_RIGHT_ENGINE = 8,          // Right Motor Value P1 (int 8) value [-127, 127]
+        CMD_ADDR_HONK = 9,                  // Honk	 P1 (bool) On/Off
+        CMD_ADDR_LIGHT = 10,                // Light P1 (bool) On/Off
+        CMD_ADDR_SABERTOOTH_ENABLE = 11,    // Sabertooth Enable	P1 (bool) On/Off
+        CMD_ADDR_SABERTOOTH_CONFIG = 12,    // Sabertooth Config	P1 (uint8) Addr , P2 (8bits) Value
+        CMD_ADDR_PRISME_TS_SYNC = 13,       // PRisme Sync Timestamp	[GET] (uint8) Prisme addr, [SET] P1 Timestamp
+        CMD_ADDR_NS_LIMITS = 14,            // Nav.Sys. Limits   : (double)	Delta, (double) Epsilon
+        CMD_ADDR_NS_CSTS = 15,              // Nav.Sys. Constant : (double) C_perp, (double) C_point, (double) C_aheahD, (double) P
+        CMD_ADDR_NS_WAYPOINTS = 16          // Nav.Sys. Waypoints	P1…n waypoint {{(double) X, (double) Y}, ...}
     } CommandAddresses;
 
     typedef enum {  // cast to quint8
@@ -82,6 +81,21 @@ namespace CRIO {
         OFF = 0,
         ON = 1
     } ON_OFF;
+
+    typedef enum {
+        DATA_ADDR_POSITION = 48,
+        DATA_ADDR_VELOCITY = 49,
+        DATA_ADDR_MOTOR_MODE = 50,
+        DATA_ADDR_RIGHT_ENGINE_FEEDBACK = 51,
+        DATA_ADDR_LEFT_ENGINE_FEEDBACK = 52,
+        DATA_ADDR_ORIENTATION = 55,
+        DATA_ADDR_DEBUG = 60,
+        DATA_ADDR_NAV_SYS_LOG = 61,
+        DATA_ADDR_NI9870_1_P1 = 64,
+        DATA_ADDR_NI9870_2_P1 = 65,
+        DATA_ADDR_NI9870_3_P1 = 66,
+        DATA_ADDR_NI9870_4_P1 = 67
+    } DataAddresses;
 
     class Object{
     public:
@@ -97,7 +111,7 @@ namespace CRIO {
         NI9217_2_SAMPLING_MODE = 9,            //	0-65535	0=>Low Res. (2.5ms), otherwise=>High Res. (200ms)
         FPGA_COUNTER_1_SAMPLING_TIME = 10      //	0-65535	[ms]
         //FPGA Counter-1/Bound port	0-8	0=>Disabled, [1-8] => [DIO0, DIO7]
-        }ADDR_16B_BLOC;
+        }CMD_ADDR_16B_BLOC;
     }
 
     typedef enum {
@@ -113,7 +127,7 @@ namespace CRIO {
         Timestamp();
         Timestamp(qint64 secs, quint64 fraqs);
         Timestamp(double ts);
-        Timestamp(CRioDataStream &ds);
+        //Timestamp(CRioDataStream &ds);
 
     private:
         static qint64 LABVIEW_EPOCH;
@@ -125,13 +139,6 @@ namespace CRIO {
         PolymorphicData(QVariant value);
         DataType::Types cRIOType() const;
     };
-}
-#include "util/criodatastream.h"
-#include "util/criobytearray.h"
-class CRioByteArray;
-namespace CRIO{
-
-
 }
 
 #endif // CRIODEFINITIONS_H

@@ -8,10 +8,10 @@
 #include "util/criodefinitions.h"
 #include "communication/criodata.h"
 #include "communication/criocommand.h"
-#include "model/sensor.h"
 
 class CRioCommand;
 class CRioData;
+class Sensor;
 
 class CRioByteArray
 {

@@ -6,17 +6,35 @@
 #include <QNetworkInterface>
 #include <QDir>
 
-Server::Server(QObject *parent) :
-    QObject(parent),
+Server *Server::s_instance = NULL;
+
+Server::Server() :
+    QObject(),
     inputStream(NULL),
-    consumer(NULL)
+    consumer(NULL),
+    m_commandQueue(),
+    m_dataQueue(),
+    m_queuesEnabled(false)
 {
+
     sensorConfig = SensorConfig::instance();
     dbManager = DatabaseManager::instance();
     server = new QTcpServer(this);
     //queue = new QQueue<char>();
     connected = false;
     connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
+
+    m_timer = new QTimer(this);
+    m_timer->setInterval(1000);
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(on_timerTimeout()));
+}
+
+Server *Server::instance()
+{
+    if(!s_instance){
+        s_instance = new Server();
+    }
+    return s_instance;
 }
 
 void Server::listen()
@@ -116,35 +134,66 @@ void Server::on_gpsPointReceived(double x, double y)
 {
     emit gpsPointReceived(x, y);
 }
-/*
-QByteArray Server::prepareConfigMessage()
+
+void Server::on_timerTimeout()
 {
-    quint8 command = MessageUtil::Set;
-    quint8 addr = 5;
-    QByteArray data;
-    data.push_back(command);
-    data.push_back(converter->intToByteArray(2, 4));
-    // add address
-    data.push_back(converter->byteArrayForCmdParameterInt(addr));
-    // add stream array
-    //qDebug() << "send array of "+ QString::number(sensorConfig->getSensors().length()) +" sensors to stream";
-    data.push_back(converter->byteArrayForCmdParameterStreamArray(sensorConfig->getSensors()));
-    return data;
-}
-*/
-void Server::sendCommandMessage(QByteArray msg)
-{
-    if (isConnected())
-        publisher->sendCommandMessage(msg);
+    if (isConnected()){
+        while(!m_dataQueue.isEmpty()){
+            sendMessage(CRioByteArray(m_dataQueue.dequeue()));
+        }
+        while(!m_dataQueue.isEmpty()){
+            sendMessage(CRioByteArray(m_commandQueue.dequeue()));
+        }
+    }
 }
 
-void Server::sendMessage(const CRioByteArray &cba)
+bool Server::sendMessage(const CRioByteArray &cba)
 {
-    if (isConnected())
+    if (isConnected()){
         publisher->sendMessage(cba);
+        return true;
+    }
+    return false;
 }
 
-bool Server::isConnected()
+bool Server::sendMessage(const CRioCommand &cmd)
+{
+    if (isConnected()){
+        publisher->sendMessage(CRioByteArray(cmd));
+        return true;
+    }
+    m_queuesEnabled?m_commandQueue.append(cmd):void();
+    return false;
+}
+
+bool Server::sendMessage(const CRioData &data)
+{
+    if (isConnected()){
+        publisher->sendMessage(CRioByteArray(data));
+        return true;
+    }
+    m_queuesEnabled?m_dataQueue.append(data):void();
+    return false;
+}
+
+void Server::enableQueues()
+{
+    m_queuesEnabled = true;
+    m_timer->start();
+}
+
+void Server::disableQueues()
+{
+    m_queuesEnabled = false;
+    m_timer->stop();
+}
+
+bool Server::queueEnabled() const
+{
+    return m_queuesEnabled;
+}
+
+bool Server::isConnected() const
 {
     return connected;
 }

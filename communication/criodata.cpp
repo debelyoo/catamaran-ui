@@ -5,42 +5,39 @@
  */
 CRioData::CRioData(quint8 address, QVariantList data, CRIO::Timestamp timestamp):
     CRIO::Object(),
-    data(),
+    m_data(),
     timestamp(timestamp)
 {
    this->address = QString::number(address);
     foreach(QVariant v, data){
-        this->data.append(v);
+        this->m_data.append(v);
     }
 }
 
 CRioData::CRioData(QString identifier, QVariantList data, CRIO::Timestamp timestamp):
     CRIO::Object(),
     address(identifier),
-    data(),
+    m_data(),
     timestamp(timestamp)
 {
     foreach(QVariant v, data){
-        this->data.append(v);
+        this->m_data.append(v);
     }
 }
 
-
-CRIO::Object *CRioData::create(CRioDataStream &ds)
+const QVariantList &CRioData::data() const
 {
-
-    quint8 address;
-    ds >> address;
-    QList<CRIO::PolymorphicData> pl;
-    ds >> pl;
-    QVariantList vl;
-    foreach(CRIO::PolymorphicData p, pl){
-        vl.append(p.value);
-    }
-    CRIO::Timestamp ts;
-    ds >> ts;
-
-
-    //ds.skipRawData(nByte);
-    return new CRioData(address, vl, ts);
+    return m_data;
 }
+
+QList<CRIO::PolymorphicData> CRioData::polymorphicData() const
+{
+    QList<CRIO::PolymorphicData> d;
+    foreach(QVariant v, m_data){
+        d.append(CRIO::PolymorphicData(v));
+    }
+    return d;
+}
+
+
+

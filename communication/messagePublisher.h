@@ -1,7 +1,6 @@
 #ifndef MESSAGEPUBLISHER_H
 #define MESSAGEPUBLISHER_H
 
-#include "util/byteArrayConverter.h"
 #include <QObject>
 #include <QTcpSocket>
 #include "util/criobytearray.h"
@@ -14,12 +13,12 @@ class MessagePublisher : public QObject
     signals:
 
     public slots:
-        void sendCommandMessage(QByteArray data);
+        //void sendCommandMessage(QByteArray data);
         void sendMessage(const CRioByteArray &cba);
 
     private:
         QTcpSocket* socket;
-        ByteArrayConverter* converter;
+        //ByteArrayConverter* converter;
 
 };
 

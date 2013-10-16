@@ -288,7 +288,8 @@ void SensorTransformationConfig::on_booleantEditorChange(int value)
 
 void SensorTransformationConfig::on_accept()
 {
-    m_linkedSensor->setTransformation(configuredTransformation());
+    TransformationBaseClass * tr = configuredTransformation();
+    m_linkedSensor->setTransformation(tr);
     close();
 }
 

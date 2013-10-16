@@ -3,41 +3,59 @@
 
 #include <QHash>
 #include <QMap>
-#include "model/sensor.h"
+//#include "model/sensor.h"
 #include "model/sensorType.h"
+
+namespace SensorList {
+    typedef enum {
+        Unknown = 0,
+        GPS_position = 1,
+        GPS_speed = 2,
+        PT100 = 3,
+        Wind_speed = 4,
+        Wind_direction = 5,
+        Radiometer = 6
+    } Types;
+}
+
+class Sensor;
 
 class SensorConfig
 {
 
     public:
         static SensorConfig* instance();
+
         void addSensor(Sensor* s);
-        void addSensorType(SensorType* st);
-        QList<Sensor*> getSensors();
-        QList<Sensor*> getSensorsForPlot(int plotIndex);
-        int getDisplayIndexForGraphName(QString str);
-        QString getSensorsAsTabSeparatedText();
-        bool containsSensor(int addr);
-        Sensor* getSensor(int addr);
-        QMap<int, SensorType*> getSensorTypes();
+        Sensor *removeSensor(const QString &addr);
+
+        //void addSensorType(SensorType* st);
+
+        QList<Sensor*> getSensors() const;
+        QList<Sensor*> getSensorsForPlot(int plotIndex) const;
+        int getDisplayIndexForGraphName(QString str) const;
+        QString getSensorsAsTabSeparatedText() const;
+        bool containsSensor(const QString &addr) const;
+        Sensor* getSensor(QString addr) const;
+        //QMap<int, SensorType*> getSensorTypes() const;
+        //SensorType *getSensorType(SensorList::Types type) const;
         QMap<int, QString> getDisplayValues();
-        bool qstringToBool(QString str);
+        bool qstringToBool(QString str) const;
         void updateDisplayGraphList(int nb = 3);
 
     private:
         SensorConfig() {
-            sensorTypes.insert(0, new SensorType(0, "Unknown", "")); // other tyes are loaded at launch from sensortypes.txt
+            //m_sensorTypes.insert(0, new SensorType(0, "Unknown", "")); // other tyes are loaded at launch from sensortypes.txt
 
             updateDisplayGraphList();
         }
-        SensorConfig(const SensorConfig &);
-        SensorConfig& operator=(const SensorConfig &);
+        Q_DISABLE_COPY(SensorConfig)
 
-        static SensorConfig* m_Instance;
+        static SensorConfig* s_instance;
 
-        QHash<int, Sensor*> sensors;
-        QMap<int, SensorType*> sensorTypes;
-        QMap<int, QString> displayGraphs;
+        QHash<QString, Sensor*> m_sensors;
+        //QMap<int, SensorType*> m_sensorTypes;
+        QMap<int, QString> m_displayGraphs;
 
         static bool addressLessThan(Sensor* s1, Sensor* s2);
 };

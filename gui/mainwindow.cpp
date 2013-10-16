@@ -15,6 +15,7 @@
 #include "util/criodefinitions.h"
 #include "communication/criocommand.h"
 #include "communication/criodata.h"
+#include "manager/sensortypemanager.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -44,8 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
     createPlotsPanel(); // need to be after configuration panel for plots
 
     // start server
-    s = new Server(this);
-    QObject::connect(s, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
+    s = Server::instance();
+    connect(s, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
     connect(s, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
     s->listen();
     sliderIsMoving = false;
@@ -108,23 +109,27 @@ MainWindow::MainWindow(QWidget *parent) :
     RegisteredSensorsModel::Proxy* proxyModel = new RegisteredSensorsModel::Proxy();
     proxyModel->setSourceModel(m_registeredSensorsModel);
     ui->registeredSensors->setModel(proxyModel);
-    RegisteredSensorsDelegate * delegate = new RegisteredSensorsDelegate(2, ui->registeredSensors);
+    //ui->registeredSensors->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    ui->registeredSensors->horizontalHeader()->setResizeMode(QHeaderView::Fixed);
+    ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::ConfigCol, 120);
+    ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::StreamCol, 80);
+    ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::RecordCol, 80);
+    ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::AddressCol, QHeaderView::Stretch);
+    ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::NameEditCol, QHeaderView::Stretch);
+    ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::TransfCol, QHeaderView::Stretch);
+
+    ui->registeredSensors->setAlternatingRowColors(true);
+    ui->registeredSensors->setStyleSheet(/*"QTableView::item:hover {background-color: rgb(185, 210, 235);}*/"QTableView{alternate-background-color: #f3f3f3; background-color: #ffffff;}");
+
+    RegisteredSensorsDelegate * delegate = new RegisteredSensorsDelegate(RegisteredSensorsModel::ConfigCol, ui->registeredSensors);
     connect(delegate, SIGNAL(buttonClicked(QModelIndex&)), this, SLOT(on_registeredSensorButtonClick(QModelIndex&)));
-    ui->registeredSensors->setItemDelegateForColumn(2, delegate);
+    ui->registeredSensors->setItemDelegateForColumn(RegisteredSensorsModel::ConfigCol, delegate);
     connect(sensorsInputModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_availableSensorsValueChanged()));
 
-    SensorInputItem * sensor = new SensorInputItem("second");
-    sensor->disable();
-    sensorsInputModel->addInput(new SensorInputItem("first"));
-    sensorsInputModel->addInput(sensor);
-    sensorsInputModel->addInput(new SensorInputItem("third"));
-    sensorsInputModel->addInput(new SensorInputItem("first"), (SensorInputItem *)sensorsInputModel->index(1,0, QModelIndex()).internalPointer());
-    sensorsInputModel->addInput(new SensorInputItem("second"), (SensorInputItem *)sensorsInputModel->index(1,0, QModelIndex()).internalPointer());
-
-    sensor = (SensorInputItem *)sensorsInputModel->index(1,0, sensorsInputModel->index(1,0, QModelIndex())).internalPointer();
-    m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
-    sensor = (SensorInputItem *)sensorsInputModel->index(0,0, sensorsInputModel->index(1,0, QModelIndex())).internalPointer();
-    m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
+    foreach(CompactRio::NamedAddress as, CompactRio::instance()->availableInputs()){
+        SensorInputItem * sensor = new SensorInputItem(as.name);
+        sensorsInputModel->addInput(sensor);
+    }
 
     connect(ui->addSensorFromList, SIGNAL(clicked()), this, SLOT(on_addSensorFlClicked()));
 
@@ -267,12 +272,13 @@ void MainWindow::on_saveConfigClicked()
 
 void MainWindow::on_addressValueChanged(QString addrStr, int rowIndex)
 {
+    /*
     Sensor* s = sensorConfig->getSensors()[rowIndex];
     bool b;
     int addr = addrStr.toInt(&b);
     if (b)
     {
-        s->setAddress(addr);
+        s->setAddress(addrStr);
         QString msg = "Address ["+ QString::number(rowIndex) +"] changed: " + addrStr + "\n";
         addStatusText(msg);
     }
@@ -281,6 +287,7 @@ void MainWindow::on_addressValueChanged(QString addrStr, int rowIndex)
         QString msg = "Address: " + addrStr + " - Bad format !\n";
         addStatusText(msg);
     }
+    */
 }
 
 void MainWindow::on_nameValueChanged(QString name, int rowIndex)
@@ -292,11 +299,12 @@ void MainWindow::on_nameValueChanged(QString name, int rowIndex)
     changeSaveBtnColor("red");
 }
 
-void MainWindow::on_typeValueChanged(int typeInd, int rowIndex)
+void MainWindow::on_typeValueChanged(QString typeName, int rowIndex)
 {
+    const SensorType *type = SensorTypeManager::instance()->type(typeName);
     Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setType(sensorConfig->getSensorTypes().value(typeInd));
-    QString msg = "Type ["+ QString::number(rowIndex) +"] changed: " + sensorConfig->getSensorTypes().value(typeInd)->getName() + "\n";
+    s->setType(type);
+    QString msg = "Type ["+ QString::number(rowIndex) +"] changed: " + type->getName() + "\n";
     addStatusText(msg);
     changeSaveBtnColor("red");
 }
@@ -371,7 +379,6 @@ void MainWindow::on_registeredSensorButtonClick(QModelIndex &index)
     QSortFilterProxyModel * proxyModel = static_cast<QSortFilterProxyModel *>(ui->registeredSensors->model());
     QModelIndex realIndex = proxyModel->mapToSource(index);
     SensorTransformationConfig *widget = new SensorTransformationConfig(static_cast<RegisteredSensorItem *>(realIndex.internalPointer()), this);
-
     widget->show();
 }
 
@@ -421,8 +428,8 @@ void MainWindow::on_nsValueChange()
 
 void MainWindow::on_getNSCongifBtnClick()
 {
-    s->sendMessage(CRIO::getCommand(CRIO::ADDR_NS_CSTS));
-    s->sendMessage(CRIO::getCommand(CRIO::ADDR_NS_LIMITS));
+    s->sendMessage(CRIO::getCommand(CRIO::CMD_ADDR_NS_CSTS));
+    s->sendMessage(CRIO::getCommand(CRIO::CMD_ADDR_NS_LIMITS));
 }
 
 void MainWindow::on_defaultNSConfigClick()
@@ -436,7 +443,7 @@ void MainWindow::on_defaultNSConfigClick()
     ui->l1->setValue(0.5);
 }
 
-void MainWindow::on_engineValueAutoUpdate()
+void MainWindow::on_engineValueAutoUpdate(CRIO::Engines engineSide, qint8 value)
 {
 
 }
@@ -744,18 +751,19 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
 {
     int sensorIndex = rowIndex - 1;
     InRowLineEdit* addressField = new InRowLineEdit(this, sensorIndex);
-    addressField->setText(QString::number(s->getAddress()));
+    addressField->setText(s->address());
     addressField->setFixedWidth(30);
+    addressField->setEnabled(false);
     QWidget* addressFieldContainer = createSpacedWidget(addressField, 0, 30);
     InRowLineEdit* nameField = new InRowLineEdit(this, sensorIndex);
-    nameField->setText(QString(s->getName()));
+    nameField->setText(QString(s->name()));
     InRowComboBox* typeBox = new InRowComboBox(this, sensorIndex);
-    QMap<int, SensorType*> sensorTypes = sensorConfig->getSensorTypes();
-    for (int i=0; i < sensorTypes.size(); i++)
+
+    foreach(QString s, SensorTypeManager::instance()->list())
     {
-        typeBox->addItem(sensorTypes.value(i)->getName());
+        typeBox->addItem(s);
     }
-    typeBox->setCurrentIndex(s->getType()->getId());
+    typeBox->setCurrentIndex(s->type()->getId());
     QWidget* typeBoxContainer = createSpacedWidget(typeBox, 0, 10);
     InRowComboBox* displayBox = new InRowComboBox(this, sensorIndex);
     QMap<int, QString> displayGraphs = sensorConfig->getDisplayValues();
@@ -763,16 +771,16 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     {
         displayBox->addItem(displayGraphs.value(i));
     }
-    displayBox->setCurrentIndex(s->getDisplay());
+    displayBox->setCurrentIndex(s->display());
     QWidget* displayBoxContainer = createSpacedWidget(displayBox, 0, 10);
     InRowCheckBox* recordCB = new InRowCheckBox(this, sensorIndex);
-    recordCB->setChecked(s->getRecord());
+    recordCB->setChecked(s->record());
     QWidget* recordCBContainer = createSpacedWidget(recordCB, 10, 0);
     InRowCheckBox* streamCB = new InRowCheckBox(this, sensorIndex);
-    streamCB->setChecked(s->getStream());
+    streamCB->setChecked(s->stream());
     QWidget* streamCBContainer = createSpacedWidget(streamCB, 10, 0);
     InRowLineEdit* filenameField = new InRowLineEdit(this, sensorIndex);
-    filenameField->setText(s->getLogFilePrefix());
+    filenameField->setText(s->logFilePrefix());
     layout->addWidget(addressFieldContainer, rowIndex, 0);
     layout->addWidget(nameField, rowIndex, 1);
     layout->addWidget(typeBoxContainer, rowIndex, 2);
@@ -783,7 +791,7 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     /// handle value changes
     connect(addressField, SIGNAL(textChanged(QString, int)), this, SLOT(on_addressValueChanged(QString, int)));
     connect(nameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_nameValueChanged(QString, int)));
-    connect(typeBox, SIGNAL(valueChanged(int,int)), this, SLOT(on_typeValueChanged(int, int)));
+    connect(typeBox, SIGNAL(valueChanged(QString,int)), this, SLOT(on_typeValueChanged(QString, int)));
     connect(displayBox, SIGNAL(valueChanged(int,int)), this, SLOT(on_displayValueChanged(int,int)));
     connect(recordCB, SIGNAL(clicked(bool,int)), this, SLOT(on_recordValueChanged(bool,int)));
     connect(streamCB, SIGNAL(clicked(bool,int)), this, SLOT(on_streamValueChanged(bool,int)));
@@ -941,7 +949,7 @@ void MainWindow::createConfigurationPanel()
 void MainWindow::createAddressesConfigPanel()
 {
     // load sensorTypes file
-    fileHelper->loadSensorTypesFile(sensorConfig);
+    fileHelper->loadSensorTypesFile();
     // load config file
     fileHelper->loadConfigFile(sensorConfig);
     // create log files

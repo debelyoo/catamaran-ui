@@ -16,7 +16,6 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
     sensorConfig.cpp\
-    util/byteArrayConverter.cpp\
     util/fileHelper.cpp\
     util/coordinateHelper.cpp\
     util/databaseManager.cpp \
@@ -46,10 +45,11 @@ SOURCES += main.cpp\
     util/criodatastream.cpp \
     communication/criomessage.cpp \
     communication/criocommand.cpp \
-    communication/criodata.cpp
+    communication/criodata.cpp \
+    model/compactrio.cpp \
+    manager/sensortypemanager.cpp
 
 HEADERS  += sensorConfig.h\
-    util/byteArrayConverter.h\
     util/fileHelper.h\
     util/coordinateHelper.h\
     util/databaseManager.h \
@@ -81,7 +81,11 @@ HEADERS  += sensorConfig.h\
     util/criodatastream.h \
     communication/criomessage.h \
     communication/criocommand.h \
-    communication/criodata.h
+    communication/criodata.h \
+    model/compactrio.h \
+    transformation/abstractsensorsdataholder.h \
+    transformation/abstractcriostatesholder.h \
+    manager/sensortypemanager.h
 
 
 

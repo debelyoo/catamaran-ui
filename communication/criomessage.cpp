@@ -59,7 +59,7 @@ bool CRioMessage::buildCommand(CRioDataStream &ds)
 {
 
     int pos = ds.device()->pos();
-    m_pContent = CRioCommand::create(ds);
+    m_pContent = createCommand(ds);
     int skip = s_neededBytes - (ds.device()->pos()-pos);
     //qDebug() << "build CMD : skip " << skip << " bytes.";
     ds.skipRawData(skip);
@@ -70,10 +70,93 @@ bool CRioMessage::buildCommand(CRioDataStream &ds)
 bool CRioMessage::buildData(CRioDataStream &ds)
 {
     int pos = ds.device()->pos();
-    m_pContent = CRioData::create(ds);
+    m_pContent = createData(ds);
     int skip = s_neededBytes - (ds.device()->pos()-pos);
     //qDebug() << "build DATA : skip " << skip << " bytes.";
     ds.skipRawData(skip);
     s_neededBytes = 0;
     return true;
+}
+
+CRioData *CRioMessage::createData(CRioDataStream &ds)
+{
+
+    quint8 address;
+    ds >> address;
+    QList<CRIO::PolymorphicData> pl;
+    ds >> pl;
+    QVariantList vl;
+    foreach(CRIO::PolymorphicData p, pl){
+        vl.append(p.value);
+    }
+    qint64 secs;
+    quint64 fracs;
+    ds >> secs;
+    ds >> fracs;
+    CRIO::Timestamp ts(secs, fracs);
+
+    //ds.skipRawData(nByte);
+    return new CRioData(address, vl, ts);
+}
+
+CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
+{
+    bool error = false;
+    quint8 cmdType;
+    ds >> cmdType;
+    quint32 nParams;
+    ds >> nParams;
+    QVariantList params;
+    quint8 address = 0;
+    switch(cmdType){
+    case CRIO::CMD_GET:
+    {
+        quint32 strlen;
+        ds >> strlen;
+        ds >> address;
+    }
+        break;
+    case CRIO::CMD_SET:
+    {
+        quint32 strlen;
+        if(nParams > 0){
+            ds >> strlen;
+            ds >> address;
+            --nParams;
+        }
+        switch(address){
+        case CRIO::CMD_ADDR_PRISME_TS_SYNC:
+        {
+            ds >> strlen;
+            qint64 secs;
+            quint64 fracs;
+            ds >> secs;
+            ds >> fracs;
+            CRIO::Timestamp ts(secs, fracs);
+            params.append(QVariant::fromValue(ts.timestamp));
+        }
+            break;
+        default:
+            break;
+        }
+    }
+        break;
+    case CRIO::CMD_ADD:
+    {
+        //ds >> address;
+    }
+        break;
+    case CRIO::CMD_DEL:
+    {
+        //ds >> address;
+    }
+        break;
+    case CRIO::CMD_STOP:
+        break;
+    }
+
+    if(error){
+        return NULL;
+    }
+    return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)address, params);
 }

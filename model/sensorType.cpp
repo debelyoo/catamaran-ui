@@ -1,31 +1,41 @@
 #include "sensorType.h"
 
-SensorType::SensorType(int i, QString n, QString tn, QString dn)
+SensorType::SensorType(int i, QString n, QString tn, QString dn, int cCount):
+    id(i),
+    m_name(n),
+    m_dbTableName(tn),
+    m_dllName(dn),
+    m_dbColumnCount(cCount)
 {
-    id = i;
-    name = n;
-    dbTableName = tn;
-    dllName = dn;
+}
+
+SensorType::SensorType(QString n, QString tn, int cCount):
+    id(0),
+    m_name(n),
+    m_dbTableName(tn),
+    m_dllName(""),
+    m_dbColumnCount(cCount)
+{
 }
 
 /// getters
-int SensorType::getId()
+int SensorType::getId() const
 {
     return id;
 }
-QString SensorType::getName()
+QString SensorType::getName() const
 {
-    return name;
+    return m_name;
 }
 
-QString SensorType::getDbTableName()
+QString SensorType::getDbTableName() const
 {
-    return dbTableName;
+    return m_dbTableName;
 }
 
-QString SensorType::getDllName()
+QString SensorType::getDllName() const
 {
-    return dllName;
+    return m_dllName;
 }
 
 /// setters
@@ -36,16 +46,16 @@ void SensorType::setId(int i)
 
 void SensorType::setName(QString n)
 {
-    name = n;
+    m_name = n;
 }
 
 void SensorType::setDbTableName(QString tn)
 {
-    dbTableName = tn;
+    m_dbTableName = tn;
 }
 
 void SensorType::setDllName(QString dn)
 {
-    dllName = dn;
+    m_dllName = dn;
 }
 

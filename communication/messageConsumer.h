@@ -1,13 +1,13 @@
 #ifndef MESSAGECONSUMER_H
 #define MESSAGECONSUMER_H
 
-#include "util/byteArrayConverter.h"
 #include "sensorConfig.h"
 #include "util/coordinateHelper.h"
 #include "util/fileHelper.h"
 #include "util/timeHelper.h"
 #include "util/databaseManager.h"
-#include "dataObject.h"
+#include "communication/criodata.h"
+#include "communication/criocommand.h"
 #include "idatamessagereceiver.h"
 #include "transformation/transformationmanager.h"
 #include <QObject>
@@ -19,7 +19,7 @@ class MessageConsumer : public QObject, public IDataMessageReceiver
     Q_OBJECT
     public:
         explicit MessageConsumer(QObject *parent = 0, CRioDataStream* ds = 0);
-        void handleMessageData(DataObject dataObj);
+        void handleMessageData(CRioData &dataObj);
         ~MessageConsumer();
 
     signals:
@@ -38,10 +38,10 @@ class MessageConsumer : public QObject, public IDataMessageReceiver
         FileHelper *fileHelper;
         DatabaseManager* dbManager;
         void handleGetCommand(int address);
-        QString createLogText(DataObject dataObj);
+        QString createLogText(const CRioData &dataObj);
         void writeInLogFile(Sensor* s, QString logTxt);
-        const DataObject applyTransformation(QString dllName, DataObject val) const;
-        const DataObject transformDataObject(DataObject iobj);
+        CRioData applyTransformation(QString dllName, CRioData &val) const;
+        CRioData transformDataObject(CRioData &iobj);
 };
 
 #endif // MESSAGECONSUMER_H

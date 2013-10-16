@@ -22,7 +22,7 @@ CRIO::Timestamp::Timestamp(double ts):
 {
     unixTimestamp = toUnixMsTimestamp(timestamp);
 }
-
+/*
 CRIO::Timestamp::Timestamp(CRioDataStream &ds)
 {
     qint64 secs;
@@ -32,7 +32,7 @@ CRIO::Timestamp::Timestamp(CRioDataStream &ds)
     timestamp = secs + ((double) fracs) / Q_UINT64_C(18446744073709551615);
     unixTimestamp = toUnixMsTimestamp(timestamp);
 }
-
+*/
 qint64 CRIO::Timestamp::toUnixMsTimestamp(double timestamp)
 {
     qint64 newTs = CRIO::Timestamp::LABVIEW_EPOCH + round(timestamp * 1000);

@@ -2,8 +2,11 @@
 #define TRANSFORMATIONBASECLASS_H
 
 #include <QtCore>
-#include "communication/dataObject.h"
+//#include "communication/dataObject.h"
+#include "transformation/abstractcriostatesholder.h"
+#include "transformation/abstractsensorsdataholder.h"
 #include "communication/idatamessagereceiver.h"
+#include "communication/criodata.h"
 
 class TransformationBaseClass
 {
@@ -27,7 +30,7 @@ public:
     virtual ~TransformationBaseClass();
     virtual const QVector<ParameterDescription> getParametersDefinition() const = 0;
     virtual const TransformationDefinition getTransformationDefinition() const = 0;
-    virtual const DataObject applyTransform(DataObject val, IDataMessageReceiver* callback) = 0;
+    virtual const CRioData applyTransform(CRioData val, IDataMessageReceiver* callback, const AbstractCrioStatesHolder *crioStates, const AbstractSensorsDataHolder *sensorsData) = 0;
     virtual const QVector<SubSensor> getSubSensors() const = 0;
     virtual TransformationBaseClass *newInstance() const = 0;
 

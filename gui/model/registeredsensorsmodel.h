@@ -8,20 +8,21 @@ class RegisteredSensorsModel : public QAbstractTableModel
 {
 	Q_OBJECT
 public:
+    typedef enum {
+        AddressCol = 0,
+        NameEditCol = 1,
+        TransfCol = 2,
+        ConfigCol = 3,
+        StreamCol = 4,
+        RecordCol = 5,
+        DeleteCol = 6
+
+    } ColumnDesc;
+
     explicit RegisteredSensorsModel(QObject *parent = 0);
     ~RegisteredSensorsModel();
 
-signals:
-
-public slots:
-
-
-    // QAbstractItemModel interface
-public:
     class Proxy : public QSortFilterProxyModel{
-    protected:
-
-
         // QSortFilterProxyModel interface
     protected:
         bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
@@ -33,19 +34,16 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     void addSensor(RegisteredSensorItem *newItem, RegisteredSensorItem *parent = NULL);
 
-    //bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role);
-
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
-
-    //bool insertRows(int row, int count, const QModelIndex &parent);
-    //bool removeRows(int row, int count, const QModelIndex &parent);
-    //bool setData(const QModelIndex &index, const QVariant &value, int role);
+    Qt::ItemFlags flags(const QModelIndex &index) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role);
 private:
     RegisteredSensorItem *getItem(const QModelIndex &index) const;
     int m_nColumn;
     QVector<QVariant> m_headers;
     QList<RegisteredSensorItem *> m_items;
+
 
 };
 

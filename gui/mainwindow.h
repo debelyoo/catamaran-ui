@@ -15,6 +15,7 @@
 #include "gui/model/sensorinputsmodel.h"
 #include "gui/model/registeredsensorsmodel.h"
 #include "gui/delegate/registeredSensorsDelegate.h"
+#include "model/compactrio.h"
 
 
 namespace Ui {
@@ -44,6 +45,7 @@ public slots:
     void on_speedValueChanged(int);
     void on_directionValueChanged(int);
     void setSliderIsMoving(bool);
+
     /// Map
     void zoomIn();
     void zoomOut();
@@ -53,12 +55,14 @@ public slots:
     void on_clearWpClicked();
     void on_cleanGPSClicked();
     void on_graphWheelEvent(QWheelEvent*);
+
     /// server event
     void on_newConnection();
+
     /// config update
     void on_addressValueChanged(QString, int);
     void on_nameValueChanged(QString, int);
-    void on_typeValueChanged(int, int);
+    void on_typeValueChanged(QString typeName, int);
     void on_displayValueChanged(int, int);
     void on_recordValueChanged(bool, int);
     void on_streamValueChanged(bool, int);
@@ -81,7 +85,7 @@ public slots:
     void on_nsValueChange();
     void on_getNSCongifBtnClick();
     void on_defaultNSConfigClick();
-    void on_engineValueAutoUpdate();
+    void on_engineValueAutoUpdate(CRIO::Engines engineSide, qint8 value);
 
 protected:
     void keyPressEvent(QKeyEvent* event);
