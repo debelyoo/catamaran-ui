@@ -169,7 +169,7 @@ bool FileHelper::loadSensorTypesFile()
 }
 
 /**
- * Get the name of the log file. Returns existing filename it file with same prefix already exists
+ * Get the name of the log file. Returns existing filename if file with same prefix already exists
  * @brief FileHelper::getLogFileName
  * @param prefix The prefix of the log file
  * @return The name of the logfile
