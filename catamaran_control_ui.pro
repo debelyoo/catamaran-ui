@@ -9,6 +9,7 @@ QT += core gui network sql printsupport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = catamaran_control_ui
+# add 'console' to CONFIG for having the console window when running the app
 CONFIG +=  static
 TEMPLATE = app
 

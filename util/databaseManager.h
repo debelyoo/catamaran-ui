@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QDateTime>
+#include <QMessageBox>
 #include "model/sensor.h"
 
 /*namespace Datastore {
@@ -20,7 +21,6 @@ class DatabaseManager
 
     public:
         static DatabaseManager* instance();
-        //bool openDB();
         bool createLogTableForDoubleValue(QString tableName);
         bool insertLogDoubleValue(QString tableName, int address, qint64 ts, double value);
         bool getTemperatureLog();
