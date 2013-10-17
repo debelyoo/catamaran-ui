@@ -5,7 +5,7 @@
 #include "util/coordinateHelper.h"
 #include "util/fileHelper.h"
 #include "util/timeHelper.h"
-#include "util/databaseManager.h"
+#include "util/database/databaseManager.h"
 #include "communication/criodata.h"
 #include "communication/criocommand.h"
 #include "idatamessagereceiver.h"

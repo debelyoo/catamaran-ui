@@ -33,6 +33,7 @@ class SensorConfig
 
         QList<Sensor*> getSensors() const;
         QList<Sensor*> getSensorsForPlot(int plotIndex) const;
+        QList<Sensor*> getSensorsRecorded() const;
         int getDisplayIndexForGraphName(QString str) const;
         QString getSensorsAsTabSeparatedText() const;
         bool containsSensor(const QString &addr) const;

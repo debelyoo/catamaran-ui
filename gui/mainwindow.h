@@ -91,6 +91,10 @@ public slots:
 protected slots:
     void on_engineValueAutoUpdate();
 
+    /// export
+    void on_exportBtnClicked();
+    void on_missionSelectedChanged(QItemSelection);
+
 protected:
     void keyPressEvent(QKeyEvent* event);
 
@@ -135,6 +139,9 @@ private:
     void removeLastWaypoint();
     void sendWaypointCommand(quint8 command, QList<QPointF> points);
     void applyStyle();
+    /// export panel
+    void createExportPanel();
+    void displayDataForMission(QString missionName);
 
     RegisteredSensorsModel *m_registeredSensorsModel;
 

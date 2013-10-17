@@ -1,5 +1,5 @@
 #include "fileHelper.h"
-#include "databaseManager.h"
+#include "database/databaseManager.h"
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
@@ -158,7 +158,7 @@ bool FileHelper::loadSensorTypesFile()
             //SensorType* st = new SensorType(fields.at(1), fields.at(2), fields.at(3).toInt());
             //sensorConfig->addSensorType(st);
             SensorTypeManager::instance()->createType(fields.at(1), fields.at(2), fields.at(3).toInt());
-            dbManager->createLogTableForDoubleValue(fields.at(2));
+            dbManager->createTableByTemplate(fields.at(2));
             res = true;
         }
         count++;

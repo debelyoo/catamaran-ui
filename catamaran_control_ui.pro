@@ -13,12 +13,10 @@ TARGET = catamaran_control_ui
 CONFIG +=  static
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
     sensorConfig.cpp\
     util/fileHelper.cpp\
     util/coordinateHelper.cpp\
-    util/databaseManager.cpp \
     gui/mainwindow.cpp\
     gui/inRowCheckBox.cpp\
     gui/inRowComboBox.cpp\
@@ -48,12 +46,17 @@ SOURCES += main.cpp\
     communication/criodata.cpp \
     model/compactrio.cpp \
     manager/sensortypemanager.cpp \
+<<<<<<< HEAD
     gui/delegate/comboboxdelegate.cpp
+=======
+    util/database/databaseManager.cpp \
+    util/database/dbColumn.cpp \
+    util/database/dbTable.cpp
+>>>>>>> refactor database manager, add export panel
 
 HEADERS  += sensorConfig.h\
     util/fileHelper.h\
     util/coordinateHelper.h\
-    util/databaseManager.h \
     util/timeHelper.h \
     model/sensor.h\
     model/sensorType.h \
@@ -87,9 +90,16 @@ HEADERS  += sensorConfig.h\
     transformation/abstractsensorsdataholder.h \
     transformation/abstractcriostatesholder.h \
     manager/sensortypemanager.h \
+<<<<<<< HEAD
     gui/delegate/comboboxdelegate.h
 
+=======
+    util/database/databaseManager.h \
+    util/database/dbColumn.h \
+    util/database/dbTable.h
+>>>>>>> refactor database manager, add export panel
 
+#include(C:/tools/dquest-0.2/dquest-0.2/src/dquest.pri)
 
 FORMS    += mainwindow.ui \
     gui/sensortransformationconfig.ui

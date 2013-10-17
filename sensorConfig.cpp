@@ -66,6 +66,23 @@ QList<Sensor*> SensorConfig::getSensorsForPlot(int plotIndex) const
     return list;
 }
 
+/**
+ * Get the sensors that are marked to be recorded (logged)
+ * @brief SensorConfig::getSensorsRecorded
+ * @return A list of sensors
+ */
+QList<Sensor*> SensorConfig::getSensorsRecorded() const
+{
+    QList<Sensor*> list = m_sensors.values();
+    qDebug() << "# sensors: " << list.length();
+    QMutableListIterator<Sensor *> i(list);
+    while (i.hasNext()) {
+        if (!i.next()->record())
+            i.remove();
+    }
+    return list;
+}
+
 int SensorConfig::getDisplayIndexForGraphName(QString gName) const
 {
     int gIndex;

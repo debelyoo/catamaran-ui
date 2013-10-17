@@ -3,7 +3,7 @@
 
 #include "qcustomplot.h"
 #include "model/sensor.h"
-#include "util/databaseManager.h"
+#include "util/database/databaseManager.h"
 
 class DataPlot : public QCustomPlot
 {

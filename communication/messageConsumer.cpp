@@ -1,5 +1,6 @@
 #include "messageConsumer.h"
 #include "server.h"
+#include "model/compactrio.h"
 #include <QThread>
 #include <QLibrary>
 #include <QDir>
@@ -164,6 +165,75 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
                 handeled = false;
                 break;
             }
+<<<<<<< HEAD
+=======
+            // save it to database
+            QList<QVariant> values;
+            values.append(intAddress);
+            values.append(dataObj.timestamp.unixTimestamp);
+            values.append(lat);
+            values.append(lon);
+            values.append(elevation);
+            values.append(CompactRio::instance()->heading());
+            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
+            dbManager->insertValue(table, values);
+            // log it in log file
+            QString log = createLogText(dataObj);
+            writeInLogFile(s, log);
+            break;
+        }
+        case SensorList::PT100:
+        {
+            // dataObj->values contains only one temperature value
+            double temp = dataObj.data()[0].toDouble();
+            // save it to database
+            QList<QVariant> values;
+            values.append(intAddress);
+            values.append(dataObj.timestamp.unixTimestamp);
+            values.append(temp);
+            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
+            dbManager->insertValue(table, values);
+            //dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, temp);
+            // log it in log file
+            QString log = createLogText(dataObj);
+            writeInLogFile(s, log);
+            break;
+        }
+        case SensorList::Wind_speed:
+        case SensorList::Wind_direction:
+        {
+            // dataObj->values contains only one value
+            double value = dataObj.data()[0].toDouble();
+            // save it to database
+            QList<QVariant> values;
+            values.append(intAddress);
+            values.append(dataObj.timestamp.unixTimestamp);
+            values.append(value);
+            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
+            dbManager->insertValue(table, values);
+            //dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
+            // log it in log file
+            QString log = createLogText(dataObj);
+            writeInLogFile(s, log);
+            break;
+        }
+        case SensorList::Radiometer:
+        {
+            // dataObj->values contains only one value
+            double value = dataObj.data()[0].toDouble();
+            // save it to database
+            QList<QVariant> values;
+            values.append(intAddress);
+            values.append(dataObj.timestamp.unixTimestamp);
+            values.append(value);
+            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
+            dbManager->insertValue(table, values);
+            //dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
+            // log it in log file
+            QString log = createLogText(dataObj);
+            writeInLogFile(s, log);
+            break;
+>>>>>>> refactor database manager, add export panel
         }
         if(!handeled){
             const Sensor *sensor = sensorConfig->getSensor(dataObj.address);

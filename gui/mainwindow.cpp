@@ -43,7 +43,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
 
     createConfigurationPanel();
+    //DatabaseManager::instance()->setDatatypesForCurrentMission(); // associate data types to current mission
     createPlotsPanel(); // need to be after configuration panel for plots
+    createExportPanel();
 
     // Server  : signals wiring
     server = Server::instance();
@@ -515,6 +517,22 @@ void MainWindow::on_cleanGPSClicked()
     {
         delete gpsPoints.first();
     }
+}
+
+void MainWindow::on_exportBtnClicked()
+{
+    // TODO - export data
+    int missionRow = ui->listViewMission->selectionModel()->selectedIndexes().first().row();
+    int dataRow = ui->listViewData->selectionModel()->selectedIndexes().first().row();
+    qDebug() << "on_exportBtnClicked() - " << missionRow << ", " << dataRow;
+}
+
+void MainWindow::on_missionSelectedChanged(QItemSelection selection)
+{
+    // TODO - load data for mission
+    QModelIndex ind = (QModelIndex)selection.indexes().first();
+    //qDebug() << "on_missionSelectedChanged()" << ind.row() << " - " << ind.data().toString() ;
+    displayDataForMission(ind.data().toString());
 }
 
 /**
@@ -1033,4 +1051,27 @@ void MainWindow::removeLastWaypoint()
     // send command to cRIO (with empty point list)
     QList<QPointF> ptList;
     sendWaypointCommand(MessageUtil::Delete, ptList);
+}
+
+void MainWindow::createExportPanel()
+{
+    ui->comboBoxTimezone->addItem("GMT+2");
+    ui->comboBoxTimezone->addItem("GMT+9");
+
+    // load missions in list view
+    QStandardItemModel *model = DatabaseManager::instance()->getMissionsAsModel();
+    ui->listViewMission->setModel(model);
+    ui->listViewMission->setCurrentIndex(model->index(0,0));
+    // load data for mission
+    displayDataForMission(model->index(0,0).data().toString());
+
+    connect(ui->listViewMission->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(on_missionSelectedChanged(QItemSelection)));
+    connect(ui->exportBtn, SIGNAL(clicked()), this, SLOT(on_exportBtnClicked()));
+}
+
+void MainWindow::displayDataForMission(QString missionName)
+{
+    QStandardItemModel *model = DatabaseManager::instance()->getDataForMissionsAsModel(missionName);
+    ui->listViewData->setModel(model);
+    ui->listViewData->setCurrentIndex(model->index(0,0));
 }
