@@ -46,13 +46,11 @@ SOURCES += main.cpp\
     communication/criodata.cpp \
     model/compactrio.cpp \
     manager/sensortypemanager.cpp \
-<<<<<<< HEAD
     gui/delegate/comboboxdelegate.cpp
-=======
     util/database/databaseManager.cpp \
     util/database/dbColumn.cpp \
-    util/database/dbTable.cpp
->>>>>>> refactor database manager, add export panel
+    util/database/dbTable.cpp \
+    communication/httpRequester.cpp
 
 HEADERS  += sensorConfig.h\
     util/fileHelper.h\
@@ -90,14 +88,11 @@ HEADERS  += sensorConfig.h\
     transformation/abstractsensorsdataholder.h \
     transformation/abstractcriostatesholder.h \
     manager/sensortypemanager.h \
-<<<<<<< HEAD
     gui/delegate/comboboxdelegate.h
-
-=======
     util/database/databaseManager.h \
     util/database/dbColumn.h \
-    util/database/dbTable.h
->>>>>>> refactor database manager, add export panel
+    util/database/dbTable.h \
+    communication/httpRequester.h
 
 #include(C:/tools/dquest-0.2/dquest-0.2/src/dquest.pri)
 

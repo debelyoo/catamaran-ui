@@ -9,6 +9,7 @@
 #include <QStandardItemModel>
 #include "model/sensor.h"
 #include "dbTable.h"
+#include "manager/sensortypemanager.h"
 
 class DatabaseManager
 {
@@ -29,6 +30,7 @@ class DatabaseManager
         ///
         bool getTemperatureLog();
         QPair< QVector<double>, QVector<double> > getData(Sensor* s, int fromTs);
+        QJsonDocument getDataAsJSON(QString missionName, const SensorType* st);
 
     private:
         DatabaseManager(){
@@ -40,6 +42,8 @@ class DatabaseManager
             insertMission(); // create mission when application starts
             addDatatypeForCurrentMission("GPS");
             addDatatypeForCurrentMission("temperature");
+            insertSampleData();
+
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);
@@ -48,13 +52,15 @@ class DatabaseManager
 
         QSqlDatabase db;
         QMap<QString, DbTable> tables;
-        QString currentMission; // stores the name of the current mission
+        int currentMissionId; // stores the id of the current mission
 
-        ///
         QString buildCreateQuery(DbTable table);
         QString buildInsertQuery(DbTable table);
         void createNecessaryTables();
-        int getCurrentMissionId();
+        int getMissionId(QString missionName);
+
+        void insertSampleData(); // TODO - TEST only
+
 };
 
 #endif // DATABASEMANAGER_H

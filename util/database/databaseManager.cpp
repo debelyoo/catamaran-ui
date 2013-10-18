@@ -81,6 +81,7 @@ bool DatabaseManager::createTableByTemplate(QString templateName)
     DbTable table;
     QList<DbColumn> cols;
     if (templateName == "gpslog") {
+        cols.append(DbColumn("mission_id", SQLite::INTEGER));
         cols.append(DbColumn("sensor_address", SQLite::INTEGER));
         cols.append(DbColumn("timestamp", SQLite::REAL));
         cols.append(DbColumn("latitude", SQLite::REAL));
@@ -89,6 +90,8 @@ bool DatabaseManager::createTableByTemplate(QString templateName)
         cols.append(DbColumn("heading", SQLite::REAL));
         table = DbTable(templateName, cols);
     } else if (templateName == "temperaturelog") {
+        cols.append(DbColumn("mission_id", SQLite::INTEGER));
+        cols.append(DbColumn("device_id", SQLite::INTEGER));
         cols.append(DbColumn("sensor_address", SQLite::INTEGER));
         cols.append(DbColumn("timestamp", SQLite::REAL));
         cols.append(DbColumn("value", SQLite::REAL));
@@ -252,15 +255,22 @@ QString DatabaseManager::buildInsertQuery(DbTable table)
 
 bool DatabaseManager::insertMission()
 {
+    bool res;
     // mission_id - departure time
     QList<QVariant> values;
     QDateTime dateTime = QDateTime::currentDateTime();
     QString missionName = "mission_"+dateTime.toString("yyyyMMdd_hh:mm:ss");;
-    currentMission = missionName;
     double ts = (double)dateTime.currentMSecsSinceEpoch() / 1000;
     values.append(missionName);
     values.append(ts);
-    return insertValue(tables["mission"], values);
+    boolean b = insertValue(tables["mission"], values);
+    if (b) {
+        currentMissionId = getMissionId(missionName);
+        res = b;
+    } else {
+        res = false;
+    }
+    return res;
 }
 
 /**
@@ -301,6 +311,46 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
     }*/
     QPair< QVector<double>, QVector<double> > data = QPair< QVector<double>, QVector<double> >(logTimes, logValues);
     return data;
+}
+
+/**
+ * Get data as JSON. Each table row is formatted as a JSON object, and appended to a JSON array
+ * @brief DatabaseManager::getDataAsJSON
+ * @param missionName The name of the mission
+ * @param datatype The type of data
+ * @return A JSON array with the data records
+ */
+QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, const SensorType* st)
+{
+    QJsonArray jArr;
+    int missionId = getMissionId(missionName);
+    //const SensorType* st = SensorTypeManager::instance()->type(datatype);
+    DbTable table = tables[st->getDbTableName()];
+    if (db.open()) {
+        QSqlQuery query(db);
+        QString sqlQuery = "SELECT * FROM "+ st->getDbTableName() +" WHERE mission_id = "+ missionId;
+        sqlQuery += " ORDER BY timestamp";// LIMIT 100";
+        sqlQuery += ";";
+        //qDebug() << "SQL query: " << sqlQuery;
+        if (query.exec(sqlQuery)) {
+            while( query.next() )
+            {
+                QJsonObject jObj;
+                jObj.insert("id", query.value(0).toInt());
+                for(int i = 0; i < table.getColumns().length(); i++) {
+                    DbColumn col = table.getColumns().at(i);
+                    jObj.insert(col.getName(), query.value(i+1).toInt()); // i+1 because first field is id, which is not in the table columns since it is standard for all tables
+                }
+                jArr.append(jObj);
+            }
+        } else {
+            qDebug() << "select failed !" << query.lastError();
+        }
+    } else {
+        qDebug() << "DB not open !";
+    }
+    db.close();
+    return QJsonDocument(jArr);
 }
 
 /**
@@ -361,23 +411,23 @@ QStandardItemModel* DatabaseManager::getDataForMissionsAsModel(QString missionNa
 }
 
 /**
- * Get the id of the current mission
- * @brief DatabaseManager::getCurrentMissionId
+ * Get the id of a mission
+ * @brief DatabaseManager::getMissionId
  * @return The id of the mission
  */
-int DatabaseManager::getCurrentMissionId()
+int DatabaseManager::getMissionId(QString missionName)
 {
     int mId = 0;
     if (db.open()) {
         QSqlQuery query(db);
-        QString sqlQuery = "SELECT id FROM mission WHERE mission_id = '"+currentMission+"'";
+        QString sqlQuery = "SELECT id FROM mission WHERE mission_id = '"+missionName+"'";
         if (query.exec(sqlQuery)) {
             while( query.next() )
             {
                 mId = query.value(0).toInt();
             }
         } else {
-            qDebug() << "[getCurrentMissionId()] SELECT failed !" << query.lastError();
+            qDebug() << "[getMissionId()] SELECT failed !" << query.lastError();
         }
     } else {
         qDebug() << "DB not open !";
@@ -416,7 +466,21 @@ bool DatabaseManager::addDatatypeForCurrentMission(QString datatype)
 {
     DbTable dfmTable = tables["dataformission"];
     QList<QVariant> values = QList<QVariant>();
-    values.append(getCurrentMissionId());
+    values.append(currentMissionId);
     values.append(datatype);
     return insertValue(dfmTable, values);
+}
+
+/// TEST ONLY
+void DatabaseManager::insertSampleData()
+{
+    QList<QVariant> values = QList<QVariant>();
+    values.append(currentMissionId); // mission_id
+    values.append(48);
+    values.append(1382093430.5); // TS
+    values.append(46.5171); // lat
+    values.append(6.5817); // long
+    values.append(373.24); // alt
+    values.append(120.0); // heading
+    insertValue(tables["gpslog"], values)   ;
 }

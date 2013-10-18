@@ -17,6 +17,7 @@
 #include "gui/delegate/registeredSensorsDelegate.h"
 #include "gui/delegate/comboboxdelegate.h"
 #include "model/compactrio.h"
+#include "communication/httpRequester.h"
 
 
 namespace Ui {
@@ -94,6 +95,8 @@ protected slots:
     /// export
     void on_exportBtnClicked();
     void on_missionSelectedChanged(QItemSelection);
+    void on_backendAddressValueChanged(QString);
+    void on_httpRequestDone(QNetworkReply*);
 
 protected:
     void keyPressEvent(QKeyEvent* event);
@@ -101,6 +104,8 @@ protected:
 private:
     Ui::MainWindow *ui;
     Server *server;
+    HttpRequester* httpRequester;
+    DatabaseManager* dbManager;
     SensorConfig* sensorConfig; // singleton
     FileHelper* fileHelper;
     CoordinateHelper* coordinateHelper;

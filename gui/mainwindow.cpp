@@ -27,7 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //converter = ByteArrayConverter::instance();
     coordinateHelper = CoordinateHelper::instance();
     compactRio = CompactRio::instance();
-
+    httpRequester = HttpRequester::instance();
+    dbManager = DatabaseManager::instance();
     ui->setupUi(this);
 
     // load map in graphics view (for GPS points)
@@ -43,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
 
     createConfigurationPanel();
-    //DatabaseManager::instance()->setDatatypesForCurrentMission(); // associate data types to current mission
+    //dbManager->setDatatypesForCurrentMission(); // associate data types to current mission
     createPlotsPanel(); // need to be after configuration panel for plots
     createExportPanel();
 
@@ -522,17 +523,69 @@ void MainWindow::on_cleanGPSClicked()
 void MainWindow::on_exportBtnClicked()
 {
     // TODO - export data
-    int missionRow = ui->listViewMission->selectionModel()->selectedIndexes().first().row();
-    int dataRow = ui->listViewData->selectionModel()->selectedIndexes().first().row();
-    qDebug() << "on_exportBtnClicked() - " << missionRow << ", " << dataRow;
+    QString missionName = ui->listViewMission->selectionModel()->selectedIndexes().first().data().toString();
+    QString datatype = ui->listViewData->selectionModel()->selectedIndexes().first().data().toString();
+    qDebug() << "on_exportBtnClicked() - " << missionName << ", " << datatype;
+    const SensorType* st = SensorTypeManager::instance()->type(datatype);
+    QJsonDocument jsonData = dbManager->getDataAsJSON(missionName, st);
+    httpRequester->sendPostRequest(QString("/portal/api/data"), jsonData);
 }
 
+/**
+ * This method is called when the selected mission changes
+ * @brief MainWindow::on_missionSelectedChanged
+ * @param selection
+ */
 void MainWindow::on_missionSelectedChanged(QItemSelection selection)
 {
-    // TODO - load data for mission
+    // load data for mission
     QModelIndex ind = (QModelIndex)selection.indexes().first();
     //qDebug() << "on_missionSelectedChanged()" << ind.row() << " - " << ind.data().toString() ;
     displayDataForMission(ind.data().toString());
+}
+
+void MainWindow::on_backendAddressValueChanged(QString addr)
+{
+    HttpRequester::instance()->setBackendAddress(addr);
+}
+
+/**
+ * This method is called when an HTTP request is done
+ * @brief MainWindow::on_httpRequestDone
+ * @param reply The HTTP reply
+ */
+void MainWindow::on_httpRequestDone(QNetworkReply* reply)
+{
+    int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    //qDebug() << "on_httpRequestDone() " << v << " - " << reply->url().toString();
+    if (reply->url().toString().contains("/ping"))
+    {
+        if (v == 200) {
+            ui->backendStatusBtn->setText("Online");
+            ui->backendStatusBtn->setStyleSheet("QPushButton {" \
+                                           "    border: 2px solid #72A574;" \
+                                           "    border-radius: 4px;" \
+                                           "    border-style: ridge;" \
+                                           "    padding: 5px;" \
+                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #C5F9C8, stop: 1 #AEE2B2);" \
+                                           "}" \
+                                           "QPushButton:pressed {" \
+                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AEE2B2, stop: 1 #C5F9C8);" \
+                                           "}");
+        } else {
+            ui->backendStatusBtn->setText("Offline");
+            ui->backendStatusBtn->setStyleSheet("QPushButton {" \
+                                           "    border: 2px solid #A57274;" \
+                                           "    border-radius: 4px;" \
+                                           "    border-style: ridge;" \
+                                           "    padding: 5px;" \
+                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F8C6C8, stop: 1 #E1AFB2);" \
+                                           "}" \
+                                           "QPushButton:pressed {" \
+                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E1AFB2, stop: 1 #F8C6C8);" \
+                                           "}");
+        }
+    }
 }
 
 /**
@@ -1059,19 +1112,37 @@ void MainWindow::createExportPanel()
     ui->comboBoxTimezone->addItem("GMT+9");
 
     // load missions in list view
-    QStandardItemModel *model = DatabaseManager::instance()->getMissionsAsModel();
+    QStandardItemModel *model = dbManager->getMissionsAsModel();
     ui->listViewMission->setModel(model);
     ui->listViewMission->setCurrentIndex(model->index(0,0));
     // load data for mission
     displayDataForMission(model->index(0,0).data().toString());
 
+    ui->backendStatusBtn->setStyleSheet("QPushButton {" \
+                                   "    border: 2px solid #A57274;" \
+                                   "    border-radius: 4px;" \
+                                   "    border-style: ridge;" \
+                                   "    padding: 5px;" \
+                                   "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F8C6C8, stop: 1 #E1AFB2);" \
+                                   "}" \
+                                   "QPushButton:pressed {" \
+                                   "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E1AFB2, stop: 1 #F8C6C8);" \
+                                   "}");
+
     connect(ui->listViewMission->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(on_missionSelectedChanged(QItemSelection)));
     connect(ui->exportBtn, SIGNAL(clicked()), this, SLOT(on_exportBtnClicked()));
+    connect(ui->backendAddressField, SIGNAL(textChanged(QString)), this, SLOT(on_backendAddressValueChanged(QString)));
+    connect(httpRequester, SIGNAL(done(QNetworkReply*)), this, SLOT(on_httpRequestDone(QNetworkReply*)));
+
+    QTimer *timer = new QTimer();
+    timer->setInterval(5000);
+    connect(timer, SIGNAL(timeout()), httpRequester, SLOT(sendPingRequest()));
+    timer->start();
 }
 
 void MainWindow::displayDataForMission(QString missionName)
 {
-    QStandardItemModel *model = DatabaseManager::instance()->getDataForMissionsAsModel(missionName);
+    QStandardItemModel *model = dbManager->getDataForMissionsAsModel(missionName);
     ui->listViewData->setModel(model);
     ui->listViewData->setCurrentIndex(model->index(0,0));
 }
