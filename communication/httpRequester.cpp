@@ -40,8 +40,12 @@ void HttpRequester::sendPingRequest()
 void HttpRequester::sendPostRequest(QString urlPath, QJsonDocument jsonData)
 {
     QNetworkRequest req;
+    QByteArray postData = jsonData.toJson();
+    QByteArray postDataSize = QByteArray::number(postData.size());
     req.setUrl(QUrl("http://"+ backendAddress + urlPath));
-    networkManager->post(req, jsonData.toBinaryData());
+    req.setRawHeader("Content-type", "application/json");
+    req.setRawHeader("Content-Length", postDataSize);
+    networkManager->post(req, postData);
 }
 
 /**

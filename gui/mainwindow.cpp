@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //converter = ByteArrayConverter::instance();
     coordinateHelper = CoordinateHelper::instance();
     compactRio = CompactRio::instance();
-    httpRequester = HttpRequester::instance();
+    dataExporter = DataExporter::instance();
     dbManager = DatabaseManager::instance();
     ui->setupUi(this);
 
@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //dbManager->setDatatypesForCurrentMission(); // associate data types to current mission
     createPlotsPanel(); // need to be after configuration panel for plots
     createExportPanel();
+    dbManager->insertSampleData(); // TODO - TEST ONLY
 
     // Server  : signals wiring
     server = Server::instance();
@@ -526,9 +527,7 @@ void MainWindow::on_exportBtnClicked()
     QString missionName = ui->listViewMission->selectionModel()->selectedIndexes().first().data().toString();
     QString datatype = ui->listViewData->selectionModel()->selectedIndexes().first().data().toString();
     qDebug() << "on_exportBtnClicked() - " << missionName << ", " << datatype;
-    const SensorType* st = SensorTypeManager::instance()->type(datatype);
-    QJsonDocument jsonData = dbManager->getDataAsJSON(missionName, st);
-    httpRequester->sendPostRequest(QString("/portal/api/data"), jsonData);
+    dataExporter->exportData(missionName, datatype);
 }
 
 /**
@@ -550,41 +549,36 @@ void MainWindow::on_backendAddressValueChanged(QString addr)
 }
 
 /**
- * This method is called when an HTTP request is done
- * @brief MainWindow::on_httpRequestDone
- * @param reply The HTTP reply
+ * This method is called when a ping request is done
+ * @brief MainWindow::on_pingRequestDone
+ * @param statusCode The HTTP status code
  */
-void MainWindow::on_httpRequestDone(QNetworkReply* reply)
+void MainWindow::on_pingRequestDone(int statusCode)
 {
-    int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    //qDebug() << "on_httpRequestDone() " << v << " - " << reply->url().toString();
-    if (reply->url().toString().contains("/ping"))
-    {
-        if (v == 200) {
-            ui->backendStatusBtn->setText("Online");
-            ui->backendStatusBtn->setStyleSheet("QPushButton {" \
-                                           "    border: 2px solid #72A574;" \
-                                           "    border-radius: 4px;" \
-                                           "    border-style: ridge;" \
-                                           "    padding: 5px;" \
-                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #C5F9C8, stop: 1 #AEE2B2);" \
-                                           "}" \
-                                           "QPushButton:pressed {" \
-                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AEE2B2, stop: 1 #C5F9C8);" \
-                                           "}");
-        } else {
-            ui->backendStatusBtn->setText("Offline");
-            ui->backendStatusBtn->setStyleSheet("QPushButton {" \
-                                           "    border: 2px solid #A57274;" \
-                                           "    border-radius: 4px;" \
-                                           "    border-style: ridge;" \
-                                           "    padding: 5px;" \
-                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F8C6C8, stop: 1 #E1AFB2);" \
-                                           "}" \
-                                           "QPushButton:pressed {" \
-                                           "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E1AFB2, stop: 1 #F8C6C8);" \
-                                           "}");
-        }
+    if (statusCode == 200) {
+        ui->backendStatusBtn->setText("Online");
+        ui->backendStatusBtn->setStyleSheet("QPushButton {" \
+                                       "    border: 2px solid #72A574;" \
+                                       "    border-radius: 4px;" \
+                                       "    border-style: ridge;" \
+                                       "    padding: 5px;" \
+                                       "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #C5F9C8, stop: 1 #AEE2B2);" \
+                                       "}" \
+                                       "QPushButton:pressed {" \
+                                       "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #AEE2B2, stop: 1 #C5F9C8);" \
+                                       "}");
+    } else {
+        ui->backendStatusBtn->setText("Offline");
+        ui->backendStatusBtn->setStyleSheet("QPushButton {" \
+                                       "    border: 2px solid #A57274;" \
+                                       "    border-radius: 4px;" \
+                                       "    border-style: ridge;" \
+                                       "    padding: 5px;" \
+                                       "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F8C6C8, stop: 1 #E1AFB2);" \
+                                       "}" \
+                                       "QPushButton:pressed {" \
+                                       "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E1AFB2, stop: 1 #F8C6C8);" \
+                                       "}");
     }
 }
 
@@ -1132,11 +1126,12 @@ void MainWindow::createExportPanel()
     connect(ui->listViewMission->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(on_missionSelectedChanged(QItemSelection)));
     connect(ui->exportBtn, SIGNAL(clicked()), this, SLOT(on_exportBtnClicked()));
     connect(ui->backendAddressField, SIGNAL(textChanged(QString)), this, SLOT(on_backendAddressValueChanged(QString)));
-    connect(httpRequester, SIGNAL(done(QNetworkReply*)), this, SLOT(on_httpRequestDone(QNetworkReply*)));
+    connect(dataExporter, SIGNAL(pingRequestDone(int)), this, SLOT(on_pingRequestDone(int)));
 
+    dataExporter->sendPingRequest();
     QTimer *timer = new QTimer();
     timer->setInterval(5000);
-    connect(timer, SIGNAL(timeout()), httpRequester, SLOT(sendPingRequest()));
+    connect(timer, SIGNAL(timeout()), dataExporter, SLOT(sendPingRequest()));
     timer->start();
 }
 

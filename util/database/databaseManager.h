@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QStandardItemModel>
 #include "model/sensor.h"
+#include "model/mission.h"
 #include "dbTable.h"
 #include "manager/sensortypemanager.h"
 
@@ -27,10 +28,12 @@ class DatabaseManager
         bool addDatatypeForCurrentMission(QString datatype);
         QStandardItemModel* getMissionsAsModel();
         QStandardItemModel* getDataForMissionsAsModel(QString missionName);
+        void insertSampleData(); // TODO - TEST only
         ///
         bool getTemperatureLog();
         QPair< QVector<double>, QVector<double> > getData(Sensor* s, int fromTs);
-        QJsonDocument getDataAsJSON(QString missionName, const SensorType* st);
+        QJsonDocument getDataAsJSON(QString missionName, const SensorType* st, long missionIdOnBackend);
+        QJsonDocument getMissionAsJSON(QString missionName);
 
     private:
         DatabaseManager(){
@@ -42,8 +45,6 @@ class DatabaseManager
             insertMission(); // create mission when application starts
             addDatatypeForCurrentMission("GPS");
             addDatatypeForCurrentMission("temperature");
-            insertSampleData();
-
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);
@@ -52,14 +53,12 @@ class DatabaseManager
 
         QSqlDatabase db;
         QMap<QString, DbTable> tables;
-        int currentMissionId; // stores the id of the current mission
+        qint64 currentMissionId; // stores the id of the current mission
 
         QString buildCreateQuery(DbTable table);
         QString buildInsertQuery(DbTable table);
         void createNecessaryTables();
-        int getMissionId(QString missionName);
-
-        void insertSampleData(); // TODO - TEST only
+        Mission getMission(QString missionName);
 
 };
 

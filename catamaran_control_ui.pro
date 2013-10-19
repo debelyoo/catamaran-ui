@@ -50,7 +50,9 @@ SOURCES += main.cpp\
     util/database/databaseManager.cpp \
     util/database/dbColumn.cpp \
     util/database/dbTable.cpp \
-    communication/httpRequester.cpp
+    communication/httpRequester.cpp \
+    communication/dataExporter.cpp \
+    model/mission.cpp
 
 HEADERS  += sensorConfig.h\
     util/fileHelper.h\
@@ -92,7 +94,9 @@ HEADERS  += sensorConfig.h\
     util/database/databaseManager.h \
     util/database/dbColumn.h \
     util/database/dbTable.h \
-    communication/httpRequester.h
+    communication/httpRequester.h \
+    communication/dataExporter.h \
+    model/mission.h
 
 #include(C:/tools/dquest-0.2/dquest-0.2/src/dquest.pri)
 
