@@ -30,7 +30,7 @@ void FileHelper::writeFile(QString filename, QString fileContent, bool isLog)
     QString folderPath;
     if (isLog)
     {
-        folderPath = QDir::currentPath() + "/" + logFolder;
+        folderPath = QDir::currentPath() + "/" + logFolder + "/" + DatabaseManager::instance()->getCurrentMissionName();
     }
     else
     {
@@ -139,7 +139,6 @@ bool FileHelper::loadSensorTypesFile()
 {
     bool res = false;
     QString sensorTypesFile = "sensortypes.txt";
-    DatabaseManager* dbManager = DatabaseManager::instance();
     QString filePath = QDir::currentPath() + "/"+ sensorTypesFile;
     QFile file(filePath);
     if(!file.open(QIODevice::ReadOnly)) {
@@ -158,7 +157,6 @@ bool FileHelper::loadSensorTypesFile()
             //SensorType* st = new SensorType(fields.at(1), fields.at(2), fields.at(3).toInt());
             //sensorConfig->addSensorType(st);
             SensorTypeManager::instance()->createType(fields.at(1), fields.at(2), fields.at(3).toInt());
-            dbManager->createTableByTemplate(fields.at(2));
             res = true;
         }
         count++;

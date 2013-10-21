@@ -23,17 +23,24 @@ void DataExporter::exportData(QString missionName, QString dataType)
     sendMission();
 }
 
+/**
+ * Send mission to backend - POST request
+ * @brief DataExporter::sendMission
+ */
 void DataExporter::sendMission()
 {
     QJsonDocument jsonData = dbManager->getMissionAsJSON(tempMissionName);
     httpRequester->sendPostRequest(QString("/portal/api/mission"), jsonData);
 }
 
+/**
+ * Send data to backend - POST request
+ * @brief DataExporter::sendData
+ * @param missionIdOnBackend
+ */
 void DataExporter::sendData(long missionIdOnBackend)
 {
-    //const SensorType* st = SensorTypeManager::instance()->type(datatype);
-    const SensorType* st = new SensorType(tempDataType, "gpslog", 0); // TODO - temporary test
-    QJsonDocument jsonData = dbManager->getDataAsJSON(tempMissionName, st, missionIdOnBackend);
+    QJsonDocument jsonData = dbManager->getDataAsJSON(tempMissionName, tempDataType, missionIdOnBackend);
     httpRequester->sendPostRequest(QString("/portal/api/data"), jsonData);
 }
 

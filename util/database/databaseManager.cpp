@@ -30,26 +30,37 @@ void DatabaseManager::createNecessaryTables()
     cols.append(DbColumn("timezone", SQLite::TEXT));
     cols.append(DbColumn("vehicle", SQLite::TEXT));
     DbTable missionTable = DbTable("mission", cols);
-    createTable(missionTable);
+    createTable(TableList::MISSION, missionTable);
     // create dataformission table
     cols.clear();
     cols.append(DbColumn("mission_id", SQLite::INTEGER));
     cols.append(DbColumn("datatype", SQLite::TEXT));
     DbTable dfmTable = DbTable("dataformission", cols);
-    createTable(dfmTable);
-
+    createTable(TableList::DATA_FOR_MISSION, dfmTable);
+    // create gpslog table
+    cols.clear();
+    cols.append(DbColumn("mission_id", SQLite::INTEGER));
+    cols.append(DbColumn("timestamp", SQLite::REAL));
+    cols.append(DbColumn("latitude", SQLite::REAL));
+    cols.append(DbColumn("longitude", SQLite::REAL));
+    cols.append(DbColumn("altitude", SQLite::REAL));
+    cols.append(DbColumn("heading", SQLite::REAL));
+    DbTable gpsTable = DbTable("gpslog", cols);
+    createTable(TableList::GPS_LOG, gpsTable);
+    // create sensorlog table
+    cols.clear();
+    cols.append(DbColumn("mission_id", SQLite::INTEGER));
+    cols.append(DbColumn("sensor_address", SQLite::TEXT));
+    cols.append(DbColumn("sensor_type", SQLite::TEXT));
+    cols.append(DbColumn("timestamp", SQLite::REAL));
+    cols.append(DbColumn("value", SQLite::REAL));
+    DbTable deviceLogTable = DbTable("sensorlog", cols);
+    createTable(TableList::SENSOR_LOG, deviceLogTable);
 }
 
-/**
- * Insert values in SQLite database
- * @brief DatabaseManager::insertValue
- * @param table The table in which inserting the values
- * @param values The values to insert (MUST be in the same order as table columns)
- * @return True if success
- */
-bool DatabaseManager::insertValue(DbTable table, QList<QVariant> values)
+bool DatabaseManager::insertRecord(DbTable table, QList<QVariant> values)
 {
-    //qDebug() << "[DatabaseManager.insertValue()] table: "+table.getName();
+    //qDebug() << "[DatabaseManager.insertRecord()] table: "+table.getName();
     bool res;
     if (table.getColumns().length() != values.length()) {
         qDebug() << "[DatabaseManager.insertValue()] [ERROR] nb of columns and values do not match ! [table: "+ table.getName() +", cols: "+table.getColumns().length()+", vals: "+values.length()+"]";
@@ -60,7 +71,7 @@ bool DatabaseManager::insertValue(DbTable table, QList<QVariant> values)
     if (db.open()) {
         QSqlQuery query(db);
         query.prepare(queryStr);
-        for (int i = 0; i<table.getColumns().length(); i++) {
+        for (int i = 0; i < table.getColumns().length(); i++) {
             query.bindValue(i, values.at(i));
         }
         if (query.exec()) {
@@ -78,46 +89,53 @@ bool DatabaseManager::insertValue(DbTable table, QList<QVariant> values)
     return res;
 }
 
-bool DatabaseManager::createTableByTemplate(QString templateName)
+bool DatabaseManager::insertSensorValue(QString sensorAddress, QString sensorType, double ts, double value)
 {
-    DbTable table;
-    QList<DbColumn> cols;
-    if (templateName == "gpslog") {
-        cols.append(DbColumn("mission_id", SQLite::INTEGER));
-        cols.append(DbColumn("timestamp", SQLite::REAL));
-        cols.append(DbColumn("latitude", SQLite::REAL));
-        cols.append(DbColumn("longitude", SQLite::REAL));
-        cols.append(DbColumn("altitude", SQLite::REAL));
-        cols.append(DbColumn("heading", SQLite::REAL));
-        table = DbTable(templateName, cols);
-    } else if (templateName == "temperaturelog") {
-        cols.append(DbColumn("mission_id", SQLite::INTEGER));
-        cols.append(DbColumn("device_id", SQLite::INTEGER));
-        cols.append(DbColumn("sensor_address", SQLite::INTEGER));
-        cols.append(DbColumn("timestamp", SQLite::REAL));
-        cols.append(DbColumn("value", SQLite::REAL));
-        table = DbTable(templateName, cols);
-    } else {
-        qDebug() << "[DatabaseManager.createTableByTemplate()] Unknown template table";
-        return false;
-    }
-    return createTable(table);
+    //qDebug() << "[DatabaseManager.insertValue()] table: "+table.getName();
+    bool res;
+    DbTable table = tables[TableList::SENSOR_LOG];
+    QList<QVariant> values = QList<QVariant>();
+    values.append(currentMissionId);
+    values.append(sensorAddress);
+    values.append(sensorType);
+    values.append(ts);
+    values.append(value);
+    res = insertRecord(table, values);
+    return res;
+}
+
+
+bool DatabaseManager::insertGpsPoint(double ts, double lat, double lon, double alt, double heading)
+{
+    //qDebug() << "[DatabaseManager.insertValue()] table: "+table.getName();
+    bool res;
+    DbTable table = tables[TableList::GPS_LOG];
+    QList<QVariant> values = QList<QVariant>();
+    values.append(currentMissionId);
+    values.append(ts);
+    values.append(lat);
+    values.append(lon);
+    values.append(alt);
+    values.append(heading);
+    res = insertRecord(table, values);
+    return res;
 }
 
 /**
  * Create a table in SQLite database
  * @brief DatabaseManager::createTable
+ * @param tableId The id of the table (enum)
  * @param table The table to create
  * @return True if success
  */
-bool DatabaseManager::createTable(DbTable table)
+bool DatabaseManager::createTable(TableList::Tables tableId, DbTable table)
 {
     bool res;
     QString queryStr = buildCreateQuery(table);
     if (db.open()) {
         QSqlQuery query(db);
         if (query.exec(queryStr)) {
-            tables.insert(table.getName(), table);
+            tables.insert(tableId, table);
             res = true;
             qDebug() << "table creation succeeded ! "+ table.getName();
         } else {
@@ -169,91 +187,6 @@ QString DatabaseManager::buildInsertQuery(DbTable table)
     return query;
 }
 
-/**
- * Create a table in embedded Sqlite DB (id, sensor_address, timestamp (double), value (double))
- * @brief DatabaseManager::createLogTableForDoubleValue
- * @param tableName The name of the table to create
- * @return true if table has been created successfully
- */
-/*bool DatabaseManager::createLogTableForDoubleValue(QString tableName)
-{
-    bool res;
-    if (db.open()) {
-        QSqlQuery query(db);
-        if (query.exec("CREATE TABLE IF NOT EXISTS "+ tableName +" ( id INTEGER PRIMARY KEY AUTOINCREMENT, sensor_address INTEGER, timestamp REAL, value REAL );")) {
-            res = true;
-            //qDebug() << "table creation succeeded ! "+ tableName;
-        } else {
-            res = false;
-            qDebug() << "table creation failed !" << query.lastError();
-        }
-    } else {
-        res = false;
-        qDebug() << "DB not open !";
-    }
-    db.close();
-    return res;
-}*/
-
-/**
- * Insert log value (double) in database
- * @brief DatabaseManager::insertLogDoubleValue
- * @param tableName The name of the table in DB
- * @param address The address of the sensor
- * @param ts The timestamp of the log
- * @param value The value of the log
- * @return true if success
- */
-/*bool DatabaseManager::insertLogDoubleValue(QString tableName, int address, qint64 ts, double value)
-{
-    bool res;
-    if (db.open()) {
-        // convert ts (milli) to ts (seconds) so that it can be stored as double
-        double tsSec = (double)ts / 1000;
-        QSqlQuery query(db);
-        query.prepare("INSERT INTO "+ tableName +" ( sensor_address, timestamp, value ) VALUES (?, ?, ?);");
-        query.bindValue(0, address);
-        query.bindValue(1, tsSec);
-        query.bindValue(2, value);
-        if (query.exec()) {
-            res = true;
-            //qDebug() << "insertion succeeded !";
-        } else {
-            res = false;
-            qDebug() << "insertion failed !" << query.lastError();
-        }
-    } else {
-        res = false;
-        qDebug() << "DB not open !";
-    }
-    db.close();
-    return res;
-}*/
-
-/*bool DatabaseManager::getTemperatureLog()
-{
-    bool res;
-    if (db.open()) {
-        QSqlQuery query(db);
-        if (query.exec("SELECT * FROM temperaturelog;")) {
-            while( query.next() )
-            {
-                double logValue = query.value( 3 ).toDouble();
-                QString msg = "select succeeded ! - ["+ QString::number(logValue) +"]";
-                qDebug() << msg;
-            }
-        } else {
-            res = false;
-            qDebug() << "select failed !" << query.lastError();
-        }
-    } else {
-        res = false;
-        qDebug() << "DB not open !";
-    }
-    db.close();
-    return res;
-}*/
-
 bool DatabaseManager::insertMission()
 {
     bool res;
@@ -266,9 +199,10 @@ bool DatabaseManager::insertMission()
     values.append(ts);
     values.append("GMT+2"); // default timezone
     values.append("catamaran");
-    boolean b = insertValue(tables["mission"], values);
+    boolean b = insertRecord(tables[TableList::MISSION], values);
     if (b) {
         currentMissionId = getMission(missionName).getId();
+        currentMissionName = missionName;
         res = b;
     } else {
         res = false;
@@ -322,19 +256,19 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
  * @param missionName The name of the mission
  * @param st The sensor type
  * @param missionIdOnBackend The id of the mission (in backend DB)
- * @return A JSON array with the data records
+ * @return A JSON array with the data records - {"datatype":"gps", "items": [...]}
  */
-QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, const SensorType* st, long missionIdOnBackend)
+QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend)
 {
     QJsonObject json;
-    json.insert("datatype", st->getName().toLower());
+    json.insert("datatype", sensorType);
     QJsonArray jArr;
     qint64 missionId = getMission(missionName).getId();
     //const SensorType* st = SensorTypeManager::instance()->type(datatype);
-    DbTable table = tables[st->getDbTableName()];
+    DbTable table = tables[TableList::SENSOR_LOG];
     if (db.open()) {
         QSqlQuery query(db);
-        QString sqlQuery = "SELECT * FROM "+ st->getDbTableName() +" WHERE mission_id = "+ QString::number(missionId);
+        QString sqlQuery = "SELECT * FROM "+ table.getName() +" WHERE mission_id = "+ QString::number(missionId);
         sqlQuery += " ORDER BY timestamp";// LIMIT 100";
         sqlQuery += ";";
         //qDebug() << "SQL query: " << sqlQuery;
@@ -363,6 +297,12 @@ QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, const SensorTy
     return QJsonDocument(json);
 }
 
+/**
+ * Get a mission as JSON object
+ * @brief DatabaseManager::getMissionAsJSON
+ * @param missionName The name of the mission
+ * @return A JSON object with the mission details - {"departure_time": "1382190049.321", "timezone": "GMT+2", "vehicle": "catamaran"}
+ */
 QJsonDocument DatabaseManager::getMissionAsJSON(QString missionName)
 {
     QJsonObject json;
@@ -419,7 +359,7 @@ QStandardItemModel* DatabaseManager::getMissionsAsModel()
  * Get the data types available for a mission
  * @brief DatabaseManager::getDataForMissionsAsModel
  * @param missionName The name of the mission
- * @return
+ * @return A QStandradItemModel to be used in a QListView
  */
 QStandardItemModel* DatabaseManager::getDataForMissionsAsModel(QString missionName)
 {
@@ -507,22 +447,20 @@ bool DatabaseManager::setDatatypesForCurrentMission()
  */
 bool DatabaseManager::addDatatypeForCurrentMission(QString datatype)
 {
-    DbTable dfmTable = tables["dataformission"];
+    DbTable dfmTable = tables[TableList::DATA_FOR_MISSION];
     QList<QVariant> values = QList<QVariant>();
     values.append(currentMissionId);
     values.append(datatype);
-    return insertValue(dfmTable, values);
+    return insertRecord(dfmTable, values);
+}
+
+QString DatabaseManager::getCurrentMissionName()
+{
+    return currentMissionName;
 }
 
 /// TEST ONLY
 void DatabaseManager::insertSampleData()
 {
-    QList<QVariant> values = QList<QVariant>();
-    values.append(currentMissionId); // mission_id
-    values.append(1382093430.5); // TS
-    values.append(46.5171); // lat
-    values.append(6.5817); // long
-    values.append(373.24); // alt
-    values.append(120.0); // heading
-    insertValue(tables["gpslog"], values)   ;
+    insertGpsPoint(1382093430.5, 46.5171, 6.5817, 373.24, 120.0);
 }

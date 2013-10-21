@@ -86,7 +86,7 @@ CRioData MessageConsumer::transformDataObject(CRioData &iobj){
  */
 void MessageConsumer::handleDataMessage(CRioData &idataObj)
 {
-    bool handeled = false;
+    bool handeled = true;
 
     // Temporary modification for test on 09.10.2013
     if(idataObj.address == "53"){
@@ -99,160 +99,43 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
 
     if (sensorConfig->containsSensor(idataObj.address))
     {
-        bool valid;
-        quint8 intAddress = idataObj.address.toInt(&valid);
-        if(valid){
-
-            handeled = true;
-            Sensor *s = sensorConfig->getSensor(idataObj.address);
-            // switch can not be used with QString
-            switch (intAddress) {
-            case 48:
+        if (idataObj.address == "48") {
+            // GPS position
+            double lat = dataObj.data()[0].toDouble();
+            double lon = dataObj.data()[1].toDouble();
+            double elevation = dataObj.data()[2].toDouble();
+            // convert to CH1903 coordinates (east, north, h)
+            QVector<double> swissCoordinates = coordinateHelper->WGS84toLV03(lat, lon, elevation);
+            // get x,y position for map in UI
+            QPointF mapPosition = coordinateHelper->LV03toUIMap(swissCoordinates[0], swissCoordinates[1]);
+            if (mapPosition.x() != 0.0 && mapPosition.y() != 0.0)
             {
-                // GPS position
-                double lat = dataObj.data()[0].toDouble();
-                double lon = dataObj.data()[1].toDouble();
-                double elevation = dataObj.data()[2].toDouble();
-                // convert to CH1903 coordinates (east, north, h)
-                QVector<double> swissCoordinates = coordinateHelper->WGS84toLV03(lat, lon, elevation);
-                // get x,y position for map in UI
-                QPointF mapPosition = coordinateHelper->LV03toUIMap(swissCoordinates[0], swissCoordinates[1]);
-                if (mapPosition.x() != 0.0 && mapPosition.y() != 0.0)
-                {
-                    // notify GUI only if coordinates are plausible
-                    emit gpsPointReceived(mapPosition.x(), mapPosition.y());
-                }
-                QString log = createLogText(dataObj);
-                writeInLogFile(s, log);
-                break;
+                // notify GUI only if coordinates are plausible
+                emit gpsPointReceived(mapPosition.x(), mapPosition.y());
             }
-            case SensorList::PT100:
-            {
-                // dataObj->values contains only one temperature value
-                double temp = dataObj.data()[0].toDouble();
-                // save it to database
-                dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, temp);
-                // log it in log file
-                QString log = createLogText(dataObj);
-                writeInLogFile(s, log);
-                break;
-            }
-            case SensorList::Wind_speed:
-            case SensorList::Wind_direction:
-            {
-                // dataObj->values contains only one value
+            // save it to database
+            dbManager->insertGpsPoint(dataObj.timestamp.unixTimestamp, lat, lon, elevation, CompactRio::instance()->heading());
+            // log it in log file
+            QString log = createLogText(dataObj);
+            writeInLogFile(s, log);
+        } else {
+            // TODO - add check to know if it's a data
+            if (s->record()) {
+                // dataObj->values contains only one sensor value
                 double value = dataObj.data()[0].toDouble();
                 // save it to database
-                dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
+                dbManager->insertSensorValue(dataObj.address, "", dataObj.timestamp.unixTimestamp, value);
                 // log it in log file
                 QString log = createLogText(dataObj);
                 writeInLogFile(s, log);
-                break;
-            }
-            case SensorList::Radiometer:
-            {
-                // dataObj->values contains only one value
-                double value = dataObj.data()[0].toDouble();
-                // save it to database
-                dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
-                // log it in log file
-                QString log = createLogText(dataObj);
-                writeInLogFile(s, log);
-                break;
-            }
-            default:
-                // unknown sensor type
+            } else {
                 handeled = false;
-                break;
-            }
-<<<<<<< HEAD
-=======
-            // save it to database
-            QList<QVariant> values;
-            values.append(intAddress);
-            values.append(dataObj.timestamp.unixTimestamp);
-            values.append(lat);
-            values.append(lon);
-            values.append(elevation);
-            values.append(CompactRio::instance()->heading());
-            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
-            dbManager->insertValue(table, values);
-            // log it in log file
-            QString log = createLogText(dataObj);
-            writeInLogFile(s, log);
-            break;
-        }
-        case SensorList::PT100:
-        {
-            // dataObj->values contains only one temperature value
-            double temp = dataObj.data()[0].toDouble();
-            // save it to database
-            QList<QVariant> values;
-            values.append(intAddress);
-            values.append(dataObj.timestamp.unixTimestamp);
-            values.append(temp);
-            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
-            dbManager->insertValue(table, values);
-            //dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, temp);
-            // log it in log file
-            QString log = createLogText(dataObj);
-            writeInLogFile(s, log);
-            break;
-        }
-        case SensorList::Wind_speed:
-        case SensorList::Wind_direction:
-        {
-            // dataObj->values contains only one value
-            double value = dataObj.data()[0].toDouble();
-            // save it to database
-            QList<QVariant> values;
-            values.append(intAddress);
-            values.append(dataObj.timestamp.unixTimestamp);
-            values.append(value);
-            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
-            dbManager->insertValue(table, values);
-            //dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
-            // log it in log file
-            QString log = createLogText(dataObj);
-            writeInLogFile(s, log);
-            break;
-        }
-        case SensorList::Radiometer:
-        {
-            // dataObj->values contains only one value
-            double value = dataObj.data()[0].toDouble();
-            // save it to database
-            QList<QVariant> values;
-            values.append(intAddress);
-            values.append(dataObj.timestamp.unixTimestamp);
-            values.append(value);
-            DbTable table = DbTable(s->type()->getDbTableName(), QList<DbColumn>()); // TODO - should come from sensorType object
-            dbManager->insertValue(table, values);
-            //dbManager->insertLogDoubleValue(s->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, value);
-            // log it in log file
-            QString log = createLogText(dataObj);
-            writeInLogFile(s, log);
-            break;
->>>>>>> refactor database manager, add export panel
-        }
-        if(!handeled){
-            const Sensor *sensor = sensorConfig->getSensor(dataObj.address);
-            if(sensor && sensor->type()){
-                if(sensor->type()->getName() == "PT100"){
-                    handeled = true;
-                    // dataObj->values contains only one temperature value
-                    double temp = dataObj.data().at(0).toDouble();
-                    // save it to database
-                    dbManager->insertLogDoubleValue(sensor->type()->getDbTableName(), intAddress, dataObj.timestamp.unixTimestamp, temp);
-                    // log it in log file
-                    //QString log = createLogText(dataObj);
-                    //writeInLogFile(s, log);
-                }
+                // unknown sensor type
+                qDebug() << "[MessageConsumer] Unknown sensor type (addr="<<dataObj.address<<") !\n";
             }
         }
-        if(!handeled){
-            qDebug() << "[MessageConsumer] Unknown sensor type (addr="<<dataObj.address<<") !\n";
-        }else{
+
+        if(handeled) {
             QString outputStr = QDateTime::fromMSecsSinceEpoch(dataObj.timestamp.unixTimestamp).toString("hh:mm:ss.zzz") + ": Addr(%1)=";
             outputStr = outputStr.arg(dataObj.address);
             foreach(QVariant dv, dataObj.data()){
@@ -262,7 +145,6 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
             emit messageParsed(outputStr);
         }
     }else{
-
         qDebug() << "[MessageConsumer] Sensor not found in config !";
     }
 }

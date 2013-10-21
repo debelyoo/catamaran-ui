@@ -12,17 +12,25 @@
 #include "dbTable.h"
 #include "manager/sensortypemanager.h"
 
+namespace TableList {
+    typedef enum {
+        MISSION = 0,
+        DATA_FOR_MISSION = 1,
+        GPS_LOG = 2,
+        SENSOR_LOG = 3
+    } Tables;
+}
+
 class DatabaseManager
 {
 
     public:
         static DatabaseManager* instance();
-        //bool createLogTableForDoubleValue(QString tableName);
-        //bool insertLogDoubleValue(QString tableName, int address, qint64 ts, double value);
         ///
-        bool createTableByTemplate(QString templateName);
-        bool createTable(DbTable table);
-        bool insertValue(DbTable table, QList<QVariant> values);
+        QString getCurrentMissionName();
+        bool createTable(TableList::Tables tableId, DbTable table);
+        bool insertGpsPoint(double ts, double lat, double lon, double alt, double heading);
+        bool insertSensorValue(QString sensorAddress, QString sensorType, double ts, double value);
         bool insertMission();
         bool setDatatypesForCurrentMission();
         bool addDatatypeForCurrentMission(QString datatype);
@@ -32,7 +40,7 @@ class DatabaseManager
         ///
         bool getTemperatureLog();
         QPair< QVector<double>, QVector<double> > getData(Sensor* s, int fromTs);
-        QJsonDocument getDataAsJSON(QString missionName, const SensorType* st, long missionIdOnBackend);
+        QJsonDocument getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend);
         QJsonDocument getMissionAsJSON(QString missionName);
 
     private:
@@ -40,10 +48,9 @@ class DatabaseManager
             // Find SQLite driver
             db = QSqlDatabase::addDatabase("QSQLITE");
             db.setDatabaseName("ecoldata.sqlite");
-            //db.open();
             createNecessaryTables();
             insertMission(); // create mission when application starts
-            addDatatypeForCurrentMission("GPS");
+            addDatatypeForCurrentMission("gps");
             addDatatypeForCurrentMission("temperature");
         }
         DatabaseManager(const DatabaseManager &);
@@ -52,13 +59,15 @@ class DatabaseManager
         static DatabaseManager* m_Instance;
 
         QSqlDatabase db;
-        QMap<QString, DbTable> tables;
+        QMap<TableList::Tables, DbTable> tables;
         qint64 currentMissionId; // stores the id of the current mission
+        QString currentMissionName; // stores the name of the current mission
 
         QString buildCreateQuery(DbTable table);
         QString buildInsertQuery(DbTable table);
         void createNecessaryTables();
         Mission getMission(QString missionName);
+        bool insertRecord(DbTable table, QList<QVariant> values);
 
 };
 
