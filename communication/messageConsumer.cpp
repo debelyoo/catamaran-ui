@@ -97,8 +97,9 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
 
     CRioData dataObj = transformDataObject(idataObj);
 
-    if (sensorConfig->containsSensor(idataObj.address))
+    if (sensorConfig->containsSensor(dataObj.address))
     {
+        Sensor* s = sensorConfig->getSensor(dataObj.address);
         if (idataObj.address == "48") {
             // GPS position
             double lat = dataObj.data()[0].toDouble();

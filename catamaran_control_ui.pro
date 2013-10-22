@@ -46,7 +46,7 @@ SOURCES += main.cpp\
     communication/criodata.cpp \
     model/compactrio.cpp \
     manager/sensortypemanager.cpp \
-    gui/delegate/comboboxdelegate.cpp
+    gui/delegate/comboboxdelegate.cpp \
     util/database/databaseManager.cpp \
     util/database/dbColumn.cpp \
     util/database/dbTable.cpp \
@@ -54,7 +54,7 @@ SOURCES += main.cpp\
     communication/dataExporter.cpp \
     model/mission.cpp
 
-HEADERS  += sensorConfig.h\
+HEADERS += sensorConfig.h\
     util/fileHelper.h\
     util/coordinateHelper.h\
     util/timeHelper.h \
@@ -90,15 +90,13 @@ HEADERS  += sensorConfig.h\
     transformation/abstractsensorsdataholder.h \
     transformation/abstractcriostatesholder.h \
     manager/sensortypemanager.h \
-    gui/delegate/comboboxdelegate.h
+    gui/delegate/comboboxdelegate.h \
     util/database/databaseManager.h \
     util/database/dbColumn.h \
     util/database/dbTable.h \
     communication/httpRequester.h \
     communication/dataExporter.h \
     model/mission.h
-
-#include(C:/tools/dquest-0.2/dquest-0.2/src/dquest.pri)
 
 FORMS    += mainwindow.ui \
     gui/sensortransformationconfig.ui
