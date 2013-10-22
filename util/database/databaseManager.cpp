@@ -234,8 +234,8 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
         if (query.exec(sqlQuery)) {
             while( query.next() )
             {
-                logTimes.push_back(query.value( 2 ).toDouble()); // times are in seconds to fit with QCustomPlot
-                logValues.push_back(query.value( 3 ).toDouble());
+                logTimes.push_back(query.value( 4 ).toDouble()); // times are in seconds to fit with QCustomPlot
+                logValues.push_back(query.value( 5 ).toDouble());
             }
         } else {
             qDebug() << "select failed !" << query.lastError();
@@ -244,9 +244,10 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
         qDebug() << "DB not open !";
     }
     db.close();
-    /*if (logValues.size() > 0)
+    /*
+    if (logValues.size() > 0)
     {
-        qDebug() << "getData() - values: "+ QString::number(logValues.size())+" for sensor address: "+ QString::number(s->getAddress());
+        qDebug() << "getData() - values: "+ QString::number(logValues.size())+" for sensor address: "+ s->address();
         //qDebug() << "getData() - last time: "+ QString::number(logTimes.last(), 'f', 10)+" last value: "+ QString::number(logValues.last());
     }*/
     QPair< QVector<double>, QVector<double> > data = QPair< QVector<double>, QVector<double> >(logTimes, logValues);

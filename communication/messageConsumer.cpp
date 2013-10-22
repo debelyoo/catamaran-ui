@@ -126,7 +126,7 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
                 // dataObj->values contains only one sensor value
                 double value = dataObj.data().at(0).toDouble();
                 // save it to database
-                dbManager->insertSensorValue(dataObj.address, "", dataObj.timestamp.unixTimestamp, value);
+                dbManager->insertSensorValue(dataObj.address, s->type()->getName(), dataObj.timestamp.unixTimestamp, value);
                 // log it in log file
                 QString log = createLogText(dataObj);
                 writeInLogFile(s, log);
