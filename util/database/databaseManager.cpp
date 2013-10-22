@@ -32,11 +32,12 @@ void DatabaseManager::createNecessaryTables()
     DbTable missionTable = DbTable("mission", cols);
     createTable(TableList::MISSION, missionTable);
     // create dataformission table
-    cols.clear();
+    /*cols.clear();
     cols.append(DbColumn("mission_id", SQLite::INTEGER));
     cols.append(DbColumn("datatype", SQLite::TEXT));
     DbTable dfmTable = DbTable("dataformission", cols);
     createTable(TableList::DATA_FOR_MISSION, dfmTable);
+    */
     // create gpslog table
     cols.clear();
     cols.append(DbColumn("mission_id", SQLite::INTEGER));
@@ -89,11 +90,12 @@ bool DatabaseManager::insertRecord(DbTable table, QList<QVariant> values)
     return res;
 }
 
-bool DatabaseManager::insertSensorValue(QString sensorAddress, QString sensorType, double ts, double value)
+bool DatabaseManager::insertSensorValue(QString sensorAddress, QString sensorType, qint64 unixTs, double value)
 {
     //qDebug() << "[DatabaseManager.insertValue()] table: "+table.getName();
     bool res;
     DbTable table = tables[TableList::SENSOR_LOG];
+    double ts = (double)unixTs / 1000;
     QList<QVariant> values = QList<QVariant>();
     values.append(currentMissionId);
     values.append(sensorAddress);
@@ -105,11 +107,12 @@ bool DatabaseManager::insertSensorValue(QString sensorAddress, QString sensorTyp
 }
 
 
-bool DatabaseManager::insertGpsPoint(double ts, double lat, double lon, double alt, double heading)
+bool DatabaseManager::insertGpsPoint(qint64 unixTs, double lat, double lon, double alt, double heading)
 {
     //qDebug() << "[DatabaseManager.insertValue()] table: "+table.getName();
     bool res;
     DbTable table = tables[TableList::GPS_LOG];
+    double ts = (double)unixTs / 1000;
     QList<QVariant> values = QList<QVariant>();
     values.append(currentMissionId);
     values.append(ts);

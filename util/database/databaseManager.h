@@ -29,8 +29,8 @@ class DatabaseManager
         ///
         QString getCurrentMissionName();
         bool createTable(TableList::Tables tableId, DbTable table);
-        bool insertGpsPoint(double ts, double lat, double lon, double alt, double heading);
-        bool insertSensorValue(QString sensorAddress, QString sensorType, double ts, double value);
+        bool insertGpsPoint(qint64 unixTs, double lat, double lon, double alt, double heading);
+        bool insertSensorValue(QString sensorAddress, QString sensorType, qint64 unixTs, double value);
         bool insertMission();
         QStandardItemModel* getMissionsAsModel();
         QStandardItemModel* getDataForMissionsAsModel(QString missionName);
