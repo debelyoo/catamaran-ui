@@ -225,9 +225,9 @@ void CompactRio::initSelftAllocatedSensors()
     SensorTypeManager::instance()->createType("GPS Position", "", 0);
     SensorTypeManager::instance()->createType("GPS Speed", "", 0);
     SensorTypeManager::instance()->createType("Compass", "", 0);
-    Sensor *gpsPos = new Sensor("48", "GPS[position]", SensorTypeManager::instance()->type("GPS Position"), 0, true, true, "GPS");
-    Sensor *gpsSpeed = new Sensor("49", "GPS[velocity]", SensorTypeManager::instance()->type("GPS Position"), 0, true, true, "GPS");
-    Sensor *compass = new Sensor("41", "Compass[heading]", SensorTypeManager::instance()->type("Compass"), 0, true, true, "Compass");
+    Sensor *gpsPos = new Sensor("48", "GPS[position]", SensorTypeManager::instance()->type("GPS Position"), 0, true, true, "GPS", "", false);
+    Sensor *gpsSpeed = new Sensor("49", "GPS[velocity]", SensorTypeManager::instance()->type("GPS Speed"), 0, true, true, "GPS", "", false);
+    Sensor *compass = new Sensor("41", "Compass[heading]", SensorTypeManager::instance()->type("Compass"), 0, true, true, "Compass", "", false);
     m_selfAllocatedSensors.append(gpsPos);
     m_selfAllocatedSensors.append(gpsSpeed);
     m_selfAllocatedSensors.append(compass);
