@@ -48,6 +48,7 @@ public slots:
     void on_speedValueChanged(int);
     void on_directionValueChanged(int);
     void setSliderIsMoving(bool);
+    void on_tabChanged(int);
 
     /// Map
     void zoomIn();
@@ -153,6 +154,7 @@ private:
     /// export panel
     void createExportPanel();
     void displayDataForMission(QString missionName);
+    void updateMissionList();
 
     RegisteredSensorsModel *m_registeredSensorsModel;
 

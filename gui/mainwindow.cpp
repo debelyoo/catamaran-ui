@@ -45,7 +45,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
 
     createConfigurationPanel();
-    //dbManager->setDatatypesForCurrentMission(); // associate data types to current mission
     createPlotsPanel(); // need to be after configuration panel for plots
     createExportPanel();
     dbManager->insertSampleData(); // TODO - TEST ONLY
@@ -152,6 +151,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_registeredSensorsModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_sensorConfigChanged()));
 
     applyStyle();
+
+    // handle signal of tab change
+    connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(on_tabChanged(int)));
 
 
     TransformationManager::instance()->load();
@@ -646,6 +648,19 @@ void MainWindow::on_newConnection()
 {
     compactRio->setFpgaCounterSamplingTime(2250);
     compactRio->setSabertoothState(CRIO::ON);
+}
+
+/**
+ * This SLOT is called when selected tab changes
+ * @brief MainWindow::on_tabChanged
+ * @param tabIndex The index of the selected tab
+ */
+void MainWindow::on_tabChanged(int tabIndex)
+{
+    //qDebug() << "tab changed: " << ui->tabWidget->widget(tabIndex)->objectName();
+    if (ui->tabWidget->widget(tabIndex)->objectName() == "export_tab") {
+
+    }
 }
 
 void MainWindow::setSliderIsMoving(bool b)
@@ -1154,11 +1169,7 @@ void MainWindow::createExportPanel()
     ui->comboBoxTimezone->addItem("GMT+9");
 
     // load missions in list view
-    QStandardItemModel *model = dbManager->getMissionsAsModel();
-    ui->listViewMission->setModel(model);
-    ui->listViewMission->setCurrentIndex(model->index(0,0));
-    // load data for mission
-    displayDataForMission(model->index(0,0).data().toString());
+    updateMissionList();
 
     ui->backendStatusBtn->setStyleSheet("QPushButton {" \
                                    "    border: 2px solid #A57274;" \
@@ -1181,6 +1192,8 @@ void MainWindow::createExportPanel()
     timer->setInterval(5000);
     connect(timer, SIGNAL(timeout()), dataExporter, SLOT(sendPingRequest()));
     timer->start();
+
+    HttpRequester::instance()->setBackendAddress(ui->backendAddressField->text());
 }
 
 void MainWindow::displayDataForMission(QString missionName)
@@ -1188,4 +1201,13 @@ void MainWindow::displayDataForMission(QString missionName)
     QStandardItemModel *model = dbManager->getDataForMissionsAsModel(missionName);
     ui->listViewData->setModel(model);
     ui->listViewData->setCurrentIndex(model->index(0,0));
+}
+
+void MainWindow::updateMissionList()
+{
+    QStandardItemModel *model = dbManager->getMissionsAsModel();
+    ui->listViewMission->setModel(model);
+    ui->listViewMission->setCurrentIndex(model->index(0,0));
+    // load data for mission
+    displayDataForMission(model->index(0,0).data().toString());
 }

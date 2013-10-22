@@ -1518,7 +1518,7 @@
               <item>
                <widget class="QLineEdit" name="backendAddressField">
                 <property name="text">
-                 <string>localhost</string>
+                 <string>128.178.90.50</string>
                 </property>
                </widget>
               </item>

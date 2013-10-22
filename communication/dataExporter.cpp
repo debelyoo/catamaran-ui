@@ -24,7 +24,7 @@ void DataExporter::exportData(QString missionName, QString dataType)
 }
 
 /**
- * Send mission to backend - POST request
+ * Send mission (and sensors) to backend - POST request
  * @brief DataExporter::sendMission
  */
 void DataExporter::sendMission()

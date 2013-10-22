@@ -32,8 +32,6 @@ class DatabaseManager
         bool insertGpsPoint(double ts, double lat, double lon, double alt, double heading);
         bool insertSensorValue(QString sensorAddress, QString sensorType, double ts, double value);
         bool insertMission();
-        bool setDatatypesForCurrentMission();
-        bool addDatatypeForCurrentMission(QString datatype);
         QStandardItemModel* getMissionsAsModel();
         QStandardItemModel* getDataForMissionsAsModel(QString missionName);
         void insertSampleData(); // TODO - TEST only
@@ -50,8 +48,8 @@ class DatabaseManager
             db.setDatabaseName("ecoldata.sqlite");
             createNecessaryTables();
             insertMission(); // create mission when application starts
-            addDatatypeForCurrentMission("gps");
-            addDatatypeForCurrentMission("temperature");
+            //addDatatypeForCurrentMission("gps");
+            //addDatatypeForCurrentMission("temperature");
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);
@@ -67,6 +65,7 @@ class DatabaseManager
         QString buildInsertQuery(DbTable table);
         void createNecessaryTables();
         Mission getMission(QString missionName);
+        QList<Sensor*> getSensorsForMission(QString missionName);
         bool insertRecord(DbTable table, QList<QVariant> values);
 
 };
