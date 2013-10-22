@@ -193,8 +193,6 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     default:
         break;
     }
-    //qDebug() << QString::number(event->key());
-    //qDebug() << event->text();
 }
 
 void MainWindow::addStatusText(QString msg)
