@@ -37,6 +37,7 @@ public:
 public slots:
     void on_navSysStart();
     void addStatusText(QString);
+    void addCrioStatusText(QString);
     void updateLeftSpinBox();
     void updateRightSpinBox();
     void updateSpeedSpinBox();

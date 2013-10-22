@@ -1,9 +1,10 @@
 #include "sensor.h"
 
 Sensor::Sensor(QString addr, QString name, const SensorType* type,
-               int display, bool record, bool stream, QString logFilePrefix, QString currentLogFilename):
+               int display, bool record, bool stream, QString logFilePrefix, QString currentLogFilename, bool isData):
     m_address(addr),
     m_name(name),
+    m_isData(isData),
     m_type(type),
     m_record(record),
     m_stream(stream),
@@ -34,6 +35,11 @@ Sensor::Sensor(QString addr, QString name, const SensorType* type,
 Sensor::~Sensor()
 {
     SensorConfig::instance()->removeSensor(m_address);
+}
+
+bool Sensor::isData() const
+{
+    return m_isData;
 }
 
 int Sensor::display() const

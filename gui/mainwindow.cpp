@@ -54,6 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(server, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
     connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
 
+    connect(compactRio, SIGNAL(newCRioStatusMessage(QString)), this, SLOT(addCrioStatusText(QString)));
+
     sliderIsMoving = false;
     previousSpeedValue = 0;
     previousDirectionValue = 0;
@@ -185,6 +187,14 @@ void MainWindow::addStatusText(QString msg)
     QTextCursor c =  ui->statusText->textCursor();
     c.movePosition(QTextCursor::End);
     ui->statusText->setTextCursor(c);
+}
+
+void MainWindow::addCrioStatusText(QString msg)
+{
+    ui->crioStatusText->insertPlainText(msg);
+    QTextCursor c =  ui->crioStatusText->textCursor();
+    c.movePosition(QTextCursor::End);
+    ui->crioStatusText->setTextCursor(c);
 }
 
 void MainWindow::updateLeftSpinBox()

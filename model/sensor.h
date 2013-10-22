@@ -14,7 +14,7 @@ public:
     Sensor(QString addr = "", QString name = "",
                     const SensorType* type = 0, int display = 0,
                     bool record = false, bool stream = false,
-                    QString logFilePrefix = "", QString currentLogFilename = "");
+                    QString logFilePrefix = "", QString currentLogFilename = "", bool isData = true);
 //    explicit Sensor(Sensor *parent, QString addr = "", QString name = "",
 //                    SensorType* type = 0, int display = 0,
 //                    bool record = false, bool stream = false,
@@ -23,7 +23,7 @@ public:
     ~Sensor();
 
     // Getters
-
+    bool isData() const;
     int display() const;
     const QString &address() const;
     const QString &name() const;
@@ -56,6 +56,7 @@ private:
     QString             m_address;
     QString             m_name;
 
+    bool                m_isData;
     const SensorType    *m_type;
     bool                m_record;
     bool                m_stream;
