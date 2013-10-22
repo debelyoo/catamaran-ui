@@ -27,7 +27,9 @@ Sensor *SensorConfig::removeSensor(const QString &addr)
     if(Sensor *s = m_sensors[addr]){
         m_sensors.remove(addr);
         //delete s;
+        return s;
     }
+    return NULL;
 }
 
 //void SensorConfig::addSensorType(SensorType* st)

@@ -136,6 +136,9 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
             params.append(QVariant::fromValue(ts.timestamp));
         }
             break;
+        case CRIO::CMD_ADDR_HONK:
+
+            break;
         default:
             break;
         }

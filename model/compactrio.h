@@ -55,7 +55,7 @@ public:
     bool stop();
 
     // Sensor and device Commands
-    bool setSensorsConfig(const QList<Sensor *> &sensors);
+    bool setSensorsConfig();
     bool setHonk(const CRIO::ON_OFF &mode);
     bool setLight(const CRIO::ON_OFF &mode);
     bool setSabertoothState(const CRIO::ON_OFF &mode);

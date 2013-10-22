@@ -47,7 +47,8 @@ SOURCES += main.cpp\
     communication/criocommand.cpp \
     communication/criodata.cpp \
     model/compactrio.cpp \
-    manager/sensortypemanager.cpp
+    manager/sensortypemanager.cpp \
+    gui/delegate/comboboxdelegate.cpp
 
 HEADERS  += sensorConfig.h\
     util/fileHelper.h\
@@ -85,7 +86,8 @@ HEADERS  += sensorConfig.h\
     model/compactrio.h \
     transformation/abstractsensorsdataholder.h \
     transformation/abstractcriostatesholder.h \
-    manager/sensortypemanager.h
+    manager/sensortypemanager.h \
+    gui/delegate/comboboxdelegate.h
 
 
 

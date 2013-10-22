@@ -10,7 +10,8 @@ class SensorInputItem : public QObject
     Q_OBJECT
 
 public:
-    SensorInputItem(QString name = "", SensorInputItem *pParent = NULL);
+    SensorInputItem(const QString &address, const QString &name, SensorInputItem *pParent = NULL);
+    SensorInputItem(const QString &name, SensorInputItem *pParent = NULL);
     SensorInputItem *parent() const;
     void setParent(SensorInputItem *pParent);
 
@@ -23,6 +24,7 @@ public:
 
     QString name() const;
     QString fullName() const;
+    const QString address() const;
     void setName(QString name);
 
 
@@ -41,6 +43,7 @@ protected:
     SensorInputItem *m_pParent;
     QVector<SensorInputItem *> m_childs;
     QString m_name;
+    QString m_address;
     bool m_enabled;
 };
 

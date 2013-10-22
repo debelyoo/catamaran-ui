@@ -2,12 +2,13 @@
 
 RegisteredSensorsModel::RegisteredSensorsModel(QObject *parent) :
     QAbstractTableModel(parent),
-    m_nColumn(7),
+    m_nColumn(8),
     m_headers(),
     m_items()
 {
     m_headers.append("Address");
     m_headers.append("Name");
+    m_headers.append("Type");
     m_headers.append("Transformation");
     m_headers.append(" ");
     m_headers.append("Stream");
@@ -61,6 +62,11 @@ QVariant RegisteredSensorsModel::data(const QModelIndex &index, int role) const
             return item->sensor()->address();
         case NameEditCol:
             return item->sensor()->name();
+        case TypeCol:
+            if(item->sensor() && item->sensor()->type()){
+                return QVariant(item->sensor()->type()->getName());
+            }
+            return QVariant("Unknown");
         case TransfCol:
             if(!item->transformation()){
                 return QVariant("None");
@@ -134,6 +140,10 @@ Qt::ItemFlags RegisteredSensorsModel::flags(const QModelIndex &index) const
     if (index.column() == StreamCol || index.column() == RecordCol)
     {
         returnFlags |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
+        QModelIndex m = createIndex(index.row(), TypeCol, index.internalPointer());
+        if(data(m, Qt::DisplayRole).toString() == "Unknown"){
+            returnFlags &= ~Qt::ItemIsEnabled;
+        }
     }
     if (index.column() == NameEditCol){
         returnFlags |= Qt::ItemIsEditable;
@@ -166,6 +176,10 @@ bool RegisteredSensorsModel::setData(const QModelIndex &index, const QVariant &v
            switch(index.column()){
            case NameEditCol:
                item->setName(value.toString());
+               emit dataChanged(index, index);
+               return true;
+           case TypeCol:
+               item->setType(value.toString());
                emit dataChanged(index, index);
                return true;
            default:

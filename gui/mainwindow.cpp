@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     fileHelper = FileHelper::instance();
     //converter = ByteArrayConverter::instance();
     coordinateHelper = CoordinateHelper::instance();
+    compactRio = CompactRio::instance();
 
     ui->setupUi(this);
 
@@ -44,16 +45,16 @@ MainWindow::MainWindow(QWidget *parent) :
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
 
-    // start server
-    s = Server::instance();
-    connect(s, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
-    connect(s, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
-    s->listen();
+    // Server  : signals wiring
+    server = Server::instance();
+    connect(server, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
+    connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
+
     sliderIsMoving = false;
     previousSpeedValue = 0;
     previousDirectionValue = 0;
 
-    connect(s, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
+    connect(server, SIGNAL(gpsPointReceived(double, double)), this, SLOT(drawPointOnMap(double,double)));
     connect(ui->navModeComboBox, SIGNAL(activated(int)), this, SLOT(on_navModeChanged(int)));
     // engines' sliders & spinboxes
     connect(ui->leftSlider, SIGNAL(valueChanged(int)), ui->leftSpinBox, SLOT(setValue(int)));
@@ -62,10 +63,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->rightSpinBox, SIGNAL(valueChanged(int)), ui->rightSlider, SLOT(setValue(int)));
 
     // speed and direction sliders & spinboxes
+    /*
     connect(ui->speedSlider, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
     connect(ui->directionSlider, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
     connect(ui->speedSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
     connect(ui->directionSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+    */
+    setEngineControlSlidersConnection(true);
     ui->speedSpinBox->installEventFilter(new MouseClickHandler(this));
     ui->directionSpinBox->installEventFilter(new MouseClickHandler(this));
 
@@ -109,6 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
     RegisteredSensorsModel::Proxy* proxyModel = new RegisteredSensorsModel::Proxy();
     proxyModel->setSourceModel(m_registeredSensorsModel);
     ui->registeredSensors->setModel(proxyModel);
+
     //ui->registeredSensors->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
     ui->registeredSensors->horizontalHeader()->setResizeMode(QHeaderView::Fixed);
     ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::ConfigCol, 120);
@@ -122,21 +127,27 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->registeredSensors->setStyleSheet(/*"QTableView::item:hover {background-color: rgb(185, 210, 235);}*/"QTableView{alternate-background-color: #f3f3f3; background-color: #ffffff;}");
 
     RegisteredSensorsDelegate * delegate = new RegisteredSensorsDelegate(RegisteredSensorsModel::ConfigCol, ui->registeredSensors);
+    ComboBoxDelegate *comboDelegate = new ComboBoxDelegate(RegisteredSensorsModel::TypeCol, ui->registeredSensors);
     connect(delegate, SIGNAL(buttonClicked(QModelIndex&)), this, SLOT(on_registeredSensorButtonClick(QModelIndex&)));
     ui->registeredSensors->setItemDelegateForColumn(RegisteredSensorsModel::ConfigCol, delegate);
+    ui->registeredSensors->setItemDelegateForColumn(RegisteredSensorsModel::TypeCol, comboDelegate);
     connect(sensorsInputModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_availableSensorsValueChanged()));
 
     foreach(CompactRio::NamedAddress as, CompactRio::instance()->availableInputs()){
-        SensorInputItem * sensor = new SensorInputItem(as.name);
+        SensorInputItem * sensor = new SensorInputItem(QString::number(as.address), as.name);
         sensorsInputModel->addInput(sensor);
     }
 
     connect(ui->addSensorFromList, SIGNAL(clicked()), this, SLOT(on_addSensorFlClicked()));
+    connect(m_registeredSensorsModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_sensorConfigChanged()));
 
     applyStyle();
 
 
     TransformationManager::instance()->load();
+
+    //Server : start
+    server->listen();
 }
 
 MainWindow::~MainWindow()
@@ -215,9 +226,11 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSpinBox->setEnabled(true);
         ui->waypointGroupBox->hide();
         ui->stopBtn->show();
-        s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_MANUAL));
+        compactRio->stop();
+        compactRio->setNavSysMode(CRIO::NAV_SYS_MANUAL);
         ui->startNavigationWpBtn->setText("Start");
         ui->startNavigationWpBtn->setProperty("started", false);
+        disconnect(compactRio, SIGNAL(enginesChanged()), this, 0);
     }
     else
     {
@@ -229,7 +242,7 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSpinBox->setEnabled(false);
         ui->stopBtn->hide();
         ui->waypointGroupBox->show();
-
+        connect(compactRio, SIGNAL(enginesChanged()), this, SLOT(on_engineValueAutoUpdate()));
     }
 
 }
@@ -265,7 +278,7 @@ void MainWindow::on_saveConfigClicked()
     fileHelper->createLogFiles();
     addStatusText("Config saved !\n");
     changeSaveBtnColor("gray");
-    s->sendMessage(CRIO::setSensorsConfig(sensorConfig->getSensors()));
+    compactRio->setSensorsConfig();
     clearPlotsPanel();
     createPlotsPanel();
 }
@@ -365,9 +378,8 @@ void MainWindow::on_addSensorFlClicked()
     QModelIndexList indexes = ui->availableSensorsInput->selectionModel()->selectedRows();
     for(int i=0;i<indexes.count(); ++i){
         SensorInputItem *sensor = static_cast<SensorInputItem *>(indexes[i].internalPointer());
-        if(sensor->enabled()){
+        if(sensor && sensor->enabled()){
             sensor->disable();
-            //RegisteredSensorsModel * rModel = static_cast<RegisteredSensorsModel *>(ui->registeredSensors->model());
             m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
             ui->registeredSensors->sortByColumn(0);
         }
@@ -382,25 +394,30 @@ void MainWindow::on_registeredSensorButtonClick(QModelIndex &index)
     widget->show();
 }
 
+void MainWindow::on_sensorConfigChanged()
+{
+    compactRio->setSensorsConfig();
+}
+
 void MainWindow::on_honkButtonPressed()
 {
-    s->sendMessage(CRIO::setHonk(CRIO::ON));
+    compactRio->setHonk(CRIO::ON);
 }
 
 void MainWindow::on_honkButtonReleased()
 {
-    s->sendMessage(CRIO::setHonk(CRIO::OFF));
+    compactRio->setHonk(CRIO::OFF);
 }
 
 void MainWindow::on_lightCheckBoxChange()
 {
-    s->sendMessage(CRIO::setLight(ui->lightBtn->isChecked()?CRIO::ON:CRIO::OFF));
+    compactRio->setLight(ui->lightBtn->isChecked()?CRIO::ON:CRIO::OFF);
 }
 
 void MainWindow::on_updateNSBtnClick()
 {
-    s->sendMessage(CRIO::setNavSysConstants(ui->c0->value(), ui->c1->value(), ui->c2->value(), ui->c3->value(), ui->c4->value()));
-    s->sendMessage(CRIO::setNavSysLimits(ui->l0->value(), ui->l1->value()));
+    compactRio->setNavSysConstants(ui->c0->value(), ui->c1->value(), ui->c2->value(), ui->c3->value(), ui->c4->value());
+    compactRio->setNavSysLimits(ui->l0->value(), ui->l1->value());
 
     ui->updateNSBtn->setStyleSheet("QPushButton {" \
                                    "    border: 2px solid #72A574;" \
@@ -428,8 +445,8 @@ void MainWindow::on_nsValueChange()
 
 void MainWindow::on_getNSCongifBtnClick()
 {
-    s->sendMessage(CRIO::getCommand(CRIO::CMD_ADDR_NS_CSTS));
-    s->sendMessage(CRIO::getCommand(CRIO::CMD_ADDR_NS_LIMITS));
+    compactRio->getCommand(CRIO::CMD_ADDR_NS_CSTS);
+    compactRio->getCommand(CRIO::CMD_ADDR_NS_LIMITS);
 }
 
 void MainWindow::on_defaultNSConfigClick()
@@ -443,9 +460,16 @@ void MainWindow::on_defaultNSConfigClick()
     ui->l1->setValue(0.5);
 }
 
-void MainWindow::on_engineValueAutoUpdate(CRIO::Engines engineSide, qint8 value)
+void MainWindow::on_engineValueAutoUpdate()
 {
-
+    setEngineControlSlidersConnection(false);
+    int left = compactRio->leftEngineValue()/1.27;
+    int right = compactRio->rightEngineValue()/1.27;
+    ui->leftSlider->setValue(left);
+    ui->rightSlider->setValue(right);
+    updateSpeedDirectionSliders(left, right);
+    qDebug() << "on_engineValueAutoUpdate called: left="<<left<<" right="<<right;
+    setEngineControlSlidersConnection(true);
 }
 
 void MainWindow::zoomIn()
@@ -507,8 +531,8 @@ void MainWindow::on_graphWheelEvent(QWheelEvent* ev)
 
 void MainWindow::on_newConnection()
 {
-    s->sendMessage(CRIO::setFpgaCounterSamplingTime(2250));
-    s->sendMessage(CRIO::setSabertoothState(CRIO::ON));
+    compactRio->setFpgaCounterSamplingTime(2250);
+    compactRio->setSabertoothState(CRIO::ON);
 }
 
 void MainWindow::setSliderIsMoving(bool b)
@@ -567,12 +591,12 @@ void MainWindow::on_navSysStart()
 {
     QVariant started = ui->startNavigationWpBtn->property("started");
     if(!started.isValid() || !started.toBool()){
-        s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_AUTO));
+        compactRio->setNavSysMode(CRIO::NAV_SYS_AUTO);
         ui->startNavigationWpBtn->setText("Stop");
         ui->startNavigationWpBtn->setProperty("started", true);
     }else{
-        s->sendMessage(CRIO::setNavSysMode(CRIO::NAV_SYS_MANUAL));
-        s->sendMessage(CRIO::stop());
+        compactRio->setNavSysMode(CRIO::NAV_SYS_MANUAL);
+        compactRio->stop();
         ui->startNavigationWpBtn->setText("Start");
         ui->startNavigationWpBtn->setProperty("started", false);
     }
@@ -588,13 +612,13 @@ void MainWindow::sendWaypointCommand(quint8 command, QList<QPointF> points)
 {
     switch (command) {
     case MessageUtil::Set:
-        s->sendMessage(CRIO::setWaypointsCmd(points));
+        compactRio->setWaypointsCmd(points);
         break;
     case MessageUtil::Add:
-        s->sendMessage(CRIO::addWaypointCmd(points[0]));
+        compactRio->addWaypointCmd(points[0]);
         break;
     case MessageUtil::Delete:
-        s->sendMessage(CRIO::delWaypointCmd());
+        compactRio->delWaypointCmd();
         break;
     default:
         break;
@@ -624,7 +648,22 @@ void MainWindow::applyStyle()
         "        border-image: none;" \
         "        image: url(:/images/ressources/style/stylesheet-branch-open.png);" \
         "}"
-    );
+                );
+}
+
+void MainWindow::setEngineControlSlidersConnection(bool enableConnections)
+{
+    if(enableConnections){
+        connect(ui->speedSlider, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
+        connect(ui->directionSlider, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+        connect(ui->speedSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
+        connect(ui->directionSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+    } else {
+        disconnect(ui->speedSlider, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
+        disconnect(ui->directionSlider, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+        disconnect(ui->speedSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_speedValueChanged(int)));
+        disconnect(ui->directionSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_directionValueChanged(int)));
+    }
 }
 
 void MainWindow::sendEngineCommand()
@@ -641,34 +680,16 @@ void MainWindow::sendEngineCommand()
 void MainWindow::sendLeftEngineCommand()
 {
     // command (uint8) | length array (uint32) | length engine addr (uint32) |engine addr (uint8) | length value (uint32) | value (int8)
-    int val = ui->leftSlider->value();
-//    quint8 command = MessageUtil::Set;
-//    quint8 engineAddr = 7;
-//    QByteArray data;
-//    data.push_back(command);
-//    data.push_back(converter->intToByteArray(2, 4)); // array len
-//    data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
-//    data.push_back(converter->byteArrayForCmdParameterInt(val));
-//    s->sendCommandMessage(data);
-
-    s->sendMessage(CRIO::setEngine(CRIO::LEFT, (qint8) correctEngineCommandValue(val)));
-    qDebug() << "sendLeftEngineCommand() [" << correctEngineCommandValue(val) << "]";
+    int val = correctEngineCommandValue(ui->leftSlider->value());
+    compactRio->setEngine(CRIO::LEFT, (qint8) val);
+    qDebug() << "sendLeftEngineCommand() [" << val << "]";
 }
 
 void MainWindow::sendRightEngineCommand()
 {
-    int val = ui->rightSlider->value();
-//    quint8 command = MessageUtil::Set;
-//    quint8 engineAddr = 8;
-//    QByteArray data;
-//    data.push_back(command);
-//    data.push_back(converter->intToByteArray(2, 4));
-//    data.push_back(converter->byteArrayForCmdParameterInt(engineAddr));
-//    data.push_back(converter->byteArrayForCmdParameterInt(val));
-//    s->sendCommandMessage(data);
-
-    s->sendMessage(CRIO::setEngine(CRIO::RIGHT, (qint8) correctEngineCommandValue(val)));
-    qDebug() << "sendRightEngineCommand() [" << correctEngineCommandValue(val) << "]";
+    int val = correctEngineCommandValue(ui->rightSlider->value());
+    compactRio->setEngine(CRIO::RIGHT, (qint8) val);
+    qDebug() << "sendRightEngineCommand() [" << val << "]";
 }
 
 /**
@@ -679,7 +700,8 @@ void MainWindow::sendRightEngineCommand()
  */
 int MainWindow::correctEngineCommandValue(int val)
 {
-   return val * 1.27;
+    int v2 = val*1.27;
+    return v2>127?127:(v2<-127?-127:v2);
 }
 
 /**
@@ -692,6 +714,12 @@ void MainWindow::updateLeftRightSliders()
     int left = ui->speedSlider->value() + ui->directionSlider->value();
     ui->rightSlider->setValue(right);
     ui->leftSlider->setValue(left);
+}
+
+void MainWindow::updateSpeedDirectionSliders(int left, int right)
+{
+    ui->speedSlider->setValue((left+right)/2);
+    ui->directionSlider->setValue((left-right)/2);
 }
 
 /**

@@ -174,6 +174,8 @@ void CRioByteArray::push(const QVariant &v, bool flatten){
         push(v.value<quint8>(), flatten); break;
     case QMetaType::Char:
         push(v.value<qint8>(), flatten); break;
+    case QMetaType::SChar:
+        push(v.value<qint8>(), flatten); break;
     case QMetaType::Double:
         push(v.toDouble(), flatten); break;
     case QMetaType::QPointF:
@@ -185,7 +187,9 @@ void CRioByteArray::push(const QVariant &v, bool flatten){
         if(v.userType() == qMetaTypeId<QList<Sensor *> >()){
             push(v.value<QList<Sensor *> >(), flatten);
         }
+        break;
     default:
+        qDebug() << "Unregistered type("<<v.typeName()<<")";
         break;
     }
 }

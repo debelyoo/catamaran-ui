@@ -15,6 +15,7 @@
 #include "gui/model/sensorinputsmodel.h"
 #include "gui/model/registeredsensorsmodel.h"
 #include "gui/delegate/registeredSensorsDelegate.h"
+#include "gui/delegate/comboboxdelegate.h"
 #include "model/compactrio.h"
 
 
@@ -74,6 +75,7 @@ public slots:
     void on_availableSensorsValueChanged();
     void on_addSensorFlClicked();
     void on_registeredSensorButtonClick(QModelIndex&);
+    void on_sensorConfigChanged();
 
     /// Honk and Light
     void on_honkButtonPressed();
@@ -85,22 +87,26 @@ public slots:
     void on_nsValueChange();
     void on_getNSCongifBtnClick();
     void on_defaultNSConfigClick();
-    void on_engineValueAutoUpdate(CRIO::Engines engineSide, qint8 value);
+
+protected slots:
+    void on_engineValueAutoUpdate();
 
 protected:
     void keyPressEvent(QKeyEvent* event);
 
 private:
     Ui::MainWindow *ui;
-    Server *s;
+    Server *server;
     SensorConfig* sensorConfig; // singleton
     FileHelper* fileHelper;
-    //ByteArrayConverter* converter; // singleton
     CoordinateHelper* coordinateHelper;
+    CompactRio *compactRio;
+
     bool sliderIsMoving;
     int previousSpeedValue, previousDirectionValue;
     int correctEngineCommandValue(int val);
     void updateLeftRightSliders();
+    void updateSpeedDirectionSliders(int left, int right);
     void sendLeftEngineCommand();
     void sendRightEngineCommand();
     int zoomStep;
@@ -131,6 +137,9 @@ private:
     void applyStyle();
 
     RegisteredSensorsModel *m_registeredSensorsModel;
+
+    void setEngineControlSlidersConnection(bool enableConnections);
+
 };
 
 #endif // MAINWINDOW_H

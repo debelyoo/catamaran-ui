@@ -1,5 +1,7 @@
 #include "registeredsensoritem.h"
 
+#include "manager/sensortypemanager.h"
+
 RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput, RegisteredSensorItem *parent):
     m_parent(parent),
     m_sensorInput(sensorInput),
@@ -8,7 +10,7 @@ RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput, Registe
     m_transformation(NULL),
     m_sortId(sensorInput->sortId())
 {
-    m_model = new Sensor(sensorInput->fullName(), sensorInput->name());
+    m_model = new Sensor(sensorInput->address(), sensorInput->name());
 }
 
 RegisteredSensorItem::~RegisteredSensorItem()
@@ -170,6 +172,10 @@ void RegisteredSensorItem::setStream(bool stream)
 void RegisteredSensorItem::setRecord(bool rec)
 {
     m_model->setRecord(rec);
+}
+
+void RegisteredSensorItem::setType(const QString &type){
+    m_model->setType(SensorTypeManager::instance()->type(type));
 }
 
 const Sensor *RegisteredSensorItem::sensor() const

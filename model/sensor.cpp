@@ -7,6 +7,7 @@ Sensor::Sensor(QString addr, QString name, const SensorType* type,
     m_type(type),
     m_record(record),
     m_stream(stream),
+    m_transformation(NULL),
     m_display(display),
     m_logFilePrefix(logFilePrefix),
     m_currentLogFilename(currentLogFilename)

@@ -11,9 +11,9 @@ class SensorType
     explicit SensorType(QString name, QString dbTableName = "", int dbColumnCount = 0);
     /// getters
     int getId() const;
-    QString getName() const;
-    QString getDbTableName() const;
-    QString getDllName() const;
+    const QString &getName() const;
+    const QString &getDbTableName() const;
+    const QString &getDllName() const;
 
     /// setters
     void setId(int id);

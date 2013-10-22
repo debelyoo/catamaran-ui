@@ -24,15 +24,17 @@ public:
     RegisteredSensorItem *child(int index) const;
 
     QString name() const;
-    void setName(QString name);
+
 
     int childCount() const;
     int childNumber() const;
     QVariant data(int col) const;
     QString sortId() const;
     TransformationBaseClass *transformation() const;
-    bool setTransformation(TransformationBaseClass *transformation);
 
+    void setName(QString name);
+
+    bool setTransformation(TransformationBaseClass *transformation);
     void setStream(bool stream);
     void setRecord(bool rec);
     void setType(const QString &type);

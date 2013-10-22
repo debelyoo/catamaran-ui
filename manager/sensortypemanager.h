@@ -11,6 +11,7 @@ public:
     static SensorTypeManager *instance();
 
     const QStringList &list() const;
+    const QStringList &sortedList() const;
     const SensorType *type(const QString & name) const;
 
     //void addType(SensorType *);
@@ -27,6 +28,9 @@ private:
     static SensorTypeManager *s_instance;
 
     QMap<QString, SensorType *> m_types;
+    QStringList m_sortedList;
+
+    void updateSortedList();
 };
 
 #endif // SENSORTYPEMANAGER_H

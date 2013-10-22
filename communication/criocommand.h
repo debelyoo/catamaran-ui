@@ -24,6 +24,7 @@ protected:
 class Sensor;
 class CRioByteArray;
 namespace CRIO {
+/*
     CRioByteArray setEngine(const Engines engine, const qint8 value);
     CRioByteArray stop();
 
@@ -50,6 +51,7 @@ namespace CRIO {
 
     // FGPA counter config
     CRioByteArray setFpgaCounterSamplingTime(const quint16 &ms);
+    */
 }
 
 

@@ -162,7 +162,7 @@ bool Server::sendMessage(const CRioCommand &cmd)
         publisher->sendMessage(CRioByteArray(cmd));
         return true;
     }
-    m_queuesEnabled?m_commandQueue.append(cmd):void();
+    //m_queuesEnabled?m_commandQueue.append(cmd):void();
     return false;
 }
 

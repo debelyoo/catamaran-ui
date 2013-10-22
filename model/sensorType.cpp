@@ -23,17 +23,17 @@ int SensorType::getId() const
 {
     return id;
 }
-QString SensorType::getName() const
+const QString &SensorType::getName() const
 {
     return m_name;
 }
 
-QString SensorType::getDbTableName() const
+const QString &SensorType::getDbTableName() const
 {
     return m_dbTableName;
 }
 
-QString SensorType::getDllName() const
+const QString &SensorType::getDllName() const
 {
     return m_dllName;
 }

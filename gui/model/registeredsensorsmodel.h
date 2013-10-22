@@ -11,11 +11,12 @@ public:
     typedef enum {
         AddressCol = 0,
         NameEditCol = 1,
-        TransfCol = 2,
-        ConfigCol = 3,
-        StreamCol = 4,
-        RecordCol = 5,
-        DeleteCol = 6
+        TypeCol = 2,
+        TransfCol = 3,
+        ConfigCol = 4,
+        StreamCol = 5,
+        RecordCol = 6,
+        DeleteCol = 7
 
     } ColumnDesc;
 

@@ -30,7 +30,7 @@ public:
     virtual ~TransformationBaseClass();
     virtual const QVector<ParameterDescription> getParametersDefinition() const = 0;
     virtual const TransformationDefinition getTransformationDefinition() const = 0;
-    virtual const CRioData applyTransform(CRioData val, IDataMessageReceiver* callback, const AbstractCrioStatesHolder *crioStates, const AbstractSensorsDataHolder *sensorsData) = 0;
+    virtual const CRioData applyTransform(CRioData val, IDataMessageReceiver* callback, const AbstractCrioStatesHolder *crioStates, const AbstractSensorsDataHolder *sensorsData) const = 0;
     virtual const QVector<SubSensor> getSubSensors() const = 0;
     virtual TransformationBaseClass *newInstance() const = 0;
 

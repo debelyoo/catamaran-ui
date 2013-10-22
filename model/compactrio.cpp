@@ -131,7 +131,64 @@ void CompactRio::feedWithData(const CRioData &data)
 
 void CompactRio::feedWithCommand(const CRioCommand &cmd)
 {
+    switch(cmd.command()){
+    case CRIO::CMD_SET:
+        switch(cmd.address()){
+        case CRIO::CMD_ADDR_ENGINE_MODE:
+        {
+            if(cmd.parameters().count() < 1){ break;}
+            CRIO::NAV_SYS_MODE nv = (CRIO::NAV_SYS_MODE) cmd.parameters()[0].toInt();
+            if(nv != m_navMode){
+                m_navMode = nv;
+                emit navigationModeChanged();
+            }
+            break;
+        }
+        case CRIO::CMD_ADDR_LEFT_ENGINE:
+        {
+            if(cmd.parameters().count() < 1){ break;}
+            qint8 v = cmd.parameters()[0].value<qint8>();
+            if(v != m_leftEngineValue){
+                m_leftEngineValue = v;
+                emit enginesChanged();
+            }
+            break;
+        }
+        case CRIO::CMD_ADDR_RIGHT_ENGINE:
+        {
+            if(cmd.parameters().count() < 1){ break;}
+            qint8 v = cmd.parameters()[0].value<qint8>();
+            if(v != m_rightEngineValue){
+                m_rightEngineValue = v;
+                emit enginesChanged();
+            }
+            break;
+        }
+        case CRIO::CMD_ADDR_HONK:
 
+            break;
+        case CRIO::CMD_ADDR_LIGHT:
+
+            break;
+        case CRIO::CMD_ADDR_MEMORY_16BIT:
+
+            break;
+        case CRIO::CMD_ADDR_PRISME_TS_SYNC:
+
+            break;
+        case CRIO::CMD_ADDR_NS_CSTS:
+
+            break;
+        case CRIO::CMD_ADDR_NS_LIMITS:
+
+            break;
+        case CRIO::CMD_ADDR_NS_WAYPOINTS:
+
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 const QList<CompactRio::NamedAddress> CompactRio::availableInputs() const
@@ -219,10 +276,10 @@ bool CompactRio::setWaypointsCmd(const QList<QPointF> &points){
     return m_server->sendMessage(cmd);
 }
 
-bool CompactRio::setSensorsConfig(const QList<Sensor *> &sensors)
+bool CompactRio::setSensorsConfig()
 {
     CRioCommand cmd(CRIO::CMD_SET, CRIO::CMD_ADDR_SENSOR_CONFIG);
-    cmd.addParameter(QVariant::fromValue(sensors));
+    cmd.addParameter(QVariant::fromValue(SensorConfig::instance()->getSensors()));
     return m_server->sendMessage(cmd);
 }
 

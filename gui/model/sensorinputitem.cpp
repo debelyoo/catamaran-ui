@@ -1,6 +1,21 @@
 #include "sensorinputitem.h"
+#include <QDebug>
 
-SensorInputItem::SensorInputItem(QString name, SensorInputItem *pParent):QObject(), m_pParent(pParent), m_name(name), m_enabled(true)
+SensorInputItem::SensorInputItem(const QString &address, const QString &name, SensorInputItem *pParent):
+    QObject(),
+    m_pParent(pParent),
+    m_name(name),
+    m_address(address),
+    m_enabled(true)
+{
+}
+
+SensorInputItem::SensorInputItem(const QString &name, SensorInputItem *pParent):
+    QObject(),
+    m_pParent(pParent),
+    m_name(name),
+    m_address(name),
+    m_enabled(true)
 {
 }
 
@@ -64,6 +79,17 @@ QString SensorInputItem::fullName() const
     }
     fn += m_name;
     return fn;
+}
+
+const QString SensorInputItem::address() const
+{
+    QString fa;
+    if(m_pParent && m_pParent->parent()){
+        fa = m_pParent->address();
+        fa += ".";
+    }
+    fa += m_address;
+    return fa;
 }
 
 void SensorInputItem::setName(QString name)

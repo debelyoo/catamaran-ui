@@ -15,6 +15,11 @@ const QStringList &SensorTypeManager::list() const
     return m_types.keys();
 }
 
+const QStringList &SensorTypeManager::sortedList() const
+{
+    return m_sortedList;
+}
+
 const SensorType *SensorTypeManager::type(const QString &name) const
 {
     if(m_types.contains(name)){
@@ -30,6 +35,7 @@ bool SensorTypeManager::createType(const QString &name, const QString &dbTableNa
     }
     SensorType *s = new SensorType(name, dbTableName);
     m_types.insert(name, s);
+    updateSortedList();
     return true;
 }
 
@@ -39,6 +45,7 @@ bool SensorTypeManager::deleteType(const QString &name)
         SensorType *s = m_types[name];
         m_types.remove(name);
         delete s;
+        updateSortedList();
         return true;
     }
     return false;
@@ -53,7 +60,20 @@ bool SensorTypeManager::updateType(const QString &name, const QString &dbTableNa
 }
 
 SensorTypeManager::SensorTypeManager():
-    m_types()
+    m_types(),
+    m_sortedList()
 {
     m_types.insert("Unknown", new SensorType("Unknown", ""));
+    updateSortedList();
+}
+
+void SensorTypeManager::updateSortedList()
+{
+    m_sortedList.clear();
+    m_sortedList.append("Unknown");
+    foreach (const QString &s, m_types.keys()) {
+        if(s != "Unknown"){
+            m_sortedList.append(s);
+        }
+    }
 }

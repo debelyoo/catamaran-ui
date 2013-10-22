@@ -19,7 +19,7 @@ class MessageConsumer : public QObject, public IDataMessageReceiver
     Q_OBJECT
     public:
         explicit MessageConsumer(QObject *parent = 0, CRioDataStream* ds = 0);
-        void handleMessageData(CRioData &dataObj);
+        void handleDataMessage(CRioData &dataObj);
         ~MessageConsumer();
 
     signals:

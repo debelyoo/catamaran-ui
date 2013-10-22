@@ -49,6 +49,8 @@ void CRioCommand::addParameter(QVariant p){
 /*
  *  Command factory method
  */
+
+/*
 CRioByteArray CRIO::setEngine(const Engines engine, const qint8 value){
     CRioCommand cmd(CMD_SET, (engine==LEFT)?CMD_ADDR_LEFT_ENGINE:CMD_ADDR_RIGHT_ENGINE);
     cmd.addParameter(QVariant::fromValue(value));
@@ -190,3 +192,4 @@ CRioByteArray CRIO::delWaypointCmd()
     CRioCommand cmd(CMD_DEL, CRIO::CMD_ADDR_NS_WAYPOINTS);
     return CRioByteArray(cmd);
 }
+*/
