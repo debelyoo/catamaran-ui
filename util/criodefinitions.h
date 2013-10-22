@@ -83,12 +83,12 @@ namespace CRIO {
     } ON_OFF;
 
     typedef enum {
+        DATA_ADDR_ORIENTATION = 41,
         DATA_ADDR_POSITION = 48,
         DATA_ADDR_VELOCITY = 49,
         DATA_ADDR_MOTOR_MODE = 50,
         DATA_ADDR_RIGHT_ENGINE_FEEDBACK = 51,
         DATA_ADDR_LEFT_ENGINE_FEEDBACK = 52,
-        DATA_ADDR_ORIENTATION = 55,
         DATA_ADDR_DEBUG = 60,
         DATA_ADDR_NAV_SYS_LOG = 61,
         DATA_ADDR_NI9870_1_P1 = 64,

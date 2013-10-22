@@ -90,6 +90,11 @@ public slots:
     void on_getNSCongifBtnClick();
     void on_defaultNSConfigClick();
 
+    /// CompactRio State changed
+    void on_crioPositionChanged();
+    void on_crioSpeedChanged();
+    void on_crioHeadingChanged();
+
 protected slots:
     void on_engineValueAutoUpdate();
 
@@ -152,6 +157,7 @@ private:
     RegisteredSensorsModel *m_registeredSensorsModel;
 
     void setEngineControlSlidersConnection(bool enableConnections);
+    QGraphicsPolygonItem* m_catPolygon;
 
 };
 

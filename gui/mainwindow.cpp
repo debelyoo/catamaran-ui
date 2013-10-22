@@ -19,7 +19,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_catPolygon()
 {
     zoomStep = 10;
     sensorConfig = SensorConfig::instance();
@@ -55,6 +56,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
 
     connect(compactRio, SIGNAL(newCRioStatusMessage(QString)), this, SLOT(addCrioStatusText(QString)));
+    connect(compactRio, SIGNAL(positionChanged()), this, SLOT(on_crioPositionChanged()));
+    connect(compactRio, SIGNAL(speedChanged()), this, SLOT(on_crioSpeedChanged()));
+    connect(compactRio, SIGNAL(headingChanged()), this, SLOT(on_crioHeadingChanged()));
 
     sliderIsMoving = false;
     previousSpeedValue = 0;
@@ -154,6 +158,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Server : start
     server->listen();
+
+    QPolygon catShape;
+    catShape.append(QPoint(0, -2));
+    catShape.append(QPoint(1, 1));
+    catShape.append(QPoint(-1, 1));
+    m_catPolygon = new QGraphicsPolygonItem(catShape);
+    m_catPolygon->setPen(QPen(QColor(0, 255, 255)));
+    m_catPolygon->setBrush(QBrush(Qt::SolidPattern));
+    ui->graphicsView->scene()->addItem(m_catPolygon);
+    m_catPolygon->setZValue(999999999);
 }
 
 MainWindow::~MainWindow()
@@ -472,6 +486,30 @@ void MainWindow::on_defaultNSConfigClick()
     ui->c4->setValue(11.2245);
     ui->l0->setValue(25);
     ui->l1->setValue(0.5);
+}
+
+void MainWindow::on_crioPositionChanged()
+{
+    QPointF p = compactRio->position();
+    ui->positionLabel->setText(QString("%1, %2 [°]").arg(p.x(), 7).arg(p.y(), 7));
+    QVector<double> v = coordinateHelper->WGS84toLV03(p.x(),p.y(),273);
+    m_catPolygon->setPos(coordinateHelper->LV03toUIMap(v[0], v[1]));
+}
+
+void MainWindow::on_crioSpeedChanged()
+{
+    QPointF s = compactRio->speed();
+    QPointF ms = compactRio->meanSpeed();
+    ui->speedLabel->setText(QString("%1(%3), %2(%4) [m/s]").arg(s.x(), 3, ' ', 1).arg(s.y(), 3, ' ', 1).arg(ms.x(), 3, ' ', 1).arg(ms.y(), 3, ' ', 1));
+}
+
+void MainWindow::on_crioHeadingChanged()
+{
+    ui->headingLabel->setText(QString("%1 [°]").arg(compactRio->heading(), 6, ' ', 2));
+    m_catPolygon->setRotation(compactRio->heading());
+    m_catPolygon->update();
+    //QPoint p = ui->graphicsView->sceneRect()
+    //ui->graphicsView->update();
 }
 
 void MainWindow::on_engineValueAutoUpdate()

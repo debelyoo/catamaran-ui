@@ -1,6 +1,8 @@
 #include "compactrio.h"
 #include "manager/sensortypemanager.h"
 
+#include <QDebug>
+
 CompactRio *CompactRio::s_instance = NULL;
 
 CompactRio::CompactRio():

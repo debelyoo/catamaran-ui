@@ -29,7 +29,6 @@ SOURCES += main.cpp\
     gui/model/registeredsensoritem.cpp \
     model/sensorType.cpp \
     model/sensor.cpp\
-    communication/dataObject.cpp \
     communication/server.cpp\
     communication/messageConsumer.cpp\
     communication/messagePublisher.cpp \
@@ -63,7 +62,6 @@ HEADERS += sensorConfig.h\
     communication/server.h\
     communication/messageConsumer.h\
     communication/messagePublisher.h \
-    communication/dataObject.h \
     gui/mainwindow.h\
     gui/inRowCheckBox.h\
     gui/inRowComboBox.h\

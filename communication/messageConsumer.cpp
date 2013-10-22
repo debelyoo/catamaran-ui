@@ -122,9 +122,9 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
             writeInLogFile(s, log);
         } else {
             // TODO - add check to know if it's a data
-            if (s->record()) {
+            if (s->isData() && s->record()) {
                 // dataObj->values contains only one sensor value
-                double value = dataObj.data()[0].toDouble();
+                double value = dataObj.data().at(0).toDouble();
                 // save it to database
                 dbManager->insertSensorValue(dataObj.address, "", dataObj.timestamp.unixTimestamp, value);
                 // log it in log file
