@@ -29,7 +29,7 @@ void DataExporter::exportData(QString missionName, QString dataType)
  */
 void DataExporter::sendMission()
 {
-    QJsonDocument jsonData = dbManager->getMissionAsJSON(tempMissionName);
+    QJsonDocument jsonData = dbManager->getMissionAsJSON(tempMissionName); // get mission and sensors associated
     httpRequester->sendPostRequest(QString("/portal/api/mission"), jsonData);
 }
 
@@ -58,7 +58,7 @@ void DataExporter::on_requestFinished(QNetworkReply* reply)
             QByteArray bytes = reply->readAll();  // bytes
             QJsonDocument json = QJsonDocument::fromJson(bytes);
             long missionIdOnBackend = (long)json.object().value("mission_id").toDouble(); // need to use toDouble and then cast to long because there is not toLong() function on QJsonValue
-            //qDebug() << missionId;
+            qDebug() << "mission id: " << missionIdOnBackend;
             sendData(missionIdOnBackend);
             break;
         }
@@ -68,6 +68,7 @@ void DataExporter::on_requestFinished(QNetworkReply* reply)
         }
     } else if(reply->url().toString().contains("/api/data")) {
         // POST data request done
+        qDebug() << "Data [" << tempDataType << "] has been exported !";
     }
 }
 

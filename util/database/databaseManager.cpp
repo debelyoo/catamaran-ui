@@ -268,13 +268,19 @@ QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, QString sensor
     json.insert("datatype", sensorType);
     QJsonArray jArr;
     qint64 missionId = getMission(missionName).getId();
-    //const SensorType* st = SensorTypeManager::instance()->type(datatype);
-    DbTable table = tables[TableList::SENSOR_LOG];
+    DbTable table;
+    QString sqlQuery;
+    if (sensorType == "gps") {
+        table = tables[TableList::GPS_LOG];
+        sqlQuery = "SELECT * FROM "+ table.getName() +" WHERE mission_id = "+ QString::number(missionId);
+        sqlQuery += " ORDER BY timestamp;"; // LIMIT 100";
+    } else {
+        table = tables[TableList::SENSOR_LOG];
+        sqlQuery = "SELECT * FROM "+ table.getName() +" WHERE mission_id = "+ QString::number(missionId)+" AND sensor_type = '"+ sensorType +"'";
+        sqlQuery += " ORDER BY timestamp;"; // LIMIT 100";
+    }
     if (db.open()) {
         QSqlQuery query(db);
-        QString sqlQuery = "SELECT * FROM "+ table.getName() +" WHERE mission_id = "+ QString::number(missionId);
-        sqlQuery += " ORDER BY timestamp";// LIMIT 100";
-        sqlQuery += ";";
         //qDebug() << "SQL query: " << sqlQuery;
         if (query.exec(sqlQuery)) {
             while( query.next() )
@@ -285,7 +291,19 @@ QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, QString sensor
                     if (col.getName() == "mission_id") {
                         jObj.insert("mission_id", (double)missionIdOnBackend); // need cast to double for QJsonValue
                     } else {
-                        jObj.insert(col.getName(), query.value(i+1).toInt()); // i+1 because first field is id, which is not in the table columns since it is standard for all tables
+                        switch (col.getType()) {
+                        case SQLite::TEXT:
+                            jObj.insert(col.getName(), query.value(i+1).toString()); // i+1 because first field is id, which is not in the table columns since it is standard for all tables
+                            break;
+                        case SQLite::INTEGER:
+                            jObj.insert(col.getName(), query.value(i+1).toInt()); // i+1 because first field is id, which is not in the table columns since it is standard for all tables
+                            break;
+                        case SQLite::REAL:
+                            jObj.insert(col.getName(), query.value(i+1).toDouble()); // i+1 because first field is id, which is not in the table columns since it is standard for all tables
+                            break;
+                        default:
+                            break;
+                        }
                     }
                 }
                 jArr.append(jObj);
@@ -318,20 +336,21 @@ QJsonDocument DatabaseManager::getMissionAsJSON(QString missionName)
         if (query.exec(sqlQuery)) {
             while( query.next() )
             {
-                QJsonArray jArr;
                 json.insert("departure_time", query.value(2).toDouble());
                 json.insert("timezone", query.value(3).toString());
                 json.insert("vehicle", query.value(4).toString());
+                QJsonArray jsSensorArray;
                 // get sensors
                 QList<Sensor*> sensors = getSensorsForMission(missionName);
+                //sensors.append(SensorConfig::instance()->getSensor("48")); // add GPS sensor to list
                 foreach (Sensor* s, sensors) {
                     QJsonObject jsDev;
                     jsDev.insert("address", s->address());
                     jsDev.insert("name", s->name());
                     jsDev.insert("datatype", s->type()->getName());
-                    jArr.append(jsDev);
+                    jsSensorArray.append(jsDev);
                 }
-                json.insert("devices", jArr);
+                json.insert("devices", jsSensorArray);
             }
         } else {
             qDebug() << "[getMissionAsJSON()] select failed !" << query.lastError();
@@ -380,14 +399,14 @@ QStandardItemModel* DatabaseManager::getDataForMissionsAsModel(QString missionNa
 {
     qint64 missionId = getMission(missionName).getId();
     QStandardItemModel* model = new QStandardItemModel;
+    model->appendRow(new QStandardItem("gps")); // add GPS sensor type (always)
     if (db.open()) {
         QSqlQuery query(db);
-        //QString sqlQuery = "SELECT dfm.* FROM dataformission AS dfm, mission WHERE dfm.mission_id = mission.id AND mission.name = '"+ missionName +"'";
         QString sqlQuery = "SELECT DISTINCT sensor_type FROM sensorlog WHERE mission_id = "+ QString::number(missionId);
         if (query.exec(sqlQuery)) {
             while( query.next() )
             {
-                model->appendRow(new QStandardItem(query.value(2).toString()));
+                model->appendRow(new QStandardItem(query.value(0).toString()));
             }
         } else {
             qDebug() << "[getDataForMissionsAsModel()] SELECT failed !" << query.lastError();
@@ -436,13 +455,19 @@ Mission DatabaseManager::getMission(QString missionName)
     return mission;
 }
 
+/**
+ * Get the sensors associated to a mission
+ * @brief DatabaseManager::getSensorsForMission
+ * @param missionName The name of the mission
+ * @return A list of sensors
+ */
 QList<Sensor*> DatabaseManager::getSensorsForMission(QString missionName)
 {
     QList<Sensor*> sensors;
     qint64 missionId = getMission(missionName).getId();
      if (db.open()) {
          QSqlQuery query(db);
-         QString sqlQuery = "SELECT DISTINCT sensor_address FROM sensorlog WHERE missionId = " + QString::number(missionId);
+         QString sqlQuery = "SELECT DISTINCT sensor_address FROM sensorlog WHERE mission_id = " + QString::number(missionId);
          if (query.exec(sqlQuery)) {
              while( query.next() )
              {
@@ -537,5 +562,8 @@ QString DatabaseManager::getCurrentMissionName()
 /// TEST ONLY
 void DatabaseManager::insertSampleData()
 {
-    insertGpsPoint(1382093430.5, 46.5171, 6.5817, 373.24, 120.0);
+    qint64 now = QDateTime::currentDateTime().toTime_t() * 1000;
+    insertGpsPoint(now, 46.5171, 6.5817, 373.24, 120.0);
+    insertSensorValue("96", "PT100", now, 24.3);
+    insertSensorValue("96", "PT100", now + 1000, 25.5);
 }

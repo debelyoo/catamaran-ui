@@ -47,7 +47,6 @@ MainWindow::MainWindow(QWidget *parent) :
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
     createExportPanel();
-    dbManager->insertSampleData(); // TODO - TEST ONLY
 
     // Server  : signals wiring
     server = Server::instance();
@@ -655,9 +654,8 @@ void MainWindow::on_newConnection()
  */
 void MainWindow::on_tabChanged(int tabIndex)
 {
-    //qDebug() << "tab changed: " << ui->tabWidget->widget(tabIndex)->objectName();
     if (ui->tabWidget->widget(tabIndex)->objectName() == "export_tab") {
-
+        updateMissionList();
     }
 }
 

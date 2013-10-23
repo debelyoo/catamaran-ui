@@ -48,8 +48,7 @@ class DatabaseManager
             db.setDatabaseName("ecoldata.sqlite");
             createNecessaryTables();
             insertMission(); // create mission when application starts
-            //addDatatypeForCurrentMission("gps");
-            //addDatatypeForCurrentMission("temperature");
+            insertSampleData();
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);

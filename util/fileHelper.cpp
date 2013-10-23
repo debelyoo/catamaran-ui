@@ -40,7 +40,7 @@ void FileHelper::writeFile(QString filename, QString fileContent, bool isLog)
     QDir logDir(folderPath);
     if (!logDir.exists())
     {
-        QDir::current().mkdir(logFolder);
+        QDir::current().mkdir(folderPath);
     }
 
     QFile file(filePath);
