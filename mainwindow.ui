@@ -33,7 +33,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -933,12 +933,6 @@
               </widget>
              </item>
             </layout>
-            <zorder>addressesContainer</zorder>
-            <zorder>groupBox</zorder>
-            <zorder>label_22</zorder>
-            <zorder>label_23</zorder>
-            <zorder>pt100_module2_comboBox</zorder>
-            <zorder>lineEdit_3</zorder>
            </widget>
           </item>
           <item>
@@ -980,10 +974,6 @@
               </widget>
              </item>
             </layout>
-            <zorder>label_17</zorder>
-            <zorder>graphNbSpinBox</zorder>
-            <zorder>groupBox_2</zorder>
-            <zorder>groupBox_2</zorder>
            </widget>
           </item>
           <item>
@@ -1431,6 +1421,19 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_11">
               <item>
+               <widget class="QPushButton" name="removeMissionBtn">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Remove mission</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QWidget" name="widget_3" native="true">
                 <layout class="QHBoxLayout" name="horizontalLayout_8">
                  <item>
@@ -1441,7 +1444,11 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="comboBoxTimezone"/>
+                  <widget class="QComboBox" name="comboBoxTimezone">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </widget>

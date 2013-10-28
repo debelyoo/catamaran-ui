@@ -13,6 +13,7 @@ class DataExporter : public QObject
 
     signals:
         void pingRequestDone(int statusCode);
+        void displayInGui(QString);
 
     public slots:
         void sendPingRequest();
@@ -32,9 +33,11 @@ class DataExporter : public QObject
         DatabaseManager* dbManager;
         QString tempMissionName;
         QString tempDataType;
+        static const int MAX_DATA_LOG_IN_EXPORT_REQUEST = 10;
 
         void sendMission();
         void sendData(long missionIdOnBackend);
+        QList<QJsonDocument> prepareDataChunk(QList<QJsonObject> jsDataList, QString sensorType);
 };
 
 #endif // DATAEXPORTER_H

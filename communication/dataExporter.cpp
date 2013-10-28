@@ -31,6 +31,8 @@ void DataExporter::sendMission()
 {
     QJsonDocument jsonData = dbManager->getMissionAsJSON(tempMissionName); // get mission and sensors associated
     httpRequester->sendPostRequest(QString("/portal/api/mission"), jsonData);
+    //qDebug() << "Mission [" << tempMissionName << "] has been sent to server !";
+    emit displayInGui("Mission [" + tempMissionName + "] has been sent to server !\n");
 }
 
 /**
@@ -40,8 +42,39 @@ void DataExporter::sendMission()
  */
 void DataExporter::sendData(long missionIdOnBackend)
 {
-    QJsonDocument jsonData = dbManager->getDataAsJSON(tempMissionName, tempDataType, missionIdOnBackend);
-    httpRequester->sendPostRequest(QString("/portal/api/data"), jsonData);
+    QList<QJsonObject> jsDataList = dbManager->getDataAsJSON(tempMissionName, tempDataType, missionIdOnBackend);
+    QList<QJsonDocument> jsChunks = prepareDataChunk(jsDataList, tempDataType);
+    foreach(QJsonDocument json, jsChunks) {
+        // send {"datatype": "temperature", "items":[...]}
+        httpRequester->sendPostRequest(QString("/portal/api/data"), json);
+    }
+    //qDebug() << "Data [" << tempDataType << "] has been sent to server !";
+    emit displayInGui("Data [" + tempDataType + "] has been sent to server !\n");
+}
+
+/**
+ * Prepare JSON documents with a maximum number (MAX_DATA_LOG_IN_EXPORT_REQUEST) of data logs
+ * The JSON documents look like this: {"datatype": "temperature", "items": [...]}
+ * @brief DataExporter::prepareDataChunk
+ * @param jsDataList The list of data records (in JSON)
+ * @param sensorType The type of sensor
+ * @return A list with the JSON documents to send
+ */
+QList<QJsonDocument> DataExporter::prepareDataChunk(QList<QJsonObject> jsDataList, QString sensorType)
+{
+    QList<QJsonDocument> jsChunks;
+    QJsonArray jArr;
+    foreach (QJsonObject item, jsDataList) {
+        jArr.append(item);
+        if (jArr.size() == MAX_DATA_LOG_IN_EXPORT_REQUEST) {
+            QJsonObject json;
+            json.insert("datatype", sensorType);
+            json.insert("items", jArr);
+            jsChunks.append(QJsonDocument(json));
+            jArr = QJsonArray();
+        }
+    }
+    return jsChunks;
 }
 
 void DataExporter::on_requestFinished(QNetworkReply* reply)
@@ -58,17 +91,21 @@ void DataExporter::on_requestFinished(QNetworkReply* reply)
             QByteArray bytes = reply->readAll();  // bytes
             QJsonDocument json = QJsonDocument::fromJson(bytes);
             long missionIdOnBackend = (long)json.object().value("mission_id").toDouble(); // need to use toDouble and then cast to long because there is not toLong() function on QJsonValue
-            qDebug() << "mission id: " << missionIdOnBackend;
+            //qDebug() << "mission id: " << missionIdOnBackend;
             sendData(missionIdOnBackend);
             break;
         }
         default:
             // error
+            qDebug() << "[ERROR] while exporting mission";
             break;
         }
     } else if(reply->url().toString().contains("/api/data")) {
         // POST data request done
-        qDebug() << "Data [" << tempDataType << "] has been exported !";
+        //qDebug() << "Data [" << tempDataType << "] has been exported !";
+        if (statusCode != 200) {
+            qDebug() << "[ERROR] while exporting data";
+        }
     }
 }
 

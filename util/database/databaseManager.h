@@ -32,13 +32,14 @@ class DatabaseManager
         bool insertGpsPoint(qint64 unixTs, double lat, double lon, double alt, double heading);
         bool insertSensorValue(QString sensorAddress, QString sensorType, qint64 unixTs, double value);
         bool insertMission();
+        bool removeMission(QString missionName);
         QStandardItemModel* getMissionsAsModel();
         QStandardItemModel* getDataForMissionsAsModel(QString missionName);
         void insertSampleData(); // TODO - TEST only
         ///
         bool getTemperatureLog();
         QPair< QVector<double>, QVector<double> > getData(Sensor* s, int fromTs);
-        QJsonDocument getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend);
+        QList<QJsonObject> getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend);
         QJsonDocument getMissionAsJSON(QString missionName);
 
     private:

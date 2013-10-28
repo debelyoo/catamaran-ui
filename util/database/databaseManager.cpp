@@ -31,13 +31,6 @@ void DatabaseManager::createNecessaryTables()
     cols.append(DbColumn("vehicle", SQLite::TEXT));
     DbTable missionTable = DbTable("mission", cols);
     createTable(TableList::MISSION, missionTable);
-    // create dataformission table
-    /*cols.clear();
-    cols.append(DbColumn("mission_id", SQLite::INTEGER));
-    cols.append(DbColumn("datatype", SQLite::TEXT));
-    DbTable dfmTable = DbTable("dataformission", cols);
-    createTable(TableList::DATA_FOR_MISSION, dfmTable);
-    */
     // create gpslog table
     cols.clear();
     cols.append(DbColumn("mission_id", SQLite::INTEGER));
@@ -214,6 +207,39 @@ bool DatabaseManager::insertMission()
 }
 
 /**
+ * Remove a mission from the SQLite database (with the related data)
+ * @brief DatabaseManager::removeMission
+ * @param missionName
+ * @return
+ */
+bool DatabaseManager::removeMission(QString missionName)
+{
+    bool res = false;
+    QList<QJsonObject> jsDataList;
+    qint64 missionId = getMission(missionName).getId();
+    DbTable gpsTable = tables[TableList::GPS_LOG];
+    DbTable sensorLogTable = tables[TableList::SENSOR_LOG];
+    DbTable missionTable = tables[TableList::MISSION];
+    QString sqlQueryDeleteMission = "DELETE FROM "+ missionTable.getName() +" WHERE id = "+ QString::number(missionId)+";";
+    QString sqlQueryDeleteGpsLog = "DELETE FROM "+ gpsTable.getName() +" WHERE mission_id = "+ QString::number(missionId)+";";
+    QString sqlQueryDeleteSensorLog = "DELETE FROM "+ sensorLogTable.getName() +" WHERE mission_id = "+ QString::number(missionId)+";";
+    if (db.open()) {
+        QSqlQuery query(db);
+        bool b1 = query.exec(sqlQueryDeleteMission);
+        bool b2 = query.exec(sqlQueryDeleteGpsLog);
+        bool b3 = query.exec(sqlQueryDeleteSensorLog);
+        res = b1 && b2 && b3;
+        if (!res) {
+            qDebug() << "delete failed !" << query.lastError();
+        }
+    } else {
+        qDebug() << "DB not open !";
+    }
+    db.close();
+    return res;
+}
+
+/**
  * Get data from database for a specific sensor from a specific timestamp
  * @brief DatabaseManager::getData
  * @param s The sensor for which getting the data
@@ -262,11 +288,12 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
  * @param missionIdOnBackend The id of the mission (in backend DB)
  * @return A JSON array with the data records - {"datatype":"gps", "items": [...]}
  */
-QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend)
+QList<QJsonObject> DatabaseManager::getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend)
 {
-    QJsonObject json;
-    json.insert("datatype", sensorType);
-    QJsonArray jArr;
+    QList<QJsonObject> jsDataList;
+    //QJsonObject json;
+    //json.insert("datatype", sensorType);
+    //QJsonArray jArr;
     qint64 missionId = getMission(missionName).getId();
     DbTable table;
     QString sqlQuery;
@@ -306,7 +333,8 @@ QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, QString sensor
                         }
                     }
                 }
-                jArr.append(jObj);
+                jsDataList.append(jObj);
+                //jArr.append(jObj);
             }
         } else {
             qDebug() << "[getDataAsJSON()] select failed !" << query.lastError();
@@ -315,8 +343,9 @@ QJsonDocument DatabaseManager::getDataAsJSON(QString missionName, QString sensor
         qDebug() << "DB not open !";
     }
     db.close();
-    json.insert("items", jArr);
-    return QJsonDocument(json);
+    //json.insert("items", jArr);
+    //return QJsonDocument(json);
+    return jsDataList;
 }
 
 /**
@@ -485,85 +514,19 @@ QList<Sensor*> DatabaseManager::getSensorsForMission(QString missionName)
      return sensors;
 }
 
-/**
- * Associate datatype to mission for all sensors that are marked 'record'
- * @brief DatabaseManager::setDatatypesForCurrentMission
- * @return True if success
- */
-/*bool DatabaseManager::setDatatypesForCurrentMission()
-{
-    qDebug() << "setDatatypesForCurrentMission()";
-    bool res = true;
-    QList<Sensor*> sensors = SensorConfig::instance()->getSensorsRecorded();
-    foreach (Sensor* s, sensors) {
-        qDebug() << "Associate: " + s->type()->getName();
-        if (!addDatatypeForCurrentMission(s->type()->getName()))
-        {
-            res = false;
-        }
-    }
-    return res;
-}*/
-
-/**
- * Associate a datatype to the current mission (persisted in DB)
- * @brief DatabaseManager::addDataForCurrentMission
- * @param datatype The datatype to associate
- * @return True if success
- */
-/*bool DatabaseManager::addDatatypeForCurrentMission(QString datatype)
-{
-    DbTable dfmTable = tables[TableList::DATA_FOR_MISSION];
-    if(isDatatypeAssociatedToMission(currentMissionId, datatype)) {
-        // if data type is already associated, return true
-        return true;
-    } else {
-        // otherwise insert it in mapping table
-        QList<QVariant> values = QList<QVariant>();
-        values.append(currentMissionId);
-        values.append(datatype);
-        return insertRecord(dfmTable, values);
-    }
-}*/
-
 QString DatabaseManager::getCurrentMissionName()
 {
     return currentMissionName;
 }
 
-/**
- * Check if a data type is already associated with a mission
- * @brief DatabaseManager::isDatatypeAssociatedToMission
- * @param missionId The id of the mission
- * @param datatype The datatype
- * @return true if it is already associated
- */
-/*bool DatabaseManager::isDatatypeAssociatedToMission(qint64 missionId, QString datatype)
-{
-    bool res = false;
-     if (db.open()) {
-         QSqlQuery query(db);
-         QString sqlQuery = "SELECT * FROM dataformission WHERE datatype = '"+datatype+"' AND mission_id = "+ QString::number(missionId); // mission table: id | mission_id | datatype
-         if (query.exec(sqlQuery)) {
-             while( query.next() )
-             {
-                 res = true;
-             }
-         } else {
-             qDebug() << "[isDatatypeAssociatedToMission()] SELECT failed !" << query.lastError();
-         }
-     } else {
-         qDebug() << "DB not open !";
-     }
-     db.close();
-     return res;
-}*/
-
 /// TEST ONLY
 void DatabaseManager::insertSampleData()
 {
+    static int MAX_VALUE = 30;
     qint64 now = QDateTime::currentDateTime().toTime_t() * 1000;
     insertGpsPoint(now, 46.5171, 6.5817, 373.24, 120.0);
-    insertSensorValue("96", "PT100", now, 24.3);
-    insertSensorValue("96", "PT100", now + 1000, 25.5);
+    for (int i = 0; i < 100; i++) {
+        double r = (double)rand() / (double)MAX_VALUE;
+        insertSensorValue("96", "PT100", now + i * 1000, r);
+    }
 }

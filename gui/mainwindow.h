@@ -101,6 +101,7 @@ protected slots:
 
     /// export
     void on_exportBtnClicked();
+    void on_removeMissionBtnClicked();
     void on_missionSelectedChanged(QItemSelection);
     void on_backendAddressValueChanged(QString);
     void on_pingRequestDone(int);

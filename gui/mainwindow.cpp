@@ -570,11 +570,23 @@ void MainWindow::on_cleanGPSClicked()
 
 void MainWindow::on_exportBtnClicked()
 {
-    // TODO - export data
+    // export data
     QString missionName = ui->listViewMission->selectionModel()->selectedIndexes().first().data().toString();
     QString datatype = ui->listViewData->selectionModel()->selectedIndexes().first().data().toString();
-    qDebug() << "on_exportBtnClicked() - " << missionName << ", " << datatype;
+    //qDebug() << "on_exportBtnClicked() - " << missionName << ", " << datatype;
     dataExporter->exportData(missionName, datatype);
+}
+
+void MainWindow::on_removeMissionBtnClicked()
+{
+    QString missionName = ui->listViewMission->selectionModel()->selectedIndexes().first().data().toString();
+    if (missionName == dbManager->getCurrentMissionName()) {
+        addStatusText("[Warning] Current mission can not be deleted ! \n");
+        return;
+    }
+    dbManager->removeMission(missionName);
+    //qDebug() << "on_removeMissionBtnClicked() - " << missionName << " - "<< b;
+    updateMissionList();
 }
 
 /**
@@ -1180,8 +1192,10 @@ void MainWindow::createExportPanel()
 
     connect(ui->listViewMission->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(on_missionSelectedChanged(QItemSelection)));
     connect(ui->exportBtn, SIGNAL(clicked()), this, SLOT(on_exportBtnClicked()));
+    connect(ui->removeMissionBtn, SIGNAL(clicked()), this, SLOT(on_removeMissionBtnClicked()));
     connect(ui->backendAddressField, SIGNAL(textChanged(QString)), this, SLOT(on_backendAddressValueChanged(QString)));
     connect(dataExporter, SIGNAL(pingRequestDone(int)), this, SLOT(on_pingRequestDone(int)));
+    connect(dataExporter, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
 
     dataExporter->sendPingRequest();
     QTimer *timer = new QTimer();
@@ -1199,6 +1213,10 @@ void MainWindow::displayDataForMission(QString missionName)
     ui->listViewData->setCurrentIndex(model->index(0,0));
 }
 
+/**
+ * Update the list of missions (in left list view)
+ * @brief MainWindow::updateMissionList
+ */
 void MainWindow::updateMissionList()
 {
     QStandardItemModel *model = dbManager->getMissionsAsModel();
