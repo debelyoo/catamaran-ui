@@ -371,7 +371,7 @@ QJsonDocument DatabaseManager::getMissionAsJSON(QString missionName)
                 QJsonArray jsSensorArray;
                 // get sensors
                 QList<Sensor*> sensors = getSensorsForMission(missionName);
-                //sensors.append(SensorConfig::instance()->getSensor("48")); // add GPS sensor to list
+                sensors.append(SensorConfig::instance()->getSensor("48")); // add GPS sensor to list
                 foreach (Sensor* s, sensors) {
                     QJsonObject jsDev;
                     jsDev.insert("address", s->address());

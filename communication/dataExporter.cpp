@@ -66,7 +66,7 @@ QList<QJsonDocument> DataExporter::prepareDataChunk(QList<QJsonObject> jsDataLis
     QJsonArray jArr;
     foreach (QJsonObject item, jsDataList) {
         jArr.append(item);
-        if (jArr.size() == MAX_DATA_LOG_IN_EXPORT_REQUEST) {
+        if (jArr.size() == MAX_DATA_LOG_IN_EXPORT_REQUEST || jArr.size() == jsDataList.length()) {
             QJsonObject json;
             json.insert("datatype", sensorType);
             json.insert("items", jArr);
