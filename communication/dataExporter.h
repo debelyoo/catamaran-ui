@@ -12,11 +12,9 @@ class DataExporter : public QObject
         void exportData(QString missionName, QString dataType);
 
     signals:
-        void pingRequestDone(int statusCode);
         void displayInGui(QString);
 
     public slots:
-        void sendPingRequest();
         void on_requestFinished(QNetworkReply*);
 
 

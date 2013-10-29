@@ -7,6 +7,8 @@
 #include <QNetworkReply>
 #include <QDebug>
 #include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 
 class HttpRequester : public QObject
 {
@@ -15,8 +17,11 @@ class HttpRequester : public QObject
         static HttpRequester* instance();
         void setBackendAddress(QString address);
         void sendPostRequest(QString urlPath, QJsonDocument jObj);
+        void getSensorTypes();
 
     signals:
+        void pingRequestDone(int statusCode);
+        void sensorTypeRequestDone(int statusCode, QList<QString> sensorTypes);
         void done(QNetworkReply*);
 
     public slots:

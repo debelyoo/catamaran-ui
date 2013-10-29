@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     coordinateHelper = CoordinateHelper::instance();
     compactRio = CompactRio::instance();
     dataExporter = DataExporter::instance();
+    httpRequester = HttpRequester::instance();
     dbManager = DatabaseManager::instance();
     ui->setupUi(this);
 
@@ -666,6 +667,19 @@ void MainWindow::on_pingRequestDone(int statusCode)
     }
 }
 
+void MainWindow::on_sensorTypeRequestDone(int statusCode, QList<QString> sensorTypes)
+{
+    if (statusCode == 200) {
+        qDebug() << "sensor types received !";
+        foreach (QString stName, sensorTypes) {
+            SensorTypeManager::instance()->createType(stName, "", 0);
+        }
+        // TODO refresh panels with sensor types combo box
+    } else {
+        qDebug() << "[ERROR] while getting the sensor types from server";
+    }
+}
+
 /**
  * Scroll the plots container when scroll is triggered over a plot
  * @brief MainWindow::on_graphWheelEvent
@@ -951,7 +965,6 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     InRowLineEdit* nameField = new InRowLineEdit(this, sensorIndex);
     nameField->setText(QString(s->name()));
     InRowComboBox* typeBox = new InRowComboBox(this, sensorIndex);
-
     foreach(QString s, SensorTypeManager::instance()->list())
     {
         typeBox->addItem(s);
@@ -1145,28 +1158,27 @@ void MainWindow::createConfigurationPanel()
 
 void MainWindow::createAddressesConfigPanel()
 {
+    connect(httpRequester, SIGNAL(sensorTypeRequestDone(int,QList<QString>)), this, SLOT(on_sensorTypeRequestDone(int,QList<QString>)));
     // load sensorTypes file
-    fileHelper->loadSensorTypesFile();
+    //fileHelper->loadSensorTypesFile(); // old way (from file)
+    httpRequester->getSensorTypes(); // new way (from server) asynchronous !
     // load config file
-    fileHelper->loadConfigFile();
+    //fileHelper->loadConfigFile(); // useless with new sensors panel
     // create log files
     fileHelper->createLogFiles();
     QList<Sensor*> sensors = sensorConfig->getSensors();
 
-    //QWidget *configurationPanel = ui->tabWidget->widget(2);
     QWidget *configurationPanel = ui->addressesContainer;
     QScrollArea *scrollArea = new QScrollArea;
     QWidget *viewport = new QWidget;
     QGridLayout *layout = new QGridLayout;
     viewport->setLayout(layout);
-
     createLabelLine(layout);
     for (int i = 1; i <= sensors.length(); i++)
     {
         createAddressFormRow(layout, i, sensors[i-1]);
     }
     scrollArea->setWidget(viewport);
-
     QVBoxLayout *configurationPanelLayout = new QVBoxLayout;
     configurationPanel->setLayout(configurationPanelLayout);
     QWidget *scrollAreaContainer = createSpacedWidget(scrollArea,0,250);
@@ -1227,13 +1239,13 @@ void MainWindow::createExportPanel()
     connect(ui->exportBtn, SIGNAL(clicked()), this, SLOT(on_exportBtnClicked()));
     connect(ui->removeMissionBtn, SIGNAL(clicked()), this, SLOT(on_removeMissionBtnClicked()));
     connect(ui->backendAddressField, SIGNAL(textChanged(QString)), this, SLOT(on_backendAddressValueChanged(QString)));
-    connect(dataExporter, SIGNAL(pingRequestDone(int)), this, SLOT(on_pingRequestDone(int)));
+    connect(httpRequester, SIGNAL(pingRequestDone(int)), this, SLOT(on_pingRequestDone(int)));
     connect(dataExporter, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
 
-    dataExporter->sendPingRequest();
+    httpRequester->sendPingRequest();
     QTimer *timer = new QTimer();
     timer->setInterval(5000);
-    connect(timer, SIGNAL(timeout()), dataExporter, SLOT(sendPingRequest()));
+    connect(timer, SIGNAL(timeout()), httpRequester, SLOT(sendPingRequest()));
     timer->start();
 
     HttpRequester::instance()->setBackendAddress(ui->backendAddressField->text());

@@ -106,6 +106,7 @@ protected slots:
     void on_missionSelectedChanged(QItemSelection);
     void on_backendAddressValueChanged(QString);
     void on_pingRequestDone(int);
+    void on_sensorTypeRequestDone(int, QList<QString>);
 
 protected:
     void keyPressEvent(QKeyEvent* event);
@@ -114,6 +115,7 @@ private:
     Ui::MainWindow *ui;
     Server *server;
     DataExporter* dataExporter;
+    HttpRequester* httpRequester;
     DatabaseManager* dbManager;
     SensorConfig* sensorConfig; // singleton
     FileHelper* fileHelper;

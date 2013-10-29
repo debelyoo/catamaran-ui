@@ -81,9 +81,7 @@ void DataExporter::on_requestFinished(QNetworkReply* reply)
 {
     int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     //qDebug() << "on_requestFinished() " << statusCode << " - " << reply->url().toString();
-    if (reply->url().toString().contains("/ping")) {
-        emit pingRequestDone(statusCode);
-    } else if (reply->url().toString().contains("/api/mission")) {
+    if (reply->url().toString().contains("/api/mission")) {
         // POST mission request done
         switch (statusCode) {
         case 200:
@@ -109,7 +107,7 @@ void DataExporter::on_requestFinished(QNetworkReply* reply)
     }
 }
 
-void DataExporter::sendPingRequest()
+/*void DataExporter::sendPingRequest()
 {
     httpRequester->sendPingRequest();
-}
+}*/
