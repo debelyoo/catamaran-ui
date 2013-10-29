@@ -37,7 +37,6 @@ void FileHelper::writeFile(QString filename, QString fileContent, bool isLog)
         folderPath = QDir::currentPath();
     }
     QString filePath = folderPath + "/" +filename;
-    qDebug() << folderPath << " - " << filePath;
     QDir logDir(folderPath);
     if (!logDir.exists())
     {
