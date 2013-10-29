@@ -2,6 +2,7 @@
 #define DATABASEMANAGER_H
 
 #include <QObject>
+#include <QPair>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QDateTime>
@@ -40,7 +41,7 @@ class DatabaseManager
         bool getTemperatureLog();
         QPair< QVector<double>, QVector<double> > getData(Sensor* s, int fromTs);
         QList<QJsonObject> getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend);
-        QJsonDocument getMissionAsJSON(QString missionName);
+        QPair<int, QJsonDocument> getMissionAsJSON(QString missionName);
 
     private:
         DatabaseManager(){
@@ -65,7 +66,7 @@ class DatabaseManager
         QString buildInsertQuery(DbTable table);
         void createNecessaryTables();
         Mission getMission(QString missionName);
-        QList<Sensor*> getSensorsForMission(QString missionName);
+        QPair<int, QList<Sensor*> > getSensorsForMission(QString missionName);
         bool insertRecord(DbTable table, QList<QVariant> values);
 
 };

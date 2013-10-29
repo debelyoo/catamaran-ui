@@ -122,13 +122,13 @@ bool FileHelper::loadConfigFile()
 void FileHelper::createLogFiles()
 {
     SensorConfig* sensorConfig = SensorConfig::instance();
-    qDebug() << "createLogFiles()";
+    //qDebug() << "createLogFiles()";
     foreach(Sensor* s, sensorConfig->getSensors())
     {
         if (s->record() && s->logFilePrefix() != "" && s->currentLogFilename() == "")
         {
             QString currentLogFilename = getLogFileName(s->logFilePrefix());
-            qDebug() << currentLogFilename;
+            //qDebug() << currentLogFilename;
             s->setCurrentLogFilename(currentLogFilename);
             writeFile(s->currentLogFilename(), "", true);
         }

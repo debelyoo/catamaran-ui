@@ -291,9 +291,6 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
 QList<QJsonObject> DatabaseManager::getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend)
 {
     QList<QJsonObject> jsDataList;
-    //QJsonObject json;
-    //json.insert("datatype", sensorType);
-    //QJsonArray jArr;
     qint64 missionId = getMission(missionName).getId();
     DbTable table;
     QString sqlQuery;
@@ -334,7 +331,6 @@ QList<QJsonObject> DatabaseManager::getDataAsJSON(QString missionName, QString s
                     }
                 }
                 jsDataList.append(jObj);
-                //jArr.append(jObj);
             }
         } else {
             qDebug() << "[getDataAsJSON()] select failed !" << query.lastError();
@@ -343,8 +339,6 @@ QList<QJsonObject> DatabaseManager::getDataAsJSON(QString missionName, QString s
         qDebug() << "DB not open !";
     }
     db.close();
-    //json.insert("items", jArr);
-    //return QJsonDocument(json);
     return jsDataList;
 }
 
@@ -354,7 +348,7 @@ QList<QJsonObject> DatabaseManager::getDataAsJSON(QString missionName, QString s
  * @param missionName The name of the mission
  * @return A JSON object with the mission details - {"departure_time": "1382190049.321", "timezone": "GMT+2", "vehicle": "catamaran"}
  */
-QJsonDocument DatabaseManager::getMissionAsJSON(QString missionName)
+QPair<int, QJsonDocument> DatabaseManager::getMissionAsJSON(QString missionName)
 {
     QJsonObject json;
     //const SensorType* st = SensorTypeManager::instance()->type(datatype);
@@ -370,7 +364,12 @@ QJsonDocument DatabaseManager::getMissionAsJSON(QString missionName)
                 json.insert("vehicle", query.value(4).toString());
                 QJsonArray jsSensorArray;
                 // get sensors
-                QList<Sensor*> sensors = getSensorsForMission(missionName);
+                QPair<int, QList<Sensor*> > res = getSensorsForMission(missionName);
+                if (res.first != 0) {
+                    // error occurred
+                    return QPair<int, QJsonDocument>(1, QJsonDocument());
+                }
+                QList<Sensor*> sensors = res.second;
                 sensors.append(SensorConfig::instance()->getSensor("48")); // add GPS sensor to list
                 foreach (Sensor* s, sensors) {
                     QJsonObject jsDev;
@@ -389,7 +388,7 @@ QJsonDocument DatabaseManager::getMissionAsJSON(QString missionName)
     }
     db.close();
     //qDebug() << "Mission JSON: " << json;
-    return QJsonDocument(json);
+    return QPair<int, QJsonDocument>(0, QJsonDocument(json));
 }
 
 /**
@@ -488,9 +487,9 @@ Mission DatabaseManager::getMission(QString missionName)
  * Get the sensors associated to a mission
  * @brief DatabaseManager::getSensorsForMission
  * @param missionName The name of the mission
- * @return A list of sensors
+ * @return A pair with error code and list of sensors
  */
-QList<Sensor*> DatabaseManager::getSensorsForMission(QString missionName)
+QPair<int, QList<Sensor*> > DatabaseManager::getSensorsForMission(QString missionName)
 {
     QList<Sensor*> sensors;
     qint64 missionId = getMission(missionName).getId();
@@ -502,6 +501,10 @@ QList<Sensor*> DatabaseManager::getSensorsForMission(QString missionName)
              {
                  QString sensorAddress = query.value(0).toString();
                  Sensor* s = SensorConfig::instance()->getSensor(sensorAddress);
+                 if (s == NULL) {
+                     qDebug() << "[getSensorsForMission()] Sensor (" << sensorAddress << ") does not exist in SensorConfig !";
+                     return QPair<int, QList<Sensor*> >(1, QList<Sensor*>());
+                 }
                  sensors.append(s);
              }
          } else {
@@ -511,7 +514,7 @@ QList<Sensor*> DatabaseManager::getSensorsForMission(QString missionName)
          qDebug() << "DB not open !";
      }
      db.close();
-     return sensors;
+     return QPair<int, QList<Sensor*> >(0, sensors);
 }
 
 QString DatabaseManager::getCurrentMissionName()

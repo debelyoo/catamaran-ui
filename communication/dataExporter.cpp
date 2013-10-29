@@ -29,10 +29,14 @@ void DataExporter::exportData(QString missionName, QString dataType)
  */
 void DataExporter::sendMission()
 {
-    QJsonDocument jsonData = dbManager->getMissionAsJSON(tempMissionName); // get mission and sensors associated
-    httpRequester->sendPostRequest(QString("/portal/api/mission"), jsonData);
-    //qDebug() << "Mission [" << tempMissionName << "] has been sent to server !";
-    emit displayInGui("Mission [" + tempMissionName + "] has been sent to server !\n");
+    QPair<int, QJsonDocument> jsonDataWithCode = dbManager->getMissionAsJSON(tempMissionName); // get mission and sensors associated
+    if (jsonDataWithCode.first != 0) {
+        emit displayInGui("[ERROR] Could not export data. Check debug console for more info.");
+    } else {
+        httpRequester->sendPostRequest(QString("/portal/api/mission"), jsonDataWithCode.second);
+        //qDebug() << "Mission [" << tempMissionName << "] has been sent to server !";
+        emit displayInGui("Mission [" + tempMissionName + "] has been sent to server !\n");
+    }
 }
 
 /**
