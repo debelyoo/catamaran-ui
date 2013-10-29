@@ -376,7 +376,7 @@ QJsonDocument DatabaseManager::getMissionAsJSON(QString missionName)
                     QJsonObject jsDev;
                     jsDev.insert("address", s->address());
                     jsDev.insert("name", s->name());
-                    jsDev.insert("datatype", s->type()->getName());
+                    jsDev.insert("datatype", s->type()->name());
                     jsSensorArray.append(jsDev);
                 }
                 json.insert("devices", jsSensorArray);

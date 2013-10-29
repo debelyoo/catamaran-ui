@@ -672,7 +672,7 @@ void MainWindow::on_sensorTypeRequestDone(int statusCode, QList<QString> sensorT
     if (statusCode == 200) {
         qDebug() << "sensor types received !";
         foreach (QString stName, sensorTypes) {
-            SensorTypeManager::instance()->createType(stName, "", 0);
+            SensorTypeManager::instance()->createType(stName);
         }
         // TODO refresh panels with sensor types combo box
     } else {

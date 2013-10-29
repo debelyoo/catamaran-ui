@@ -30,13 +30,14 @@ void FileHelper::writeFile(QString filename, QString fileContent, bool isLog)
     QString folderPath;
     if (isLog)
     {
-        folderPath = QDir::currentPath() + "/" + logFolder + "/" + DatabaseManager::instance()->getCurrentMissionName();
+        folderPath = QDir::currentPath() + "/" + logFolder + "/" + DatabaseManager::instance()->getCurrentMissionName().replace(':', ""); // colon can not be used in folder names
     }
     else
     {
         folderPath = QDir::currentPath();
     }
     QString filePath = folderPath + "/" +filename;
+    qDebug() << folderPath << " - " << filePath;
     QDir logDir(folderPath);
     if (!logDir.exists())
     {
@@ -122,13 +123,13 @@ bool FileHelper::loadConfigFile()
 void FileHelper::createLogFiles()
 {
     SensorConfig* sensorConfig = SensorConfig::instance();
-    //qDebug() << "createLogFiles()";
+    qDebug() << "createLogFiles()";
     foreach(Sensor* s, sensorConfig->getSensors())
     {
         if (s->record() && s->logFilePrefix() != "" && s->currentLogFilename() == "")
         {
             QString currentLogFilename = getLogFileName(s->logFilePrefix());
-            //qDebug() << currentLogFilename;
+            qDebug() << currentLogFilename;
             s->setCurrentLogFilename(currentLogFilename);
             writeFile(s->currentLogFilename(), "", true);
         }
