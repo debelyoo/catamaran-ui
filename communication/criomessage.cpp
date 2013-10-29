@@ -6,13 +6,13 @@
  *  CRIOMessage class definition
  */
 quint32 CRioMessage::s_neededBytes = 0;
-CRIO::MessageType CRioMessage::s_currentType = CRIO::CMD;
+CRIO::MessageType CRioMessage::s_currentType = CRIO::MESSAGE_TYPE_ERROR;
 
 CRioMessage::CRioMessage(CRioDataStream &ds):
     m_pContent(NULL),
     m_valid(false)
 {
-    if(s_neededBytes <= 0){
+    if(s_neededBytes <= 0 | s_currentType == CRIO::MESSAGE_TYPE_ERROR){
         if(ds.device()->bytesAvailable() >= 5){
             quint8 messageType;
             ds >> messageType;
@@ -31,6 +31,7 @@ CRioMessage::CRioMessage(CRioDataStream &ds):
             m_valid = buildData(ds);
             break;
         default:
+            s_currentType = CRIO::MESSAGE_TYPE_ERROR;
             break;
         }
     }
@@ -47,6 +48,7 @@ CRIO::MessageType CRioMessage::type() const{
 }
 
 bool CRioMessage::isValid() const{
+    if(!m_valid)qDebug() << "s_neededB="<<s_neededBytes<<" s_cType="<<s_currentType;
     return m_valid;
 }
 
@@ -55,15 +57,43 @@ CRIO::Object *CRioMessage::content()
     return m_pContent;
 }
 
+void CRioMessage::reset()
+{
+    s_neededBytes = 0;
+    s_currentType = CRIO::MESSAGE_TYPE_ERROR;
+}
+
 bool CRioMessage::buildCommand(CRioDataStream &ds)
 {
 
     int pos = ds.device()->pos();
     m_pContent = createCommand(ds);
     int skip = s_neededBytes - (ds.device()->pos()-pos);
-    //qDebug() << "build CMD : skip " << skip << " bytes.";
-    ds.skipRawData(skip);
+    if(skip > 0){
+        ds.skipRawData(skip);
+//        int skiped = ds.skipRawData(skip);
+//        qDebug() << "build CMD : skip " << skip << " ("<<skiped<<") bytes.";
+//        qDebug() << "\tneeded="<<s_neededBytes;
+//        qDebug() << "\tpos1="<<pos;
+//        qDebug() << "\tpos2="<<ds.device()->pos();
+//        qDebug() << "\tab="<<ds.device()->bytesAvailable();
+//        CRioCommand *cmd = (CRioCommand *)m_pContent;
+//        if(cmd){
+//            qDebug() << "\tCMD="<<cmd->command() << " addr="<<cmd->address();
+//            foreach(QVariant v, cmd->parameters()){
+//                qDebug() << "\t\t"<<v;
+//            }
+//        }else{
+//            qDebug() << "\tCMD invalid";
+//        }
+
+        //char *s = new char[skip];
+        //ds.readRawData(s, skip);
+        //qDebug() << QByteArray(s, skip).toHex();
+        //delete [] s;
+    }
     s_neededBytes = 0;
+    s_currentType = CRIO::MESSAGE_TYPE_ERROR;
     return true;
 }
 
@@ -72,9 +102,24 @@ bool CRioMessage::buildData(CRioDataStream &ds)
     int pos = ds.device()->pos();
     m_pContent = createData(ds);
     int skip = s_neededBytes - (ds.device()->pos()-pos);
-    //qDebug() << "build DATA : skip " << skip << " bytes.";
-    ds.skipRawData(skip);
+    if(skip > 0){
+        ds.skipRawData(skip);
+//        int skiped = ds.skipRawData(skip);
+//        CRioData *data = (CRioData*) m_pContent;
+//        qDebug() << "build DATA : skip " << skip << " ("<<skiped<<") bytes.";
+//        qDebug() << "\tneeded="<<s_neededBytes;
+//        qDebug() << "\tpos1="<<pos;
+//        qDebug() << "\tpos2="<<ds.device()->pos();
+//        qDebug() << "\tab="<<ds.device()->bytesAvailable();
+//        if(data){
+//            qDebug() << "\tData.addr="<<data->address<<", nP="<<data->polymorphicData().count();
+//            foreach(CRIO::PolymorphicData p, data->polymorphicData()){
+//                qDebug() << "\t\t" << p.value;
+//            }
+//        }
+    }
     s_neededBytes = 0;
+    s_currentType = CRIO::MESSAGE_TYPE_ERROR;
     return true;
 }
 

@@ -11,7 +11,7 @@
 class RegisteredSensorItem
 {
 public:
-    RegisteredSensorItem(SensorInputItem *sensorInput, RegisteredSensorItem *parent = NULL);
+    RegisteredSensorItem(SensorInputItem *sensorInput);
     ~RegisteredSensorItem();
 
     RegisteredSensorItem *parent() const;
@@ -38,8 +38,11 @@ public:
     void setStream(bool stream);
     void setRecord(bool rec);
     void setType(const QString &type);
+    void setLogFilePrefix(const QString &pref);
 
     const Sensor *sensor() const;
+
+    const SensorInputItem *sensorInpurItem() const;
 protected:
     RegisteredSensorItem *m_parent;
     SensorInputItem *m_sensorInput;

@@ -156,7 +156,7 @@ bool FileHelper::loadSensorTypesFile()
             //int id = QString(fields.at(0)).toInt();
             //SensorType* st = new SensorType(fields.at(1), fields.at(2), fields.at(3).toInt());
             //sensorConfig->addSensorType(st);
-            SensorTypeManager::instance()->createType(fields.at(1), fields.at(2), fields.at(3).toInt());
+            SensorTypeManager::instance()->createType(fields.at(1));
             res = true;
         }
         count++;

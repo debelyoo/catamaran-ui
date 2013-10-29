@@ -44,8 +44,21 @@ class SensorConfig
         bool qstringToBool(QString str) const;
         void updateDisplayGraphList(int nb = 3);
 
+        bool addPlot(int plotIndex);
+        bool removePlot(int plotIndex);
+
+        const QList<Sensor *> &sensorForPlot(int plotIndex);
+
+        bool addSensorToPlot(int plotIndex, Sensor *sensor);
+        bool removeSensorFromPlot(int plotIndex, Sensor *sensor);
+
+        QList<int> removeSensorFromPlots(Sensor *sensor);
+
     private:
-        SensorConfig() {
+        SensorConfig():
+            m_sensors(),
+            m_sensorForPlotIndexMap()
+        {
             //m_sensorTypes.insert(0, new SensorType(0, "Unknown", "")); // other tyes are loaded at launch from sensortypes.txt
 
             updateDisplayGraphList();
@@ -54,9 +67,10 @@ class SensorConfig
 
         static SensorConfig* s_instance;
 
-        QHash<QString, Sensor*> m_sensors;
+        QHash<QString, Sensor *> m_sensors;
         //QMap<int, SensorType*> m_sensorTypes;
         QMap<int, QString> m_displayGraphs;
+        QHash<int, QList<Sensor *> > m_sensorForPlotIndexMap;
 
         static bool addressLessThan(Sensor* s1, Sensor* s2);
 };

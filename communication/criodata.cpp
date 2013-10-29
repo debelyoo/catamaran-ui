@@ -5,8 +5,8 @@
  */
 CRioData::CRioData(quint8 address, QVariantList data, CRIO::Timestamp timestamp):
     CRIO::Object(),
-    m_data(),
-    timestamp(timestamp)
+    timestamp(timestamp),
+    m_data()
 {
    this->address = QString::number(address);
     foreach(QVariant v, data){
@@ -17,8 +17,8 @@ CRioData::CRioData(quint8 address, QVariantList data, CRIO::Timestamp timestamp)
 CRioData::CRioData(QString identifier, QVariantList data, CRIO::Timestamp timestamp):
     CRIO::Object(),
     address(identifier),
-    m_data(),
-    timestamp(timestamp)
+    timestamp(timestamp),
+    m_data()
 {
     foreach(QVariant v, data){
         this->m_data.append(v);

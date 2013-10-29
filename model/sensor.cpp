@@ -9,7 +9,6 @@ Sensor::Sensor(QString addr, QString name, const SensorType* type,
     m_record(record),
     m_stream(stream),
     m_transformation(NULL),
-    m_display(display),
     m_logFilePrefix(logFilePrefix),
     m_currentLogFilename(currentLogFilename)
 {
@@ -42,10 +41,6 @@ bool Sensor::isData() const
     return m_isData;
 }
 
-int Sensor::display() const
-{
-    return m_display;
-}
 
 const QString &Sensor::address() const
 {
@@ -92,10 +87,6 @@ void Sensor::setName(const QString &name)
     m_name = name;
 }
 
-void Sensor::setDisplay(int g)
-{
-    m_display = g;
-}
 
 void Sensor::setType(const SensorType *type)
 {

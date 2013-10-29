@@ -7,5 +7,6 @@
         <file>ressources/style/stylesheet-branch-more.png</file>
         <file>ressources/style/stylesheet-branch-open.png</file>
         <file>ressources/style/stylesheet-vline.png</file>
+        <file>ressources/style/delete-16.png</file>
     </qresource>
 </RCC>

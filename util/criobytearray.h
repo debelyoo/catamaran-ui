@@ -43,6 +43,7 @@ private:
     void push(const double &a, bool flatten = false);
     void push(const float &a, bool flatten = false);
     void push(const bool &a, bool flatten = false);
+    void push(const QString &s, bool flatten = false);
 
     void push(const CRioByteArray &a, bool flatten = false);
     void push(const QPointF &a, bool flatten = false);

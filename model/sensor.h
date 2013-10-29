@@ -62,7 +62,6 @@ private:
     bool                m_stream;
     const TransformationBaseClass *m_transformation;
 
-    int                 m_display;
 
     QString             m_logFilePrefix;
     QString             m_currentLogFilename;

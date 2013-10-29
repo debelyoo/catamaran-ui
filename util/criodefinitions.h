@@ -30,7 +30,8 @@ class CRioDataStream;
 namespace CRIO {
     typedef enum {  // cast to quint8
         DATA = 0,
-        CMD = 1
+        CMD = 1,
+        MESSAGE_TYPE_ERROR
     } MessageType;
 
     typedef enum {

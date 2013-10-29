@@ -5,28 +5,17 @@
 
 class SensorType
 {
-    public:
-    // first constructor is to be removed
-    explicit SensorType(int id, QString name = "", QString dbTableName = "", QString dllName = "", int dbColumnCount = 0);
-    explicit SensorType(QString name, QString dbTableName = "", int dbColumnCount = 0);
+public:
+    explicit SensorType(const QString &name = "");
     /// getters
-    int getId() const;
-    const QString &getName() const;
-    const QString &getDbTableName() const;
-    const QString &getDllName() const;
+    const QString &name() const;
 
     /// setters
-    void setId(int id);
     void setName(QString name);
-    void setDbTableName(QString tn);
-    void setDllName(QString dn);
 
-    private:
-        int id;
-        QString m_name;
-        QString m_dbTableName;
-        QString m_dllName;
-        int m_dbColumnCount;
+private:
+    QString m_name;
+
 };
 
 #endif // SENSORTYPE_H

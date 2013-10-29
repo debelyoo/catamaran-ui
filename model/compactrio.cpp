@@ -1,5 +1,6 @@
 #include "compactrio.h"
 #include "manager/sensortypemanager.h"
+#include "transformation/PRisme/prisme.h"
 
 #include <QDebug>
 
@@ -190,6 +191,8 @@ void CompactRio::feedWithCommand(const CRioCommand &cmd)
         default:
             break;
         }
+    default:
+        break;
     }
 }
 
@@ -222,15 +225,22 @@ void CompactRio::processMeanSpeed()
 
 void CompactRio::initSelftAllocatedSensors()
 {
-    SensorTypeManager::instance()->createType("GPS Position", "", 0);
-    SensorTypeManager::instance()->createType("GPS Speed", "", 0);
-    SensorTypeManager::instance()->createType("Compass", "", 0);
+    SensorTypeManager::instance()->createType("GPS Position");
+    SensorTypeManager::instance()->createType("GPS Speed");
+    SensorTypeManager::instance()->createType("Compass");
     Sensor *gpsPos = new Sensor("48", "GPS[position]", SensorTypeManager::instance()->type("GPS Position"), 0, true, true, "GPS", "", false);
     Sensor *gpsSpeed = new Sensor("49", "GPS[velocity]", SensorTypeManager::instance()->type("GPS Speed"), 0, true, true, "GPS", "", false);
     Sensor *compass = new Sensor("41", "Compass[heading]", SensorTypeManager::instance()->type("Compass"), 0, true, true, "Compass", "", false);
+
+    TransformationBaseClass *prismeTransformation = new PRisme();
+    TransformationManager::instance()->addTransformation(prismeTransformation);
+    //Sensor *prisme = new Sensor("65", "PRisme", SensorTypeManager::instance()->type("Unknown"), 0, false, true, "", "", false);
+    //prisme->setTransformation(prismeTransformation);
+
     m_selfAllocatedSensors.append(gpsPos);
     m_selfAllocatedSensors.append(gpsSpeed);
     m_selfAllocatedSensors.append(compass);
+    //m_selfAllocatedSensors.append(prisme);
 }
 
 void CompactRio::initAvailableInputs()
@@ -359,6 +369,24 @@ bool CompactRio::set16bMemory(const CRIO::Memory::CMD_ADDR_16B_BLOC &addr, const
     CRioCommand cmd(CRIO::CMD_SET, CRIO::CMD_ADDR_MEMORY_16BIT);
     cmd.addParameter(QVariant::fromValue((quint8) addr));
     cmd.addParameter(QVariant::fromValue(value));
+    return m_server->sendMessage(cmd);
+}
+
+bool CompactRio::setPRismeSamplingRate(quint8 n100ms, quint8 portAddress)
+{
+    QVariantList d;
+    QString bytes;
+    bytes.append('s');
+    bytes.append((char) portAddress);
+    bytes.append((char) n100ms);
+    d.append(bytes);
+    CRioData data(CRIO::DATA_ADDR_NI9870_2_P1, d, CRIO::Timestamp());
+    return m_server->sendMessage(data);
+}
+
+bool CompactRio::getPRismeSyncTimestamp()
+{
+    CRioCommand cmd(CRIO::CMD_GET, CRIO::CMD_ADDR_PRISME_TS_SYNC);
     return m_server->sendMessage(cmd);
 }
 

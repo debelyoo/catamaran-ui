@@ -144,6 +144,16 @@ void CRioByteArray::push(const bool &a, bool flatten)
     push((quint8) (a?1:0), flatten);
 }
 
+void CRioByteArray::push(const QString &s, bool flatten)
+{
+    if(flatten){
+        push((quint32) s.count());
+    }
+    for(int i=0;i<s.count();++i){
+        push((quint8)s.at(i).toLatin1(), false);
+    }
+}
+
 void CRioByteArray::push(const QPointF &p, bool flatten)
 {
     if(flatten){
@@ -181,7 +191,7 @@ void CRioByteArray::push(const QVariant &v, bool flatten){
     case QMetaType::QPointF:
         push(v.toPointF(), flatten); break;
     case QMetaType::QString:
-        push(v.toByteArray(), flatten); break;
+        push(v.toString(), flatten); break;
     case QMetaType::User:
         //qDebug() << "CBA << QV, UserType="<<v.userType()<<" qmt="<<qMetaTypeId<QList<Sensor *> >();
         if(v.userType() == qMetaTypeId<QList<Sensor *> >()){
@@ -196,11 +206,10 @@ void CRioByteArray::push(const QVariant &v, bool flatten){
 
 void CRioByteArray::push(const CRIO::PolymorphicData &v, bool flatten){
     CRioByteArray cba;
-
     DataType::Types type = v.cRIOType();
-
-    cba.push(v.value, true);
     cba.push((quint8) type);
+    cba.push(v.value, true);
+
     if(flatten){
         push((quint32) cba.size());
     }

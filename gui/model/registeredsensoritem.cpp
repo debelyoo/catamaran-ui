@@ -2,8 +2,8 @@
 
 #include "manager/sensortypemanager.h"
 
-RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput, RegisteredSensorItem *parent):
-    m_parent(parent),
+RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput):
+    m_parent(NULL),
     m_sensorInput(sensorInput),
     m_childs(),
     m_name(sensorInput->fullName()),
@@ -19,6 +19,7 @@ RegisteredSensorItem::~RegisteredSensorItem()
     if(m_parent){
         m_parent->removeChild(this);
     }
+    m_sensorInput->enable();
     delete m_model;
 }
 
@@ -178,9 +179,19 @@ void RegisteredSensorItem::setType(const QString &type){
     m_model->setType(SensorTypeManager::instance()->type(type));
 }
 
+void RegisteredSensorItem::setLogFilePrefix(const QString &pref)
+{
+    m_model->setLogFilePrefix(pref);
+}
+
 const Sensor *RegisteredSensorItem::sensor() const
 {
     return m_model;
+}
+
+const SensorInputItem *RegisteredSensorItem::sensorInpurItem() const
+{
+    return m_sensorInput;
 }
 
 

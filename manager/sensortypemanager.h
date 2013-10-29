@@ -10,14 +10,14 @@ class SensorTypeManager
 public:
     static SensorTypeManager *instance();
 
-    const QStringList &list() const;
+    const QStringList list() const;
     const QStringList &sortedList() const;
     const SensorType *type(const QString & name) const;
 
     //void addType(SensorType *);
-    bool createType(const QString &name, const QString &dbTableName, int dbColumnCount = 0);
+    bool createType(const QString &name);
     bool deleteType(const QString &name);
-    bool updateType(const QString &name, const QString &dbTableName, int dbColumnCount = 0);
+    bool updateType(const QString &name);
 
     //int loadFromfile(const QString &path);
 

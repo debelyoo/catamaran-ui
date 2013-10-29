@@ -2,7 +2,7 @@
 
 RegisteredSensorsModel::RegisteredSensorsModel(QObject *parent) :
     QAbstractTableModel(parent),
-    m_nColumn(8),
+    m_nColumn(9),
     m_headers(),
     m_items()
 {
@@ -13,12 +13,21 @@ RegisteredSensorsModel::RegisteredSensorsModel(QObject *parent) :
     m_headers.append(" ");
     m_headers.append("Stream");
     m_headers.append("Record");
+    m_headers.append("Lof file prefix");
     m_headers.append(" ");
 }
 
 RegisteredSensorsModel::~RegisteredSensorsModel()
 {
-    qDeleteAll(m_items);
+    //qDeleteAll(m_items);
+    while(m_items.count() > 0){
+        foreach(RegisteredSensorItem *item, m_items){
+            if(item->childCount() == 0){
+                m_items.removeOne(item);
+                delete item;
+            }
+        }
+    }
 }
 
 
@@ -62,9 +71,11 @@ QVariant RegisteredSensorsModel::data(const QModelIndex &index, int role) const
             return item->sensor()->address();
         case NameEditCol:
             return item->sensor()->name();
+        case PrefixLogCol:
+            return item->sensor()->logFilePrefix();
         case TypeCol:
             if(item->sensor() && item->sensor()->type()){
-                return QVariant(item->sensor()->type()->getName());
+                return QVariant(item->sensor()->type()->name());
             }
             return QVariant("Unknown");
         case TransfCol:
@@ -93,7 +104,29 @@ QVariant RegisteredSensorsModel::data(const QModelIndex &index, int role) const
         default:
             break;
         }
+        break;
     }
+    case Qt::DecorationRole:
+        switch(index.column()){
+        case DeleteCol:
+            if(index.flags() & Qt::ItemIsEnabled){
+                return QIcon(":/images/ressources/style/delete-16.png");
+            }else{
+                return QVariant::Invalid;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+    case Qt::SizeHintRole:
+        switch(index.column()){
+        case DeleteCol:
+            return QSize(16, 16);
+            break;
+        default:
+            break;
+        }
         break;
     default:
         break;
@@ -107,9 +140,24 @@ void RegisteredSensorsModel::addSensor(RegisteredSensorItem *newItem, Registered
     if(parent){
         parent->addChild(newItem);
     }
-
     m_items.append(newItem);
     endInsertRows();
+}
+
+void RegisteredSensorsModel::removeSensor(QModelIndex index)
+{
+    RegisteredSensorItem *item = getItem(index);
+    if(item){
+        beginRemoveRows(QModelIndex(), index.row(), index.row());
+        m_items.removeOne(item);
+        delete item;
+        endRemoveRows();
+    }
+}
+
+QList<RegisteredSensorItem *> RegisteredSensorsModel::items()
+{
+    return m_items;
 }
 
 RegisteredSensorItem *RegisteredSensorsModel::getItem(const QModelIndex &index) const
@@ -137,7 +185,10 @@ Qt::ItemFlags RegisteredSensorsModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags returnFlags = QAbstractTableModel::flags(index);
 
-    if (index.column() == StreamCol || index.column() == RecordCol)
+    if (index.column() == StreamCol)
+    {
+        returnFlags |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
+    }else if(index.column() == RecordCol)
     {
         returnFlags |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
         QModelIndex m = createIndex(index.row(), TypeCol, index.internalPointer());
@@ -145,8 +196,14 @@ Qt::ItemFlags RegisteredSensorsModel::flags(const QModelIndex &index) const
             returnFlags &= ~Qt::ItemIsEnabled;
         }
     }
-    if (index.column() == NameEditCol){
+    if (index.column() == NameEditCol || index.column() == PrefixLogCol){
         returnFlags |= Qt::ItemIsEditable;
+    }
+    if(index.column() == DeleteCol){
+        RegisteredSensorItem * item = getItem(index);
+        if(item && item->childCount() > 0){
+            returnFlags &= ~Qt::ItemIsEnabled;
+        }
     }
 
     return returnFlags;
@@ -176,6 +233,10 @@ bool RegisteredSensorsModel::setData(const QModelIndex &index, const QVariant &v
            switch(index.column()){
            case NameEditCol:
                item->setName(value.toString());
+               emit dataChanged(index, index);
+               return true;
+           case PrefixLogCol:
+               item->setLogFilePrefix(value.toString());
                emit dataChanged(index, index);
                return true;
            case TypeCol:

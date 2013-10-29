@@ -3,6 +3,7 @@
 
 #include <QAbstractTableModel>
 #include "registeredsensoritem.h"
+#include <QIcon>
 
 class RegisteredSensorsModel : public QAbstractTableModel
 {
@@ -16,7 +17,8 @@ public:
         ConfigCol = 4,
         StreamCol = 5,
         RecordCol = 6,
-        DeleteCol = 7
+        PrefixLogCol = 7,
+        DeleteCol = 8
 
     } ColumnDesc;
 
@@ -39,6 +41,9 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
+    void removeSensor(QModelIndex index);
+
+    QList<RegisteredSensorItem *> items();
 private:
     RegisteredSensorItem *getItem(const QModelIndex &index) const;
     int m_nColumn;

@@ -79,6 +79,7 @@ public slots:
     void on_addSensorFlClicked();
     void on_registeredSensorButtonClick(QModelIndex&);
     void on_sensorConfigChanged();
+    void on_registeredSensorClicked(QModelIndex index);
 
     /// Honk and Light
     void on_honkButtonPressed();

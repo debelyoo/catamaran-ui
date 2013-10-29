@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->navModeComboBox->addItem("Automatic");
     ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
 
+    ui->graphNbSpinBox->setValue(3);
+
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
     createExportPanel();
@@ -123,13 +125,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->registeredSensors->setModel(proxyModel);
 
     //ui->registeredSensors->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    ui->registeredSensors->horizontalHeader()->setStretchLastSection(false);
     ui->registeredSensors->horizontalHeader()->setResizeMode(QHeaderView::Fixed);
     ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::ConfigCol, 120);
     ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::StreamCol, 80);
     ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::RecordCol, 80);
+    ui->registeredSensors->horizontalHeader()->resizeSection(RegisteredSensorsModel::DeleteCol, 30);
+    //ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::DeleteCol, QHeaderView::ResizeToContents);
     ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::AddressCol, QHeaderView::Stretch);
     ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::NameEditCol, QHeaderView::Stretch);
     ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::TransfCol, QHeaderView::Stretch);
+    ui->registeredSensors->horizontalHeader()->setSectionResizeMode(RegisteredSensorsModel::PrefixLogCol, QHeaderView::Stretch);
 
     ui->registeredSensors->setAlternatingRowColors(true);
     ui->registeredSensors->setStyleSheet(/*"QTableView::item:hover {background-color: rgb(185, 210, 235);}*/"QTableView{alternate-background-color: #f3f3f3; background-color: #ffffff;}");
@@ -140,6 +146,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->registeredSensors->setItemDelegateForColumn(RegisteredSensorsModel::ConfigCol, delegate);
     ui->registeredSensors->setItemDelegateForColumn(RegisteredSensorsModel::TypeCol, comboDelegate);
     connect(sensorsInputModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_availableSensorsValueChanged()));
+    connect(ui->registeredSensors, SIGNAL(clicked(QModelIndex)), this, SLOT(on_registeredSensorClicked(QModelIndex)));
 
     foreach(CompactRio::NamedAddress as, CompactRio::instance()->availableInputs()){
         SensorInputItem * sensor = new SensorInputItem(QString::number(as.address), as.name);
@@ -344,18 +351,18 @@ void MainWindow::on_typeValueChanged(QString typeName, int rowIndex)
     const SensorType *type = SensorTypeManager::instance()->type(typeName);
     Sensor* s = sensorConfig->getSensors()[rowIndex];
     s->setType(type);
-    QString msg = "Type ["+ QString::number(rowIndex) +"] changed: " + type->getName() + "\n";
+    QString msg = "Type ["+ QString::number(rowIndex) +"] changed: " + type->name() + "\n";
     addStatusText(msg);
     changeSaveBtnColor("red");
 }
 
 void MainWindow::on_displayValueChanged(int displayInd, int rowIndex)
 {
-    Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setDisplay(displayInd);
-    QString msg = "Display ["+ QString::number(rowIndex) +"] changed: " + sensorConfig->getDisplayValues().value(displayInd) + "\n";
-    addStatusText(msg);
-    changeSaveBtnColor("red");
+//    Sensor* s = sensorConfig->getSensors()[rowIndex];
+//    s->setDisplay(displayInd);
+//    QString msg = "Display ["+ QString::number(rowIndex) +"] changed: " + sensorConfig->getDisplayValues().value(displayInd) + "\n";
+//    addStatusText(msg);
+//    changeSaveBtnColor("red");
 }
 
 void MainWindow::on_recordValueChanged(bool rec, int rowIndex)
@@ -407,7 +414,16 @@ void MainWindow::on_addSensorFlClicked()
         SensorInputItem *sensor = static_cast<SensorInputItem *>(indexes[i].internalPointer());
         if(sensor && sensor->enabled()){
             sensor->disable();
-            m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor));
+            RegisteredSensorItem *parent = NULL;
+            if(sensor->parent()){
+                for(int i=0;i<m_registeredSensorsModel->items().count(); ++i){
+                    if(m_registeredSensorsModel->items().at(i)->sensorInpurItem() == sensor->parent()){
+                        parent = m_registeredSensorsModel->items().at(i);
+                        break;
+                    }
+                }
+            }
+            m_registeredSensorsModel->addSensor(new RegisteredSensorItem(sensor), parent);
             ui->registeredSensors->sortByColumn(0);
         }
     }
@@ -424,6 +440,15 @@ void MainWindow::on_registeredSensorButtonClick(QModelIndex &index)
 void MainWindow::on_sensorConfigChanged()
 {
     compactRio->setSensorsConfig();
+}
+
+void MainWindow::on_registeredSensorClicked(QModelIndex index)
+{
+    if(index.column() == RegisteredSensorsModel::DeleteCol && (index.flags() & Qt::ItemIsEnabled)){
+        QSortFilterProxyModel * proxyModel = static_cast<QSortFilterProxyModel *>(ui->registeredSensors->model());
+        QModelIndex realIndex = proxyModel->mapToSource(index);
+        m_registeredSensorsModel->removeSensor(realIndex);
+    }
 }
 
 void MainWindow::on_honkButtonPressed()
@@ -657,6 +682,10 @@ void MainWindow::on_newConnection()
 {
     compactRio->setFpgaCounterSamplingTime(2250);
     compactRio->setSabertoothState(CRIO::ON);
+    compactRio->getPRismeSyncTimestamp();
+    for(quint8 i=0;i<8;++i){
+        compactRio->setPRismeSamplingRate(10, i);
+    }
 }
 
 /**
@@ -927,7 +956,9 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     {
         typeBox->addItem(s);
     }
-    typeBox->setCurrentIndex(s->type()->getId());
+    if(s->type()){
+        typeBox->setCurrentText(s->type()->name());
+    }
     QWidget* typeBoxContainer = createSpacedWidget(typeBox, 0, 10);
     InRowComboBox* displayBox = new InRowComboBox(this, sensorIndex);
     QMap<int, QString> displayGraphs = sensorConfig->getDisplayValues();
@@ -935,7 +966,8 @@ void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor*
     {
         displayBox->addItem(displayGraphs.value(i));
     }
-    displayBox->setCurrentIndex(s->display());
+//    displayBox->setCurrentIndex(s->display());
+    displayBox->setCurrentIndex(0);
     QWidget* displayBoxContainer = createSpacedWidget(displayBox, 0, 10);
     InRowCheckBox* recordCB = new InRowCheckBox(this, sensorIndex);
     recordCB->setChecked(s->record());
@@ -993,8 +1025,9 @@ void MainWindow::createPlotsPanel()
     QVBoxLayout *layout = new QVBoxLayout;
     viewport->setLayout(layout);
     scrollArea->setObjectName("scrollAreaPlotsPanel");
-    int nbPlots = sensorConfig->getDisplayValues().size();
-    ui->graphNbSpinBox->setValue(nbPlots);
+    //int nbPlots = sensorConfig->getDisplayValues().size();
+    int nbPlots = ui->graphNbSpinBox->value();
+    //ui->graphNbSpinBox->setValue(nbPlots);
     // Need to use fixed sizes, because container is expandable, cannot use ui->tabWidget->width()
     int plotHeight = 200;
     int plotWidth = 1200;
@@ -1057,10 +1090,10 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
     QVBoxLayout *layout = new QVBoxLayout;
     viewport->setLayout(layout);
 
-    QList<Sensor*> sensorsToPlot = sensorConfig->getSensorsForPlot(plotIndex+1); // plotIndex + 1 because index 0 is for "NO" plot
-    if (sensorsToPlot.length() > 0)
+    //QList<Sensor*> sensorsToPlot = sensorConfig->getSensorsForPlot(plotIndex+1); // plotIndex + 1 because index 0 is for "NO" plot
+    if (true/*sensorsToPlot.length() > 0*/)
     {
-        DataPlot* dataPlot = new DataPlot(this, sensorsToPlot);
+        DataPlot* dataPlot = new DataPlot(this, QList<Sensor*>(), plotIndex+1);
         layout->addWidget(dataPlot);
         dataPlot->setFixedHeight(geometry.height());
         dataPlot->setMinimumWidth(geometry.width());

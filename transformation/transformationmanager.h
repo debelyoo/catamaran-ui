@@ -21,6 +21,7 @@ public:
     int load(QString path = "");
     bool unload(QString &name);
     int unloadAll();
+    bool addTransformation(TransformationBaseClass * tr);
 
 private:
     TransformationManager();

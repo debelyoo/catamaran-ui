@@ -51,7 +51,10 @@ SOURCES += main.cpp\
     util/database/dbTable.cpp \
     communication/httpRequester.cpp \
     communication/dataExporter.cpp \
-    model/mission.cpp
+    model/mission.cpp \
+    transformation/PRisme/prismemessage.cpp \
+    transformation/PRisme/prisme.cpp \
+    gui/addtoplotwidget.cpp
 
 HEADERS += sensorConfig.h\
     util/fileHelper.h\
@@ -94,10 +97,14 @@ HEADERS += sensorConfig.h\
     util/database/dbTable.h \
     communication/httpRequester.h \
     communication/dataExporter.h \
-    model/mission.h
+    model/mission.h \
+    transformation/PRisme/prismemessage.h \
+    transformation/PRisme/prisme.h \
+    gui/addtoplotwidget.h
 
 FORMS    += mainwindow.ui \
-    gui/sensortransformationconfig.ui
+    gui/sensortransformationconfig.ui \
+    gui/addtoplotwidget.ui
 
 RESOURCES += \
     images.qrc

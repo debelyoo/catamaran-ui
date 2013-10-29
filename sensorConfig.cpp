@@ -24,7 +24,9 @@ void SensorConfig::addSensor(Sensor* s)
 
 Sensor *SensorConfig::removeSensor(const QString &addr)
 {
-    if(Sensor *s = m_sensors[addr]){
+    if(m_sensors.contains(addr)){
+        Sensor *s = m_sensors[addr];
+        removeSensorFromPlots(s);
         m_sensors.remove(addr);
         //delete s;
         return s;
@@ -60,8 +62,8 @@ QList<Sensor*> SensorConfig::getSensorsForPlot(int plotIndex) const
     QList<Sensor*> list = m_sensors.values();
     QMutableListIterator<Sensor *> i(list);
     while (i.hasNext()) {
-        if (i.next()->display() != plotIndex)
-            i.remove();
+//        if (i.next()->display() != plotIndex)
+//            i.remove();
     }
     return list;
 }
@@ -103,8 +105,7 @@ QString SensorConfig::getSensorsAsTabSeparatedText() const
     foreach (Sensor* s, list) {
         res += s->address()+"\t";
         res += s->name()+"\t";
-        res += QString::number(s->type()->getId())+"\t";
-        res += m_displayGraphs.value(s->display())+"\t";
+//        res += m_displayGraphs.value(s->display())+"\t";
         res += QString::number(s->record())+"\t";
         res += QString::number(s->stream())+"\t";
         res += s->logFilePrefix()+"\n";
@@ -162,6 +163,55 @@ void SensorConfig::updateDisplayGraphList(int nb)
     {
         m_displayGraphs.insert(i+1, "G"+QString::number(i));
     }
+}
+
+bool SensorConfig::addPlot(int plotIndex)
+{
+    if(!m_sensorForPlotIndexMap.contains(plotIndex)){
+        m_sensorForPlotIndexMap.insert(plotIndex, QList<Sensor *>());
+        return true;
+    }
+    return false;
+}
+
+bool SensorConfig::removePlot(int plotIndex)
+{
+    if(m_sensorForPlotIndexMap.contains(plotIndex)){
+        m_sensorForPlotIndexMap.remove(plotIndex);
+        return true;
+    }
+    return false;
+}
+
+const QList<Sensor *> &SensorConfig::sensorForPlot(int plotIndex)
+{
+    return m_sensorForPlotIndexMap[plotIndex];
+}
+
+bool SensorConfig::addSensorToPlot(int plotIndex, Sensor *sensor)
+{
+    if(!m_sensorForPlotIndexMap[plotIndex].contains(sensor)){
+        m_sensorForPlotIndexMap[plotIndex].append(sensor);
+        return true;
+    }
+    return false;
+}
+
+bool SensorConfig::removeSensorFromPlot(int plotIndex, Sensor *sensor)
+{
+    return m_sensorForPlotIndexMap[plotIndex].removeOne(sensor);
+}
+
+QList<int> SensorConfig::removeSensorFromPlots(Sensor *sensor)
+{
+    QList<int> c;
+    foreach(int i, m_sensorForPlotIndexMap.keys()){
+        QList<Sensor *> sl = m_sensorForPlotIndexMap[i];
+        if(sl.removeOne(sensor)){
+            c.append(i);
+        }
+    }
+    return c;
 }
 
 /**

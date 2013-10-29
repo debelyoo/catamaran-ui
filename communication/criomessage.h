@@ -14,6 +14,8 @@ public:
     CRIO::MessageType type() const;
     bool isValid() const;
     CRIO::Object *content();
+
+    static void reset();
 protected:
     CRioCommand *createCommand(CRioDataStream &ds);
     CRioData *createData(CRioDataStream &ds);

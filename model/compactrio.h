@@ -1,6 +1,7 @@
 #ifndef COMPACTRIO_H
 #define COMPACTRIO_H
 
+#include "transformation/transformationbaseclass.h"
 #include "transformation/abstractcriostatesholder.h"
 #include "communication/server.h"
 #include "util/criobytearray.h"
@@ -76,6 +77,10 @@ public:
     bool set16bMemory(const CRIO::Memory::CMD_ADDR_16B_BLOC &addr, const quint16 &value);
 
     // PT100 config
+
+    // PRisme config
+    bool setPRismeSamplingRate(quint8 n100ms, quint8 portAddress);
+    bool getPRismeSyncTimestamp();
 
     // FGPA counter config
     bool setFpgaCounterSamplingTime(const quint16 &ms);

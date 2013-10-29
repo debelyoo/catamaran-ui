@@ -104,6 +104,11 @@ int TransformationManager::unloadAll()
     return count;
 }
 
+bool TransformationManager::addTransformation(TransformationBaseClass *tr)
+{
+    m_transformations.insert(tr->getTransformationDefinition().name, tr);
+}
+
 TransformationManager::TransformationManager()
 {
 }

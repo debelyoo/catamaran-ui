@@ -55,6 +55,9 @@ void MessageConsumer::on_dataReceived()
                 default:
                     break;
                 }
+            }else{
+                qDebug() << "Message Invalide : " << crioDataStream->device()->readAll().toHex();
+                CRioMessage::reset();
             }
         }
         consuming = false;
@@ -96,7 +99,7 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
     // End of temporary modification for 09.10.2013
 
     CRioData dataObj = transformDataObject(idataObj);
-	CompactRio::instance()->feedWithData(dataObj);
+    CompactRio::instance()->feedWithData(dataObj);
 
     if (sensorConfig->containsSensor(dataObj.address))
     {
@@ -126,14 +129,14 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
                 // dataObj->values contains only one sensor value
                 double value = dataObj.data().at(0).toDouble();
                 // save it to database
-                dbManager->insertSensorValue(dataObj.address, s->type()->getName(), dataObj.timestamp.unixTimestamp, value);
+                dbManager->insertSensorValue(dataObj.address, s->type()->name(), dataObj.timestamp.unixTimestamp, value);
                 // log it in log file
                 QString log = createLogText(dataObj);
                 writeInLogFile(s, log);
             } else {
                 handeled = false;
                 // unknown sensor type
-                qDebug() << "[MessageConsumer] Unknown sensor type (addr="<<dataObj.address<<") !\n";
+                //qDebug() << "[MessageConsumer] Unknown sensor type (addr="<<dataObj.address<<") !";
             }
         }
 
@@ -147,7 +150,7 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
             emit messageParsed(outputStr);
         }
     }else{
-        qDebug() << "[MessageConsumer] Sensor not found in config !";
+        qDebug() << "[MessageConsumer] Sensor " << dataObj.address << " not found in config !";
     }
 }
 

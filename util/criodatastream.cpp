@@ -37,8 +37,8 @@ CRioDataStream &CRioDataStream::operator >>(CRIO::PolymorphicData &p)
     case DataType::String:
     {
         char *a = new char[nb];
-        this->readBytes(a, nb);
-        p.value = QVariant::fromValue(QString(a));
+        this->readRawData(a, nb);
+        p.value = QVariant::fromValue(QByteArray(a, nb));
         delete a;
     }
         break;
@@ -88,9 +88,6 @@ CRioDataStream &CRioDataStream::operator >>(CRIO::PolymorphicData &p)
         break;
     case DataType::LightAddrConf:
     {
-//        double a;
-//        (*this) >> a;
-//        p.value = QVariant::fromValue(a);
         this->skipRawData(nb);
     }
         break;
