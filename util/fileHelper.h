@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QMap>
 #include "sensorConfig.h"
+#include "util/coordinateHelper.h"
 
 /**
  * @brief The FileHelper class - Singleton
@@ -20,6 +21,7 @@ class FileHelper
         bool loadConfigFile();
         void createLogFiles();
         bool loadSensorTypesFile();
+        QList<QPointF> loadWaypointsFile(QString fileName);
 
     private:
         FileHelper() {

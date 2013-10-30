@@ -32,7 +32,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void sendEngineCommand();
-    void drawWayPointOnMap(QPoint);
+    void drawWayPointOnMap(QPointF, bool);
     
 public slots:
     void on_navSysStart();
@@ -91,6 +91,7 @@ public slots:
     void on_nsValueChange();
     void on_getNSCongifBtnClick();
     void on_defaultNSConfigClick();
+    void on_loadWPBtnClicked();
 
     /// CompactRio State changed
     void on_crioPositionChanged();
@@ -159,6 +160,8 @@ private:
     void createExportPanel();
     void displayDataForMission(QString missionName);
     void updateMissionList();
+    /// NS panel
+    void updateWPFileList();
 
     RegisteredSensorsModel *m_registeredSensorsModel;
 

@@ -44,7 +44,7 @@ bool MouseClickHandler::eventFilter(QObject *obj, QEvent *event)
             {
                 // right click on map
                 // draw way point on map
-                parent->drawWayPointOnMap(mouseEvent->pos());
+                parent->drawWayPointOnMap(mouseEvent->posF(), true);
             }
         }
         else

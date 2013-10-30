@@ -114,6 +114,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->c4, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
     connect(ui->l0, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
     connect(ui->l1, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
+    connect(ui->loadWPFileBtn, SIGNAL(clicked()), this, SLOT(on_loadWPBtnClicked()));
+    updateWPFileList();
 
     // Sensor transformation view
     SensorInputsModel *sensorsInputModel = new SensorInputsModel(this);
@@ -513,6 +515,16 @@ void MainWindow::on_defaultNSConfigClick()
     ui->l1->setValue(0.5);
 }
 
+void MainWindow::on_loadWPBtnClicked()
+{
+    QString fileName = ui->listViewWPFiles->selectionModel()->selectedIndexes().first().data().toString();
+    QList<QPointF> waypoints = fileHelper->loadWaypointsFile(fileName);
+    foreach (QPointF wp, waypoints) {
+        drawWayPointOnMap(wp, false);
+    }
+    addStatusText("Waypoints ["+ QString::number(waypoints.length()) +"] have been loaded ! \n");
+}
+
 void MainWindow::on_crioPositionChanged()
 {
     QPointF p = compactRio->position();
@@ -711,6 +723,8 @@ void MainWindow::on_tabChanged(int tabIndex)
 {
     if (ui->tabWidget->widget(tabIndex)->objectName() == "export_tab") {
         updateMissionList();
+    } else if(ui->tabWidget->widget(tabIndex)->objectName() == "navsys_tab") {
+        updateWPFileList();
     }
 }
 
@@ -739,16 +753,25 @@ void MainWindow::drawPointOnMap(double x, double y)
  * Draw a way point on map
  * @brief MainWindow::drawWayPointOnMap
  * @param newPoint The new way point to dram on map
+ * @param hasClicked Indicates if the user right-clicked on map to draw the point (in manual mode, points can not be drawn with right click)
  */
-void MainWindow::drawWayPointOnMap(QPoint newPoint)
+void MainWindow::drawWayPointOnMap(QPointF newPoint, bool hasClicked)
 {
-    if (ui->navModeComboBox->currentIndex() == 1)
+    if (!hasClicked || ui->navModeComboBox->currentIndex() == 1)
     {
+        //qDebug() << "drawWayPointOnMap()" << newPoint << " - length: "<< wayPoints.length();
         QPoint previousPoint;
         if (!wayPoints.empty())
             previousPoint = ((PointOnMap)wayPoints.last()).p;
-        QPointF pointFloat = ui->graphicsView->mapToScene(newPoint);
-        QPoint pointOnMap = pointFloat.toPoint();
+        QPointF pointFloat;
+        QPoint pointOnMap;
+        if (hasClicked) {
+            // if user clicked, point needs to be mapped to scene
+            pointFloat = ui->graphicsView->mapToScene(newPoint.toPoint());
+        } else {
+            pointFloat = newPoint;
+        }
+        pointOnMap = pointFloat.toPoint();
         PointOnMap pom;
         pom.p = pointOnMap;
         double rad = 1;
@@ -1269,4 +1292,23 @@ void MainWindow::updateMissionList()
     ui->listViewMission->setCurrentIndex(model->index(0,0));
     // load data for mission
     displayDataForMission(model->index(0,0).data().toString());
+}
+
+/**
+ * Update the list of waypoint files
+ * @brief MainWindow::updateWPFileList
+ */
+void MainWindow::updateWPFileList()
+{
+    QStandardItemModel* model = new QStandardItemModel;
+    QString folderPath = QDir::currentPath() + "/waypoints";
+    QDir myDir(folderPath);
+    QFileInfoList filesList = myDir.entryInfoList(QStringList("*"));
+    foreach (QFileInfo fi, filesList) {
+        if (fi.isFile()) {
+            model->appendRow(new QStandardItem(fi.fileName()));
+        }
+    }
+    ui->listViewWPFiles->setModel(model);
+    ui->listViewWPFiles->setCurrentIndex(model->index(0,0));
 }

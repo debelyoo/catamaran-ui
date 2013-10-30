@@ -31,7 +31,7 @@ void DataExporter::sendMission()
 {
     QPair<int, QJsonDocument> jsonDataWithCode = dbManager->getMissionAsJSON(tempMissionName); // get mission and sensors associated
     if (jsonDataWithCode.first != 0) {
-        emit displayInGui("[ERROR] Could not export data. Check debug console for more info.");
+        emit displayInGui("[ERROR] Could not export data. Check debug console for more info.\n");
     } else {
         httpRequester->sendPostRequest(QString("/portal/api/mission"), jsonDataWithCode.second);
         //qDebug() << "Mission [" << tempMissionName << "] has been sent to server !";

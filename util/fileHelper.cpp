@@ -166,6 +166,36 @@ bool FileHelper::loadSensorTypesFile()
     return res;
 }
 
+QList<QPointF> FileHelper::loadWaypointsFile(QString fileName)
+{
+    QList<QPointF> waypoints;
+    QString filePath = QDir::currentPath() + "/waypoints/"+ fileName;
+    QFile file(filePath);
+    if(!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::information(0, "error", file.errorString() + " ["+fileName+"]");
+    }
+
+    QTextStream in(&file);
+
+    int count = 0;
+    while(!in.atEnd()) {
+        QString line = in.readLine();
+        QStringList fields = line.split("\t"); // separated by tab
+        if (fields.at(0) != "")
+        {
+            // convert to CH1903 coordinates (east, north, h)
+            QVector<double> swissCoordinates = CoordinateHelper::instance()->WGS84toLV03(fields.at(0).toDouble(), fields.at(1).toDouble(), 0.0);
+            // get x,y position for map in UI
+            QPointF mapPosition = CoordinateHelper::instance()->LV03toUIMap(swissCoordinates[0], swissCoordinates[1]);
+            waypoints.append(mapPosition);
+        }
+        count++;
+    }
+
+    file.close();
+    return waypoints;
+}
+
 /**
  * Get the name of the log file. Returns existing filename if file with same prefix already exists
  * @brief FileHelper::getLogFileName
