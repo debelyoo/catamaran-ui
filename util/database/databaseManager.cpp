@@ -50,6 +50,12 @@ void DatabaseManager::createNecessaryTables()
     cols.append(DbColumn("value", SQLite::REAL));
     DbTable deviceLogTable = DbTable("sensorlog", cols);
     createTable(TableList::SENSOR_LOG, deviceLogTable);
+    // create sensorconfig table
+    cols.clear();
+    cols.append(DbColumn("mission_id", SQLite::INTEGER));
+    cols.append(DbColumn("config_blob", SQLite::BLOB));
+    DbTable sensorConfigTable = DbTable("sensorconfig", cols);
+    createTable(TableList::SENSOR_CONFIG, sensorConfigTable);
 }
 
 bool DatabaseManager::insertRecord(DbTable table, QList<QVariant> values)
@@ -117,6 +123,21 @@ bool DatabaseManager::insertGpsPoint(qint64 unixTs, double lat, double lon, doub
     return res;
 }
 
+bool DatabaseManager::insertSensorConfigBlob(QByteArray blob)
+{
+    bool res;
+    qint64 missionId = 0; // TODO - change fix mission id
+    // remove blob record if it already exists for this mission
+    removeSensorConfigBlobForMission(missionId);
+    // insert new blob
+    DbTable table = tables[TableList::SENSOR_CONFIG];
+    QList<QVariant> values = QList<QVariant>();
+    values.append(missionId);
+    values.append(blob);
+    res = insertRecord(table, values);
+    return res;
+}
+
 /**
  * Create a table in SQLite database
  * @brief DatabaseManager::createTable
@@ -133,7 +154,7 @@ bool DatabaseManager::createTable(TableList::Tables tableId, DbTable table)
         if (query.exec(queryStr)) {
             tables.insert(tableId, table);
             res = true;
-            qDebug() << "table creation succeeded ! "+ table.getName();
+            //qDebug() << "table creation succeeded ! "+ table.getName();
         } else {
             res = false;
             qDebug() << "table creation failed !" << query.lastError();
@@ -370,7 +391,7 @@ QPair<int, QJsonDocument> DatabaseManager::getMissionAsJSON(QString missionName)
                     return QPair<int, QJsonDocument>(1, QJsonDocument());
                 }
                 QList<Sensor*> sensors = res.second;
-                sensors.append(SensorConfig::instance()->getSensor("48")); // add GPS sensor to list
+                //sensors.append(SensorConfig::instance()->getSensor("48")); // add GPS sensor to list
                 foreach (Sensor* s, sensors) {
                     QJsonObject jsDev;
                     jsDev.insert("address", s->address());
@@ -517,9 +538,54 @@ QPair<int, QList<Sensor*> > DatabaseManager::getSensorsForMission(QString missio
      return QPair<int, QList<Sensor*> >(0, sensors);
 }
 
+QByteArray DatabaseManager::getSensorConfigBlob(qint64 mId)
+{
+    QByteArray blob;
+    /*qint64 missionId;
+    if (mId == 0) {
+        missionId = currentMissionId;
+    } else {
+        missionId = mId;
+    }*/
+    if (db.open()) {
+         QSqlQuery query(db);
+         QString sqlQuery = "SELECT config_blob FROM sensorconfig WHERE mission_id = " + QString::number(mId);
+         if (query.exec(sqlQuery)) {
+             while( query.next() )
+             {
+                blob = query.value(0).toByteArray();
+             }
+         } else {
+             qDebug() << "[getSensorConfigBlob()] SELECT failed !" << query.lastError();
+         }
+    } else {
+        qDebug() << "DB not open !";
+    }
+    db.close();
+    return blob;
+}
+
 QString DatabaseManager::getCurrentMissionName()
 {
     return currentMissionName;
+}
+
+bool DatabaseManager::removeSensorConfigBlobForMission(qint64 missionId)
+{
+    bool res = false;
+    DbTable sensorConfigTable = tables[TableList::SENSOR_CONFIG];
+    QString sqlQueryDelete = "DELETE FROM "+ sensorConfigTable.getName() +" WHERE mission_id = "+ QString::number(missionId)+";";
+    if (db.open()) {
+        QSqlQuery query(db);
+        res = query.exec(sqlQueryDelete);
+        if (!res) {
+            qDebug() << "delete failed !" << query.lastError();
+        }
+    } else {
+        qDebug() << "DB not open !";
+    }
+    db.close();
+    return res;
 }
 
 /// TEST ONLY

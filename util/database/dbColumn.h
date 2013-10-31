@@ -8,7 +8,8 @@ namespace SQLite {
     typedef enum {
         INTEGER = 0,
         REAL = 1,
-        TEXT = 2
+        TEXT = 2,
+        BLOB = 3
     } DataTypes;
 }
 

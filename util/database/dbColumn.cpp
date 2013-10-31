@@ -29,6 +29,9 @@ QString DbColumn::getTypeAsString()
     case SQLite::TEXT:
         str = "TEXT";
         break;
+    case SQLite::BLOB:
+        str = "BLOB";
+        break;
     default:
         str = "TEXT";
         break;

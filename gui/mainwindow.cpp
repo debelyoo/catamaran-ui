@@ -187,10 +187,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->graphicsView->scene()->addItem(m_catPolygon);
     m_catPolygon->setZValue(999999999);
 
-    QByteArray ba = QByteArray::fromHex("000000070000000e0043006f006d00700061007300730000001800470050005300200050006f0073006900740069006f006e00000012004700500053002000530070006500650064000000140052006100640069006f006d00650074006500720000001600540065006d007000650072006100740075007200650000001c00570069006e006400200044006900720065006300740069006f006e0000001400570069006e00640020005300700065006500640000000400000004003600350000001600530065007200690061006c0020004d003000500031010000000e0055006e006b006e006f0077006e0001000000260050005200690073006d0065002000440061007400610020004400650063006f0064006500720000000000000000000000000000000e00360035002e0041004400430031000000080041004400430031010000001400570069006e0064002000530070006500650064010100000006005f005f005f000000000000000000000000000000040039003600000014005000540031003000300020004d003000500030010000001600540065006d007000650072006100740075007200650101000000200050005400310030003000200063006f006e00760065007200740069006f006e00000000000000000000000000000004003900370000001c005000540031003000300020004d003000500031005f003100300030010000001400570069006e00640020005300700065006500640101000000200050005400310030003000200063006f006e00760065007200740069006f006e00000000000000000000000000000003000000000000000000000001000000000000000200000000");
-    QDataStream ds(&ba, QIODevice::ReadWrite);
-    loadProfile(ds);
-
 }
 
 MainWindow::~MainWindow()
@@ -480,12 +476,22 @@ void MainWindow::on_saveConfig()
     QDataStream ds(&ba, QIODevice::ReadWrite);
     ds << *SensorTypeManager::instance();
     ds << *SensorConfig::instance();
-    qDebug() << "Serialization test : ba ="<<ba.toHex();
+    //qDebug() << "Serialization test : ba ="<<ba.toHex();
+    bool b = DatabaseManager::instance()->insertSensorConfigBlob(ba.toHex());
+    if (b) {
+        addStatusText("Config has been saved !\n");
+    } else {
+        addStatusText("[WARNING] Config could not be saved !\n");
+    }
 }
 
 void MainWindow::on_loadConfig()
 {
-    //loadProfile(ds);
+    //QByteArray ba = QByteArray::fromHex("000000070000000e0043006f006d00700061007300730000001800470050005300200050006f0073006900740069006f006e00000012004700500053002000530070006500650064000000140052006100640069006f006d00650074006500720000001600540065006d007000650072006100740075007200650000001c00570069006e006400200044006900720065006300740069006f006e0000001400570069006e00640020005300700065006500640000000400000004003600350000001600530065007200690061006c0020004d003000500031010000000e0055006e006b006e006f0077006e0001000000260050005200690073006d0065002000440061007400610020004400650063006f0064006500720000000000000000000000000000000e00360035002e0041004400430031000000080041004400430031010000001400570069006e0064002000530070006500650064010100000006005f005f005f000000000000000000000000000000040039003600000014005000540031003000300020004d003000500030010000001600540065006d007000650072006100740075007200650101000000200050005400310030003000200063006f006e00760065007200740069006f006e00000000000000000000000000000004003900370000001c005000540031003000300020004d003000500031005f003100300030010000001400570069006e00640020005300700065006500640101000000200050005400310030003000200063006f006e00760065007200740069006f006e00000000000000000000000000000003000000000000000000000001000000000000000200000000");
+    QByteArray blob = DatabaseManager::instance()->getSensorConfigBlob(0); // TODO - change fixed mission id
+    QByteArray ba = QByteArray::fromHex(blob);
+    QDataStream ds(&ba, QIODevice::ReadWrite);
+    loadProfile(ds);
 }
 
 void MainWindow::on_engineValueAutoUpdate()
@@ -563,6 +569,20 @@ void MainWindow::on_removeMissionBtnClicked()
     }
     dbManager->removeMission(missionName);
     //qDebug() << "on_removeMissionBtnClicked() - " << missionName << " - "<< b;
+    updateMissionList();
+}
+
+void MainWindow::on_removeAllMissionBtnClicked()
+{
+    //qDebug() << "on_removeAllMissionBtnClicked() " << ui->listViewMission->selectionModel()->model()->rowCount();
+    for ( int i = 0 ; i < ui->listViewMission->model()->rowCount() ; ++i )
+    {
+      QString missionName = ui->listViewMission->model()->index( i, 0 ).data( Qt::DisplayRole ).toString() ;
+      if (missionName != dbManager->getCurrentMissionName()) {
+          // remove all missions except current one
+          dbManager->removeMission(missionName);
+      }
+    }
     updateMissionList();
 }
 
@@ -811,14 +831,14 @@ void MainWindow::loadProfile(QDataStream &ds)
 {
     ds >> *SensorTypeManager::instance();
     ds >> *SensorConfig::instance();
-    qDebug() << "Loaded SensorTypes : ";
+    /*qDebug() << "Loaded SensorTypes : ";
     foreach(const QString &s, SensorTypeManager::instance()->list()){
         qDebug() << "\t" << s;
     }
     qDebug() << "Loaded Sensors : ";
     foreach(const Sensor* s, SensorConfig::instance()->getSensors()){
         qDebug() << "\t" << s->address() << ", " << s->name();
-    }
+    }*/
 
     buildConfigSensorsView();
 }
@@ -1150,6 +1170,7 @@ void MainWindow::createExportPanel()
     connect(ui->listViewMission->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(on_missionSelectedChanged(QItemSelection)));
     connect(ui->exportBtn, SIGNAL(clicked()), this, SLOT(on_exportBtnClicked()));
     connect(ui->removeMissionBtn, SIGNAL(clicked()), this, SLOT(on_removeMissionBtnClicked()));
+    connect(ui->removeAllMissionBtn, SIGNAL(clicked()), this, SLOT(on_removeAllMissionBtnClicked()));
     connect(ui->backendAddressField, SIGNAL(textChanged(QString)), this, SLOT(on_backendAddressValueChanged(QString)));
     connect(httpRequester, SIGNAL(pingRequestDone(int)), this, SLOT(on_pingRequestDone(int)));
     connect(dataExporter, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));

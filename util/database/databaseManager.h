@@ -18,7 +18,8 @@ namespace TableList {
         MISSION = 0,
         DATA_FOR_MISSION = 1,
         GPS_LOG = 2,
-        SENSOR_LOG = 3
+        SENSOR_LOG = 3,
+        SENSOR_CONFIG = 4
     } Tables;
 }
 
@@ -32,6 +33,7 @@ class DatabaseManager
         bool createTable(TableList::Tables tableId, DbTable table);
         bool insertGpsPoint(qint64 unixTs, double lat, double lon, double alt, double heading);
         bool insertSensorValue(QString sensorAddress, QString sensorType, qint64 unixTs, double value);
+        bool insertSensorConfigBlob(QByteArray blob);
         bool insertMission();
         bool removeMission(QString missionName);
         QStandardItemModel* getMissionsAsModel();
@@ -42,6 +44,7 @@ class DatabaseManager
         QPair< QVector<double>, QVector<double> > getData(Sensor* s, int fromTs);
         QList<QJsonObject> getDataAsJSON(QString missionName, QString sensorType, long missionIdOnBackend);
         QPair<int, QJsonDocument> getMissionAsJSON(QString missionName);
+        QByteArray getSensorConfigBlob(qint64 missionId);
 
     private:
         DatabaseManager(){
@@ -68,6 +71,7 @@ class DatabaseManager
         Mission getMission(QString missionName);
         QPair<int, QList<Sensor*> > getSensorsForMission(QString missionName);
         bool insertRecord(DbTable table, QList<QVariant> values);
+        bool removeSensorConfigBlobForMission(qint64 missionId);
 
 };
 
