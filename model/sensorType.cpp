@@ -18,3 +18,9 @@ void SensorType::setName(QString n)
 {
     m_name = n;
 }
+
+
+QDataStream &operator<<(QDataStream &stream, const SensorType &sensorType)
+{
+    stream<<sensorType.name();
+}

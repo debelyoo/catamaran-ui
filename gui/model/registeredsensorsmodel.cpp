@@ -160,6 +160,16 @@ QList<RegisteredSensorItem *> RegisteredSensorsModel::items()
     return m_items;
 }
 
+RegisteredSensorItem *RegisteredSensorsModel::getItem(const QString &address)
+{
+    foreach(RegisteredSensorItem * rsi, m_items){
+        if(rsi->sensor()->address() == address){
+            return rsi;
+        }
+    }
+    return NULL;
+}
+
 RegisteredSensorItem *RegisteredSensorsModel::getItem(const QModelIndex &index) const
 {
     if (index.isValid()) {

@@ -77,3 +77,32 @@ void SensorTypeManager::updateSortedList()
         }
     }
 }
+
+
+QDataStream &operator<<(QDataStream &stream, const SensorTypeManager &a)
+{
+
+    QList<SensorType *> list;
+    foreach(SensorType *st, a.m_types.values()){
+        if(st->name() != "Unknown"){
+            list.append(st);
+        }
+    }
+    stream << list.count();
+    foreach(const SensorType *st, list){
+        stream << *st;
+    }
+    return stream;
+}
+
+QDataStream &operator>>(QDataStream &stream, SensorTypeManager &a)
+{
+    int n;
+    stream >> n;
+    for(int i=0;i<n;++i){
+        QString name;
+        stream >> name;
+        a.createType(name);
+    }
+    return stream;
+}

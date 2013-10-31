@@ -6,13 +6,16 @@
 #include <QList>
 #include "transformation/transformationbaseclass.h"
 #include "sensorConfig.h"
+#include "manager/sensortypemanager.h"
+#include "transformation/transformationmanager.h"
 
+class RegisteredSensorItem;
 class TransformationBaseClass;
 class Sensor
 {
 public:
     Sensor(QString addr = "", QString name = "",
-                    const SensorType* type = 0, int display = 0,
+                    const SensorType* type = 0,
                     bool record = false, bool stream = false,
                     QString logFilePrefix = "", QString currentLogFilename = "", bool isData = true);
 //    explicit Sensor(Sensor *parent, QString addr = "", QString name = "",
@@ -20,6 +23,7 @@ public:
 //                    bool record = false, bool stream = false,
 //                    QString logFilePrefix = "", QString currentLogFilename = "");
 
+    Sensor(QDataStream &ds);
     ~Sensor();
 
     // Getters
@@ -42,10 +46,12 @@ public:
     void setType(const SensorType *type);
     void setStream(bool enable);
     void setRecord(bool enable);
-    void setTransformation(const TransformationBaseClass *tr);
+    void setTransformation(TransformationBaseClass *tr);
     void setLogFilePrefix(const QString &prefix);
     void setCurrentLogFilename(const QString &fn);
 
+    friend QDataStream &operator<< (QDataStream &stream, const Sensor &s);
+    friend class RegisteredSensorItem;
     // Modifiers
 
 protected:
@@ -60,49 +66,15 @@ private:
     const SensorType    *m_type;
     bool                m_record;
     bool                m_stream;
-    const TransformationBaseClass *m_transformation;
+    TransformationBaseClass *m_transformation;
 
 
     QString             m_logFilePrefix;
     QString             m_currentLogFilename;
-    /*
 
-public:
-    explicit Sensor(int addr = 0, QString name = "",
-                    SensorType* type = 0, int display = 0,
-                    bool record = false, bool stream = false,
-                    QString logFilePrefix = "", QString currentLogFilename = "");
-    /// getters
-    int getAddress();
-    QString getName();
-    SensorType* getType();
-    int getDisplay();
-    bool getRecord();
-    bool getStream();
-    QString getLogFilePrefix();
-    QString getCurrentLogFilename();
-
-    /// setters
-    void setAddress(int addr);
-    void setName(QString name);
-    void setType(SensorType* t);
-    void setDisplay(int display);
-    void setRecord(bool b);
-    void setStream(bool b);
-    void setLogFilePrefix(QString prefix);
-    void setCurrentLogFilename(QString fn);
-
-    private:
-        int address;
-        QString name;
-        SensorType* type;
-        int display;
-        bool record;
-        bool stream;
-        QString logFilePrefix;
-        QString currentLogFilename;
-        */
 };
+
+QDataStream &operator<< (QDataStream &stream, const Sensor &s);
 
 Q_DECLARE_METATYPE(Sensor)
 Q_DECLARE_METATYPE(QList<Sensor *>)

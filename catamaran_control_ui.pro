@@ -100,7 +100,8 @@ HEADERS += sensorConfig.h\
     model/mission.h \
     transformation/PRisme/prismemessage.h \
     transformation/PRisme/prisme.h \
-    gui/addtoplotwidget.h
+    gui/addtoplotwidget.h \
+    util/hierarchicalidentifier.h
 
 FORMS    += mainwindow.ui \
     gui/sensortransformationconfig.ui \

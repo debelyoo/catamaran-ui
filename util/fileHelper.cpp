@@ -97,9 +97,9 @@ bool FileHelper::loadConfigFile()
             QString addr = fields.at(0);
             //int sType = QString(fields.at(2)).toInt();
             const SensorType* sType = SensorTypeManager::instance()->type(fields.at(2));
-            int displayInd = sensorConfig->getDisplayIndexForGraphName(fields.at(3));
+            //int displayInd = sensorConfig->getDisplayIndexForGraphName(fields.at(3));
             QString dateStr = QDateTime::currentDateTime().toString("ddMMyyyy_hhmmss");
-            bool record = sensorConfig->qstringToBool(fields.at(4));
+            //bool record = sensorConfig->qstringToBool(fields.at(4));
             QString currentLogFilename = "";
 //            Sensor *s = new Sensor(addr, fields.at(1), sType,
 //                                   displayInd, record,

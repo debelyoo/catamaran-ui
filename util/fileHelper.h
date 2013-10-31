@@ -27,8 +27,9 @@ class FileHelper
         FileHelper() {
             logFolder = "logs";
         }
-        FileHelper(const FileHelper &);
-        FileHelper& operator=(const FileHelper &);
+        Q_DISABLE_COPY(FileHelper)
+        //FileHelper(const FileHelper &);
+        //FileHelper& operator=(const FileHelper &);
 
         static FileHelper* m_Instance;
 

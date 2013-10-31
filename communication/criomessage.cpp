@@ -12,7 +12,7 @@ CRioMessage::CRioMessage(CRioDataStream &ds):
     m_pContent(NULL),
     m_valid(false)
 {
-    if(s_neededBytes <= 0 | s_currentType == CRIO::MESSAGE_TYPE_ERROR){
+    if(s_neededBytes <= 0 | (s_currentType == CRIO::MESSAGE_TYPE_ERROR)){
         if(ds.device()->bytesAvailable() >= 5){
             quint8 messageType;
             ds >> messageType;

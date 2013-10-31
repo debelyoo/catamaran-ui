@@ -20,6 +20,8 @@ public:
     bool updateType(const QString &name);
 
     //int loadFromfile(const QString &path);
+    friend QDataStream &operator>> (QDataStream &stream, SensorTypeManager &a);
+    friend QDataStream &operator<< (QDataStream &stream, const SensorTypeManager &a);
 
 private:
     Q_DISABLE_COPY(SensorTypeManager)
@@ -32,5 +34,8 @@ private:
 
     void updateSortedList();
 };
+
+QDataStream &operator<< (QDataStream &stream, const SensorTypeManager &a);
+QDataStream &operator>> (QDataStream &stream, SensorTypeManager &a);
 
 #endif // SENSORTYPEMANAGER_H

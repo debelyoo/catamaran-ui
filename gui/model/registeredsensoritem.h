@@ -12,6 +12,7 @@ class RegisteredSensorItem
 {
 public:
     RegisteredSensorItem(SensorInputItem *sensorInput);
+    RegisteredSensorItem(SensorInputItem *sensorInput, Sensor *s);
     ~RegisteredSensorItem();
 
     RegisteredSensorItem *parent() const;
@@ -54,5 +55,4 @@ protected:
 
     Sensor *m_model;
 };
-
 #endif // REGISTEREDSENSORITEM_H

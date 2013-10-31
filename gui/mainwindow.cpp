@@ -17,9 +17,13 @@
 #include "communication/criodata.h"
 #include "manager/sensortypemanager.h"
 
+#include "util/hierarchicalidentifier.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    m_sensorInputsModel(NULL),
+    m_registeredSensorsModel(NULL),
     m_catPolygon()
 {
     zoomStep = 10;
@@ -46,6 +50,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
 
     ui->graphNbSpinBox->setValue(3);
+
+    connect(ui->actionSave_config, SIGNAL(triggered()), this, SLOT(on_saveConfig()));
+    connect(ui->actionLoad_configuration, SIGNAL(triggered()), this, SLOT(on_loadConfig()));
 
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
@@ -118,10 +125,10 @@ MainWindow::MainWindow(QWidget *parent) :
     updateWPFileList();
 
     // Sensor transformation view
-    SensorInputsModel *sensorsInputModel = new SensorInputsModel(this);
+    m_sensorInputsModel = new SensorInputsModel(this);
     m_registeredSensorsModel = new RegisteredSensorsModel(this);
     ui->registeredSensors->sortByColumn(0);
-    ui->availableSensorsInput->setModel(sensorsInputModel);
+    ui->availableSensorsInput->setModel(m_sensorInputsModel);
 
     RegisteredSensorsModel::Proxy* proxyModel = new RegisteredSensorsModel::Proxy();
     proxyModel->setSourceModel(m_registeredSensorsModel);
@@ -148,12 +155,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(delegate, SIGNAL(buttonClicked(QModelIndex&)), this, SLOT(on_registeredSensorButtonClick(QModelIndex&)));
     ui->registeredSensors->setItemDelegateForColumn(RegisteredSensorsModel::ConfigCol, delegate);
     ui->registeredSensors->setItemDelegateForColumn(RegisteredSensorsModel::TypeCol, comboDelegate);
-    connect(sensorsInputModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_availableSensorsValueChanged()));
+    connect(m_sensorInputsModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(on_availableSensorsValueChanged()));
     connect(ui->registeredSensors, SIGNAL(clicked(QModelIndex)), this, SLOT(on_registeredSensorClicked(QModelIndex)));
 
     foreach(CompactRio::NamedAddress as, CompactRio::instance()->availableInputs()){
         SensorInputItem * sensor = new SensorInputItem(QString::number(as.address), as.name);
-        sensorsInputModel->addInput(sensor);
+        m_sensorInputsModel->addInput(sensor);
     }
 
     connect(ui->addSensorFromList, SIGNAL(clicked()), this, SLOT(on_addSensorFlClicked()));
@@ -179,6 +186,11 @@ MainWindow::MainWindow(QWidget *parent) :
     m_catPolygon->setBrush(QBrush(Qt::SolidPattern));
     ui->graphicsView->scene()->addItem(m_catPolygon);
     m_catPolygon->setZValue(999999999);
+
+    QByteArray ba = QByteArray::fromHex("000000070000000e0043006f006d00700061007300730000001800470050005300200050006f0073006900740069006f006e00000012004700500053002000530070006500650064000000140052006100640069006f006d00650074006500720000001600540065006d007000650072006100740075007200650000001c00570069006e006400200044006900720065006300740069006f006e0000001400570069006e00640020005300700065006500640000000400000004003600350000001600530065007200690061006c0020004d003000500031010000000e0055006e006b006e006f0077006e0001000000260050005200690073006d0065002000440061007400610020004400650063006f0064006500720000000000000000000000000000000e00360035002e0041004400430031000000080041004400430031010000001400570069006e0064002000530070006500650064010100000006005f005f005f000000000000000000000000000000040039003600000014005000540031003000300020004d003000500030010000001600540065006d007000650072006100740075007200650101000000200050005400310030003000200063006f006e00760065007200740069006f006e00000000000000000000000000000004003900370000001c005000540031003000300020004d003000500031005f003100300030010000001400570069006e00640020005300700065006500640101000000200050005400310030003000200063006f006e00760065007200740069006f006e00000000000000000000000000000003000000000000000000000001000000000000000200000000");
+    QDataStream ds(&ba, QIODevice::ReadWrite);
+    loadProfile(ds);
+
 }
 
 MainWindow::~MainWindow()
@@ -308,91 +320,6 @@ void MainWindow::on_directionValueChanged(int val)
     }
 }
 
-void MainWindow::on_saveConfigClicked()
-{
-    // write config file
-    fileHelper->writeFile("config2.txt", sensorConfig->getSensorsAsTabSeparatedText(), false);
-    fileHelper->createLogFiles();
-    addStatusText("Config saved !\n");
-    changeSaveBtnColor("gray");
-    compactRio->setSensorsConfig();
-    clearPlotsPanel();
-    createPlotsPanel();
-}
-
-void MainWindow::on_addressValueChanged(QString addrStr, int rowIndex)
-{
-    /*
-    Sensor* s = sensorConfig->getSensors()[rowIndex];
-    bool b;
-    int addr = addrStr.toInt(&b);
-    if (b)
-    {
-        s->setAddress(addrStr);
-        QString msg = "Address ["+ QString::number(rowIndex) +"] changed: " + addrStr + "\n";
-        addStatusText(msg);
-    }
-    else
-    {
-        QString msg = "Address: " + addrStr + " - Bad format !\n";
-        addStatusText(msg);
-    }
-    */
-}
-
-void MainWindow::on_nameValueChanged(QString name, int rowIndex)
-{
-    Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setName(name);
-    QString msg = "Name ["+ QString::number(rowIndex) +"] changed: " + name + "\n";
-    addStatusText(msg);
-    changeSaveBtnColor("red");
-}
-
-void MainWindow::on_typeValueChanged(QString typeName, int rowIndex)
-{
-    const SensorType *type = SensorTypeManager::instance()->type(typeName);
-    Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setType(type);
-    QString msg = "Type ["+ QString::number(rowIndex) +"] changed: " + type->name() + "\n";
-    addStatusText(msg);
-    changeSaveBtnColor("red");
-}
-
-void MainWindow::on_displayValueChanged(int displayInd, int rowIndex)
-{
-//    Sensor* s = sensorConfig->getSensors()[rowIndex];
-//    s->setDisplay(displayInd);
-//    QString msg = "Display ["+ QString::number(rowIndex) +"] changed: " + sensorConfig->getDisplayValues().value(displayInd) + "\n";
-//    addStatusText(msg);
-//    changeSaveBtnColor("red");
-}
-
-void MainWindow::on_recordValueChanged(bool rec, int rowIndex)
-{
-    Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setRecord(rec);
-    QString msg = "Record ["+ QString::number(rowIndex) +"] changed: " + QString::number(rec) + "\n";
-    addStatusText(msg);
-    changeSaveBtnColor("red");
-}
-
-void MainWindow::on_streamValueChanged(bool stream, int rowIndex)
-{
-    Sensor* s = sensorConfig->getSensors()[rowIndex];
-    s->setStream(stream);
-    QString msg = "Stream ["+ QString::number(rowIndex) +"] changed: " + QString::number(stream) + "\n";
-    addStatusText(msg);
-    changeSaveBtnColor("red");
-}
-
-void MainWindow::on_filenameValueChanged(QString fn, int rowIndex)
-{
-    QString msg = "Filename ["+ QString::number(rowIndex) +"] changed: " + fn + "\n";
-    addStatusText(msg);
-    changeSaveBtnColor("red");
-}
-
 /**
  * SLOT called when "nb of graphs" value has changed. Update this value in config and redraw addresses config
  * @brief MainWindow::on_graphNbValueChanged
@@ -400,9 +327,7 @@ void MainWindow::on_filenameValueChanged(QString fn, int rowIndex)
  */
 void MainWindow::on_graphNbValueChanged(int nb)
 {
-    sensorConfig->updateDisplayGraphList(nb);
-    clearAddressesConfigPanel();
-    createAddressesConfigPanel();
+    //sensorConfig->updateDisplayGraphList(nb);
 }
 
 void MainWindow::on_availableSensorsValueChanged()
@@ -547,6 +472,20 @@ void MainWindow::on_crioHeadingChanged()
     m_catPolygon->update();
     //QPoint p = ui->graphicsView->sceneRect()
     //ui->graphicsView->update();
+}
+
+void MainWindow::on_saveConfig()
+{
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::ReadWrite);
+    ds << *SensorTypeManager::instance();
+    ds << *SensorConfig::instance();
+    qDebug() << "Serialization test : ba ="<<ba.toHex();
+}
+
+void MainWindow::on_loadConfig()
+{
+    //loadProfile(ds);
 }
 
 void MainWindow::on_engineValueAutoUpdate()
@@ -868,6 +807,22 @@ void MainWindow::setEngineControlSlidersConnection(bool enableConnections)
     }
 }
 
+void MainWindow::loadProfile(QDataStream &ds)
+{
+    ds >> *SensorTypeManager::instance();
+    ds >> *SensorConfig::instance();
+    qDebug() << "Loaded SensorTypes : ";
+    foreach(const QString &s, SensorTypeManager::instance()->list()){
+        qDebug() << "\t" << s;
+    }
+    qDebug() << "Loaded Sensors : ";
+    foreach(const Sensor* s, SensorConfig::instance()->getSensors()){
+        qDebug() << "\t" << s->address() << ", " << s->name();
+    }
+
+    buildConfigSensorsView();
+}
+
 void MainWindow::sendEngineCommand()
 {
     if (!sliderIsMoving)
@@ -892,6 +847,65 @@ void MainWindow::sendRightEngineCommand()
     int val = correctEngineCommandValue(ui->rightSlider->value());
     compactRio->setEngine(CRIO::RIGHT, (qint8) val);
     qDebug() << "sendRightEngineCommand() [" << val << "]";
+}
+
+void MainWindow::buildConfigSensorsView()
+{
+    QList<Sensor *> list = SensorConfig::instance()->getSensors();
+    int i=0;
+    bool ctn = true;
+    while(!list.isEmpty()){
+        ctn = true;
+        int idx = i%list.count();
+        Sensor* s = list.at(idx);
+        SensorAddress sa(s->address());
+        SensorInputItem *si = m_sensorInputsModel->getItem(sa);
+        if(s->isData()){
+            if(!si){
+//                // The sensorInputItem does not exist for this sensor, so we create it
+//                // We search for its parent;
+//                if(sa.hasParent()){
+//                    SensorInputItem *sip = m_sensorInputsModel->getItem(sa.parent());
+//                    if(sip){
+//                        si = new SensorInputItem(sa.id());
+//                        sip->addChild(si);
+//                    }else{
+//                        ctn = false;
+//                    }
+//                }else{
+                    ctn = false;
+//                }
+            }
+            // If si exist or created
+            if(ctn){
+                RegisteredSensorItem *rsi = m_registeredSensorsModel->getItem(sa);
+                if(rsi){
+                    // The RegisteredSensorItem already exist : so ew can remove the sensor from the list
+                    list.removeAt(idx);
+                }else{
+                    // We try to create the rsi
+                    if(sa.hasParent()){
+                        RegisteredSensorItem *rsip = m_registeredSensorsModel->getItem(sa.parent());
+                        if(rsip){
+                            rsi = new RegisteredSensorItem(si, s);
+                            m_registeredSensorsModel->addSensor(rsi, rsip);
+                        }else{
+                            ctn = false;
+                        }
+                    }else{
+                        rsi = new RegisteredSensorItem(si, s);
+                        m_registeredSensorsModel->addSensor(rsi);
+                    }
+                }
+            }
+            if(!ctn){
+                ++i;
+            }
+        }else{
+            list.removeAt(idx);
+        }
+    }
+    ui->registeredSensors->sortByColumn(0);
 }
 
 /**
@@ -968,66 +982,6 @@ QWidget* MainWindow::createSpacedWidget(QWidget *w, int spaceBefore, int spaceAf
     if (spaceAfter != 0)
         layout->addSpacerItem(spacerAfter);
     return container;
-}
-
-/**
- * Create the fields on a row for an address (sensor)
- * @brief MainWindow::createAddressFormRow
- * @param layout
- * @param rowIndex
- * @param s The sensor at this address
- */
-void MainWindow::createAddressFormRow(QGridLayout* layout, int rowIndex, Sensor* s)
-{
-    int sensorIndex = rowIndex - 1;
-    InRowLineEdit* addressField = new InRowLineEdit(this, sensorIndex);
-    addressField->setText(s->address());
-    addressField->setFixedWidth(30);
-    addressField->setEnabled(false);
-    QWidget* addressFieldContainer = createSpacedWidget(addressField, 0, 30);
-    InRowLineEdit* nameField = new InRowLineEdit(this, sensorIndex);
-    nameField->setText(QString(s->name()));
-    InRowComboBox* typeBox = new InRowComboBox(this, sensorIndex);
-    foreach(QString s, SensorTypeManager::instance()->list())
-    {
-        typeBox->addItem(s);
-    }
-    if(s->type()){
-        typeBox->setCurrentText(s->type()->name());
-    }
-    QWidget* typeBoxContainer = createSpacedWidget(typeBox, 0, 10);
-    InRowComboBox* displayBox = new InRowComboBox(this, sensorIndex);
-    QMap<int, QString> displayGraphs = sensorConfig->getDisplayValues();
-    for (int i=0; i < displayGraphs.size(); i++)
-    {
-        displayBox->addItem(displayGraphs.value(i));
-    }
-//    displayBox->setCurrentIndex(s->display());
-    displayBox->setCurrentIndex(0);
-    QWidget* displayBoxContainer = createSpacedWidget(displayBox, 0, 10);
-    InRowCheckBox* recordCB = new InRowCheckBox(this, sensorIndex);
-    recordCB->setChecked(s->record());
-    QWidget* recordCBContainer = createSpacedWidget(recordCB, 10, 0);
-    InRowCheckBox* streamCB = new InRowCheckBox(this, sensorIndex);
-    streamCB->setChecked(s->stream());
-    QWidget* streamCBContainer = createSpacedWidget(streamCB, 10, 0);
-    InRowLineEdit* filenameField = new InRowLineEdit(this, sensorIndex);
-    filenameField->setText(s->logFilePrefix());
-    layout->addWidget(addressFieldContainer, rowIndex, 0);
-    layout->addWidget(nameField, rowIndex, 1);
-    layout->addWidget(typeBoxContainer, rowIndex, 2);
-    layout->addWidget(displayBoxContainer, rowIndex, 3);
-    layout->addWidget(recordCBContainer, rowIndex, 4);
-    layout->addWidget(streamCBContainer, rowIndex, 5);
-    layout->addWidget(filenameField, rowIndex, 6);
-    /// handle value changes
-    connect(addressField, SIGNAL(textChanged(QString, int)), this, SLOT(on_addressValueChanged(QString, int)));
-    connect(nameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_nameValueChanged(QString, int)));
-    connect(typeBox, SIGNAL(valueChanged(QString,int)), this, SLOT(on_typeValueChanged(QString, int)));
-    connect(displayBox, SIGNAL(valueChanged(int,int)), this, SLOT(on_displayValueChanged(int,int)));
-    connect(recordCB, SIGNAL(clicked(bool,int)), this, SLOT(on_recordValueChanged(bool,int)));
-    connect(streamCB, SIGNAL(clicked(bool,int)), this, SLOT(on_streamValueChanged(bool,int)));
-    connect(filenameField, SIGNAL(textChanged(QString, int)), this, SLOT(on_filenameValueChanged(QString, int)));
 }
 
 /**
@@ -1129,7 +1083,7 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
     //QList<Sensor*> sensorsToPlot = sensorConfig->getSensorsForPlot(plotIndex+1); // plotIndex + 1 because index 0 is for "NO" plot
     if (true/*sensorsToPlot.length() > 0*/)
     {
-        DataPlot* dataPlot = new DataPlot(this, QList<Sensor*>(), plotIndex+1);
+        DataPlot* dataPlot = new DataPlot(plotIndex, this);
         layout->addWidget(dataPlot);
         dataPlot->setFixedHeight(geometry.height());
         dataPlot->setMinimumWidth(geometry.width());
@@ -1145,25 +1099,6 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
 }
 
 /**
- * Removes all widgets in the addresses panel
- * @brief MainWindow::clearAddressesConfigPanel
- */
-void MainWindow::clearAddressesConfigPanel()
-{
-    QWidget *addressesPanel = ui->addressesContainer;
-    if ( addressesPanel->layout() != NULL )
-    {
-        QLayoutItem* item;
-        while ( ( item = addressesPanel->layout()->takeAt( 0 ) ) != NULL )
-        {
-            delete item->widget();
-            delete item;
-        }
-        delete addressesPanel->layout();
-    }
-}
-
-/**
  * Create the configuration panel
  * @brief MainWindow::createConfigurationPanel
  */
@@ -1175,54 +1110,8 @@ void MainWindow::createConfigurationPanel()
     ui->pt100_module2_comboBox->addItem("Low res.");
     ui->pt100_module2_comboBox->addItem("High res.");
     connect(ui->graphNbSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_graphNbValueChanged(int)));
-
-    createAddressesConfigPanel();
 }
 
-void MainWindow::createAddressesConfigPanel()
-{
-    connect(httpRequester, SIGNAL(sensorTypeRequestDone(int,QList<QString>)), this, SLOT(on_sensorTypeRequestDone(int,QList<QString>)));
-    // load sensorTypes file
-    //fileHelper->loadSensorTypesFile(); // old way (from file)
-    httpRequester->getSensorTypes(); // new way (from server) asynchronous !
-    // load config file
-    //fileHelper->loadConfigFile(); // useless with new sensors panel
-    // create log files
-    fileHelper->createLogFiles();
-    QList<Sensor*> sensors = sensorConfig->getSensors();
-
-    QWidget *configurationPanel = ui->addressesContainer;
-    QScrollArea *scrollArea = new QScrollArea;
-    QWidget *viewport = new QWidget;
-    QGridLayout *layout = new QGridLayout;
-    viewport->setLayout(layout);
-    createLabelLine(layout);
-    for (int i = 1; i <= sensors.length(); i++)
-    {
-        createAddressFormRow(layout, i, sensors[i-1]);
-    }
-    scrollArea->setWidget(viewport);
-    QVBoxLayout *configurationPanelLayout = new QVBoxLayout;
-    configurationPanel->setLayout(configurationPanelLayout);
-    QWidget *scrollAreaContainer = createSpacedWidget(scrollArea,0,250);
-    configurationPanelLayout->addWidget(scrollAreaContainer);
-    saveBtn = new QPushButton("Save config");
-    saveBtn->setStyleSheet("background-color: gray;border-style: outset;border-width: 2px;border-radius: 10px;border-color: black;font: 12px;min-width: 10em;padding: 6px;");
-    QWidget *saveBtnContainer = createSpacedWidget(saveBtn,200,200);
-    configurationPanelLayout->addWidget(saveBtnContainer);
-    connect(saveBtn, SIGNAL(clicked()), this, SLOT(on_saveConfigClicked()));
-}
-
-/**
- * Change the color of the "save config" button border
- * @brief MainWindow::changeSaveBtnColor
- * @param cssColor The color to set
- */
-void MainWindow::changeSaveBtnColor(QString cssColor)
-{
-    QString style = "background-color: gray;border-style: outset;border-width: 2px;border-radius: 10px;font: 12px;min-width: 10em;padding: 6px;";
-    saveBtn->setStyleSheet(style + "border-color: "+cssColor+";");
-}
 
 void MainWindow::removeLastWaypoint()
 {

@@ -1,9 +1,11 @@
 #ifndef SENSORINPUTSMODEL_H
 #define SENSORINPUTSMODEL_H
 
+#include <QHash>
 #include <QAbstractItemModel>
 #include <QDebug>
 #include "sensorinputitem.h"
+#include "util/hierarchicalidentifier.h"
 
 class SensorInputsModel : public QAbstractItemModel
 {
@@ -31,9 +33,11 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
 
     void addInput(SensorInputItem *newItem, SensorInputItem *parent = NULL);
+
+    SensorInputItem *getItem(const QString &address) const;
 private:
     SensorInputItem *m_rootItem;
-    SensorInputItem *getItem(const QModelIndex &index) const;       
+    SensorInputItem *getItem(const QModelIndex &index) const;
 };
 
 #endif // SENSORINPUTSMODEL_H

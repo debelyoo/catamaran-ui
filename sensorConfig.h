@@ -32,17 +32,16 @@ class SensorConfig
         //void addSensorType(SensorType* st);
 
         QList<Sensor*> getSensors() const;
-        QList<Sensor*> getSensorsForPlot(int plotIndex) const;
         QList<Sensor*> getSensorsRecorded() const;
         int getDisplayIndexForGraphName(QString str) const;
         QString getSensorsAsTabSeparatedText() const;
         bool containsSensor(const QString &addr) const;
+        bool containsSensor(Sensor *s) const;
         Sensor* getSensor(QString addr) const;
         //QMap<int, SensorType*> getSensorTypes() const;
         //SensorType *getSensorType(SensorList::Types type) const;
-        QMap<int, QString> getDisplayValues();
-        bool qstringToBool(QString str) const;
-        void updateDisplayGraphList(int nb = 3);
+        //bool qstringToBool(QString str) const;
+        //void updateDisplayGraphList(int nb = 3);
 
         bool addPlot(int plotIndex);
         bool removePlot(int plotIndex);
@@ -54,25 +53,27 @@ class SensorConfig
 
         QList<int> removeSensorFromPlots(Sensor *sensor);
 
+        friend QDataStream &operator<< (QDataStream &stream, const SensorConfig &sc);
+        friend QDataStream &operator>> (QDataStream &stream, SensorConfig &sc);
     private:
         SensorConfig():
             m_sensors(),
             m_sensorForPlotIndexMap()
         {
-            //m_sensorTypes.insert(0, new SensorType(0, "Unknown", "")); // other tyes are loaded at launch from sensortypes.txt
-
-            updateDisplayGraphList();
+            //updateDisplayGraphList();
         }
         Q_DISABLE_COPY(SensorConfig)
 
         static SensorConfig* s_instance;
 
-        QHash<QString, Sensor *> m_sensors;
+        QMap<QString, Sensor *> m_sensors;
         //QMap<int, SensorType*> m_sensorTypes;
-        QMap<int, QString> m_displayGraphs;
         QHash<int, QList<Sensor *> > m_sensorForPlotIndexMap;
 
         static bool addressLessThan(Sensor* s1, Sensor* s2);
 };
+
+QDataStream &operator<< (QDataStream &stream, const SensorConfig &sc);
+QDataStream &operator>> (QDataStream &stream, SensorConfig &sc);
 
 #endif // SENSORCONFIG_H

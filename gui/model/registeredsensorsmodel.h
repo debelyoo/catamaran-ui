@@ -44,6 +44,7 @@ public:
     void removeSensor(QModelIndex index);
 
     QList<RegisteredSensorItem *> items();
+    RegisteredSensorItem * getItem(const QString &address);
 private:
     RegisteredSensorItem *getItem(const QModelIndex &index) const;
     int m_nColumn;

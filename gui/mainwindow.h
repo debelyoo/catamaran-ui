@@ -64,14 +64,6 @@ public slots:
     void on_newConnection();
 
     /// config update
-    void on_addressValueChanged(QString, int);
-    void on_nameValueChanged(QString, int);
-    void on_typeValueChanged(QString typeName, int);
-    void on_displayValueChanged(int, int);
-    void on_recordValueChanged(bool, int);
-    void on_streamValueChanged(bool, int);
-    void on_filenameValueChanged(QString, int);
-    void on_saveConfigClicked();
     void on_graphNbValueChanged(int);
 
     /// sensor transformation and config tables events
@@ -97,6 +89,9 @@ public slots:
     void on_crioPositionChanged();
     void on_crioSpeedChanged();
     void on_crioHeadingChanged();
+
+    void on_saveConfig();
+    void on_loadConfig();
 
 protected slots:
     void on_engineValueAutoUpdate();
@@ -132,20 +127,17 @@ private:
     void sendRightEngineCommand();
     int zoomStep;
     bool viewportIsMoving;
+    /// Sensor load config
+    void buildConfigSensorsView();
     /// plots panel
     void clearPlotsPanel();
     void createPlotsPanel();
     //QWidget* createPlot(int xPos, int yPos, int width, int height);
     QWidget* createPlotByDate(int plotIndex, QRect geometry);
     /// configuration panel
-    void clearAddressesConfigPanel();
     void createConfigurationPanel();
-    void createAddressesConfigPanel();
     void createLabelLine(QGridLayout* l);
-    void createAddressFormRow(QGridLayout* l, int rowIndex, Sensor* s);
     QWidget* createSpacedWidget(QWidget *w, int spaceBefore, int spaceAfter);
-    QPushButton* saveBtn;
-    void changeSaveBtnColor(QString cssColor);
     struct PointOnMap {
         QPoint p;
         QGraphicsEllipseItem* circle;
@@ -163,10 +155,14 @@ private:
     /// NS panel
     void updateWPFileList();
 
+
+    SensorInputsModel *m_sensorInputsModel;
     RegisteredSensorsModel *m_registeredSensorsModel;
 
     void setEngineControlSlidersConnection(bool enableConnections);
     QGraphicsPolygonItem* m_catPolygon;
+
+    void loadProfile(QDataStream &ds);
 
 };
 

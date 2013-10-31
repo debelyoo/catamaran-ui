@@ -95,6 +95,38 @@ void SensorInputsModel::addInput(SensorInputItem *newItem, SensorInputItem *pare
     emit dataChanged(index, index);
 }
 
+SensorInputItem *SensorInputsModel::getItem(const QString &address) const
+{
+    SensorAddress sa(address);
+    SensorInputItem *item = m_rootItem;
+    bool found = false;
+    for(int level=0;level<sa.level(); ++level){
+        found = false;
+        foreach(SensorInputItem *i, item->childs()){
+            if(i->address() == sa.parent(level)){
+                item = i;
+                found = true;
+                break;
+            }
+        }
+        if(!found){
+            return NULL;
+        }
+    }
+    found = false;
+    foreach(SensorInputItem *i, item->childs()){
+        if(i->address() == sa){
+            item = i;
+            found = true;
+            break;
+        }
+    }
+    if(!found){
+        return NULL;
+    }
+    return item;
+}
+
 SensorInputItem *SensorInputsModel::getItem(const QModelIndex &index) const
 {
     if (index.isValid()) {

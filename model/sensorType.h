@@ -2,6 +2,7 @@
 #define SENSORTYPE_H
 
 #include <QObject>
+#include <QByteArray>
 
 class SensorType
 {
@@ -18,4 +19,5 @@ private:
 
 };
 
+QDataStream &operator<< (QDataStream &stream, const SensorType &sensorType);
 #endif // SENSORTYPE_H

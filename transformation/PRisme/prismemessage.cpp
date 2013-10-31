@@ -33,12 +33,9 @@ CRioData PRismeMessage::decodePrismeData(const CRioData &msg, IDataMessageReceiv
     //qDebug() << "buffer.size ="<<buffer.count()<< " " << buffer.toHex();
     int len = buffer.size() - 4;
     //unsigned char *bdata = (unsigned char*)buffer.data();
-    bool decoded = false;
     int i = 0;
     while(i<len){
-        decoded = false;
         if(buffer.at(i+3) == '\r' && buffer.at(i+4) == '\n'){
-            decoded = true;
             // Read the pseudo timestamp (8bits)
             unsigned char pseudoTSchar = buffer.at(i);//bdata[i];
             int pseudoTS =  pseudoTSchar * PSEUDO_TIMESTAMP_INC_MS;

@@ -1,12 +1,13 @@
 #include "dataPlot.h"
 
-DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp, int plotIndex) :
+DataPlot::DataPlot(int plotIndex, QWidget *parent) :
     QCustomPlot(parent),
+    m_sensorsToPlot(),
+    m_sensorToGraphHash(),
     m_availableGraphIndex()
 {
     m_availableGraphIndex.append(0);
     m_dbManager = DatabaseManager::instance();
-    m_sensorsToPlot = stp;
     m_timeWindow = 15 * 60; // 15 minutes in seconds
     double now = QDateTime::currentDateTime().toTime_t();
     int fromTs = now - m_timeWindow;
@@ -14,24 +15,6 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp, int plotIndex) :
     m_maxValue = 0;
     m_plotIndex = plotIndex;
 
-//    for (int gi=0; gi<m_sensorsToPlot.size(); ++gi)
-//    {
-//        this->addGraph();
-//        QPen pen;
-//        int hueOffset = 30; // the offset for the first color (30° -> orange)
-//        pen.setColor(QColor::fromHsl(hueOffset + (25*gi), 255, 150));
-//        //pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
-//        this->graph(gi)->setLineStyle(QCPGraph::lsLine);
-//        this->graph(gi)->setPen(pen);
-
-//        this->graph(gi)->setName(m_sensorsToPlot[gi]->name());
-
-        // get data
-//        QPair< QVector<double>, QVector<double> > data = m_dbManager->getData(m_sensorsToPlot[gi], fromTs);
-//        this->graph(gi)->setData(data.first, data.second);
-//        updateMinMaxValues(data.second);
-//        this->graph(gi)->rescaleValueAxis(true);
-//    }
     // configure bottom axis to show date and time instead of number:
     this->xAxis->setTickLabelType(QCPAxis::ltDateTime);
     //this->xAxis->setDateTimeFormat("MMMM\nyyyy");
@@ -70,6 +53,7 @@ DataPlot::DataPlot(QWidget *parent, QList<Sensor*> stp, int plotIndex) :
     m_configBt->setGeometry(5,5,40,20);
     m_configBt->show();
     connect(m_configBt, SIGNAL(clicked()), this, SLOT(on_editClicked()));
+    updateSensorList();
 }
 
 DataPlot::~DataPlot()
@@ -86,14 +70,18 @@ void DataPlot::updatePlot()
     //qDebug() << "Range axis Y: " << minValue << " -> " << maxValue;
     foreach(Sensor * s, m_sensorToGraphHash.keys())
     {
-        QCPGraph *graph = m_sensorToGraphHash[s];
-        // get data for sensor
-        QPair< QVector<double>, QVector<double> > data = m_dbManager->getData(s, fromTs);
-        if (data.first.size() > 0)
-        {
-            graph->removeData(0, fromTsAxis); // remove old data
-            graph->addData(data.first, data.second); // add data from the last second
-            updateMinMaxValues(data.second);
+        if(SensorConfig::instance()->containsSensor(s)){
+            QCPGraph *graph = m_sensorToGraphHash[s];
+            // get data for sensor
+            QPair< QVector<double>, QVector<double> > data = m_dbManager->getData(s, fromTs);
+            if (data.first.size() > 0)
+            {
+                graph->removeData(0, fromTsAxis); // remove old data
+                graph->addData(data.first, data.second); // add data from the last second
+                updateMinMaxValues(data.second);
+            }
+        }else{
+            removeSensorFromPlot(s);
         }
     }
     // set axis ranges to show all data:
@@ -160,23 +148,17 @@ void DataPlot::addSensorToPlot(Sensor *sensor)
     QPen pen;
     int hueOffset = 30; // the offset for the first color (30° -> orange)
     pen.setColor(QColor::fromHsl(hueOffset + (25*index), 255, 150));
-    //pen.setColor(QColor(255/4.0*gi, 160, 50, 200));
     graph->setLineStyle(QCPGraph::lsLine);
     graph->setPen(pen);
 
     graph->setName(sensor->name());
 
-    // get data
-    //QPair< QVector<double>, QVector<double> > data = m_dbManager->getData(sensor, fromTs);
-    //graph->setData(data.first, data.second);
-    //updateMinMaxValues(data.second);
-    //graph->rescaleValueAxis(true);
 }
 
 void DataPlot::removeSensorFromPlot(Sensor *sensor)
 {
     QCPGraph *graph = m_sensorToGraphHash[sensor];
-    m_availableGraphIndex.append(graph->property("index").toInt());
+    m_availableGraphIndex.prepend(graph->property("index").toInt());
     removeGraph(graph);
     m_sensorToGraphHash.remove(sensor);
 }

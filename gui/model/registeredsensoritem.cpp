@@ -11,6 +11,23 @@ RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput):
     m_sortId(sensorInput->sortId())
 {
     m_model = new Sensor(sensorInput->address(), sensorInput->name());
+    m_sensorInput->disable();
+}
+
+RegisteredSensorItem::RegisteredSensorItem(SensorInputItem *sensorInput, Sensor *s):
+    m_parent(NULL),
+    m_sensorInput(sensorInput),
+    m_childs(),
+    m_name(sensorInput->fullName()),
+    m_transformation(NULL),
+    m_sortId(sensorInput->sortId()),
+    m_model(s)
+{
+    setTransformation(s->m_transformation);
+    setRecord(s->record());
+    setStream(s->stream());
+    setName(s->name());
+    m_sensorInput->disable();
 }
 
 RegisteredSensorItem::~RegisteredSensorItem()

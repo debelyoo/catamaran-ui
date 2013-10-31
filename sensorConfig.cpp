@@ -52,23 +52,6 @@ QList<Sensor*> SensorConfig::getSensors() const
 }
 
 /**
- * Get the sensors to be plotted on plot with index "plotIndex"
- * @brief SensorConfig::getSensorsForPlot
- * @param plotIndex The index of the desired plot
- * @return A list of sensors
- */
-QList<Sensor*> SensorConfig::getSensorsForPlot(int plotIndex) const
-{
-    QList<Sensor*> list = m_sensors.values();
-    QMutableListIterator<Sensor *> i(list);
-    while (i.hasNext()) {
-//        if (i.next()->display() != plotIndex)
-//            i.remove();
-    }
-    return list;
-}
-
-/**
  * Get the sensors that are marked to be recorded (logged)
  * @brief SensorConfig::getSensorsRecorded
  * @return A list of sensors
@@ -85,17 +68,6 @@ QList<Sensor*> SensorConfig::getSensorsRecorded() const
     return list;
 }
 
-int SensorConfig::getDisplayIndexForGraphName(QString gName) const
-{
-    int gIndex;
-    QMap<int, QString>::ConstIterator i;
-    for (i = m_displayGraphs.constBegin(); i != m_displayGraphs.constEnd(); ++i)
-    {
-        if (i.value() == gName)
-            gIndex = i.key();
-    }
-    return gIndex;
-}
 
 QString SensorConfig::getSensorsAsTabSeparatedText() const
 {
@@ -118,6 +90,11 @@ bool SensorConfig::containsSensor(const QString &addr) const
     return m_sensors.contains(addr);
 }
 
+bool SensorConfig::containsSensor(Sensor *s) const
+{
+    return m_sensors.values().contains(s);
+}
+
 Sensor* SensorConfig::getSensor(QString addr) const
 {
     if(!m_sensors.contains(addr)){
@@ -138,7 +115,7 @@ Sensor* SensorConfig::getSensor(QString addr) const
 //    }
 //    return NULL;
 //}
-
+/*
 QMap<int, QString> SensorConfig::getDisplayValues()
 {
     return m_displayGraphs;
@@ -164,7 +141,7 @@ void SensorConfig::updateDisplayGraphList(int nb)
         m_displayGraphs.insert(i+1, "G"+QString::number(i));
     }
 }
-
+*/
 bool SensorConfig::addPlot(int plotIndex)
 {
     if(!m_sensorForPlotIndexMap.contains(plotIndex)){
@@ -234,4 +211,52 @@ bool SensorConfig::addressLessThan(Sensor* s1, Sensor* s2)
     return false;
 }
 
+QDataStream &operator<<(QDataStream &stream, const SensorConfig &sc)
+{
+    int n=0;
+    foreach(Sensor *s, sc.m_sensors.values()){
+        if(s->isData()){
+            ++n;
+        }
+    }
+    stream << n;
+    foreach(Sensor *s, sc.m_sensors.values()){
+        if(s->isData()){
+            stream << *s;
+        }
+    }
+    stream << sc.m_sensorForPlotIndexMap.size();
+    foreach(int i, sc.m_sensorForPlotIndexMap.keys()){
+        QList<Sensor *> sl = sc.m_sensorForPlotIndexMap[i];
+        stream << i;
+        stream << sl.count();
+        foreach(Sensor *s, sl){
+            stream << s->address();
+        }
+    }
+    return stream;
+}
 
+
+QDataStream &operator>>(QDataStream &stream, SensorConfig &sc)
+{
+    int ns;
+    stream >> ns;
+    for(int i=0;i<ns;++i){
+        new Sensor(stream);
+    }
+    stream >> ns;
+    for(int i=0;i<ns;++i){
+        int n2, idx;
+        stream >> idx;
+        stream >> n2;
+        for(int j=0;j<n2;++j){
+            QString addr;
+            stream >> addr;
+            if(sc.m_sensors.contains(addr)){
+                sc.m_sensorForPlotIndexMap[idx].append(sc.m_sensors[addr]);
+            }
+        }
+    }
+    return stream;
+}

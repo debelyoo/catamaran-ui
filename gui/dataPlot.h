@@ -11,7 +11,7 @@ class DataPlot : public QCustomPlot
 {
     Q_OBJECT
 public:
-    explicit DataPlot(QWidget *parent = 0, QList<Sensor*> stp = QList<Sensor*>(), int plotIndex = 0);
+    explicit DataPlot(int plotIndex, QWidget *parent = 0);
     ~DataPlot();
 
 signals:

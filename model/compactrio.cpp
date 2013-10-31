@@ -228,9 +228,13 @@ void CompactRio::initSelftAllocatedSensors()
     SensorTypeManager::instance()->createType("GPS Position");
     SensorTypeManager::instance()->createType("GPS Speed");
     SensorTypeManager::instance()->createType("Compass");
-    Sensor *gpsPos = new Sensor("48", "GPS[position]", SensorTypeManager::instance()->type("GPS Position"), 0, true, true, "GPS", "", false);
-    Sensor *gpsSpeed = new Sensor("49", "GPS[velocity]", SensorTypeManager::instance()->type("GPS Speed"), 0, true, true, "GPS", "", false);
-    Sensor *compass = new Sensor("41", "Compass[heading]", SensorTypeManager::instance()->type("Compass"), 0, true, true, "Compass", "", false);
+    SensorTypeManager::instance()->createType("Temperature");
+    SensorTypeManager::instance()->createType("Wind Speed");
+    SensorTypeManager::instance()->createType("Wind Direction");
+    SensorTypeManager::instance()->createType("Radiometer");
+    Sensor *gpsPos = new Sensor("48", "GPS[position]", SensorTypeManager::instance()->type("GPS Position"), true, true, "GPS", "", false);
+    Sensor *gpsSpeed = new Sensor("49", "GPS[velocity]", SensorTypeManager::instance()->type("GPS Speed"), true, true, "GPS", "", false);
+    Sensor *compass = new Sensor("41", "Compass[heading]", SensorTypeManager::instance()->type("Compass"), true, true, "Compass", "", false);
 
     TransformationBaseClass *prismeTransformation = new PRisme();
     TransformationManager::instance()->addTransformation(prismeTransformation);
