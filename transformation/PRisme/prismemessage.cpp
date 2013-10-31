@@ -21,6 +21,17 @@ QByteArray PRismeMessage::buffer = QByteArray();
 PRismeMessage::PRismeMessage()
 {
 }
+
+QString toBin(quint16 v){
+    QString s="";
+    quint16 mask = 1<<15;
+    for(int i=0;i<16;++i){
+        s += (v&mask)?"1":"0";
+        mask >>=1;
+    }
+    return s;
+}
+
 /**
  * Try to decode PRisme Message using the DataObject msg and the buffer of undecoded element.
  * @brief PRismeMessage::decodePrismeData
@@ -55,10 +66,16 @@ CRioData PRismeMessage::decodePrismeData(const CRioData &msg, IDataMessageReceiv
             encodedValue <<= 8;
             encodedValue += buffer.at(i+2);//bdata[2+i];
 
+
+
             bool type = encodedValue & PRISME_TYPE_MASK;
             unsigned char address = (encodedValue >> 10)&PRISME_ADDR_MASK;
             unsigned short data = encodedValue & PRISME_DATA_MASK;
 
+//            if(address == 7){
+//                qDebug() << "EV: " << toBin(encodedValue);
+//                qDebug() << " d: " << toBin(data);
+//            }
             if(lastPTS > 0 && pseudoTS < lastPTS){
                 pseudoTS += 256*PSEUDO_TIMESTAMP_INC_MS;
             }
@@ -67,7 +84,7 @@ CRioData PRismeMessage::decodePrismeData(const CRioData &msg, IDataMessageReceiv
                 //address += ADDRESS_OFFSET;
                 QVariantList params;
                 params.append((quint16)data);
-                CRioData dObj(sensorAddress+"."+subsensorsAddress[address], params, PSEUDO_TIMESTAMP_SYNC_VALUE + pseudoTS);
+                CRioData dObj(sensorAddress+"."+subsensorsAddress[address], params, msg.timestamp /*PSEUDO_TIMESTAMP_SYNC_VALUE + pseudoTS*/);
                 callback->handleDataMessage(dObj);
             }
             i += 5;
