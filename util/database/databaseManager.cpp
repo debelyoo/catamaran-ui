@@ -210,11 +210,13 @@ bool DatabaseManager::insertMission()
     // mission_id - departure time
     QList<QVariant> values;
     QDateTime dateTime = QDateTime::currentDateTime();
+    QString tzOffset = TimeHelper::getTimeZoneOffset();
+    QString timeZoneStr = "GMT"+tzOffset; // set timezone id (e.g. GMT+1, GMT+2, GMT+9)
     QString missionName = "mission_"+dateTime.toString("yyyyMMdd_hh:mm:ss");;
     double ts = (double)dateTime.currentMSecsSinceEpoch() / 1000;
     values.append(missionName);
     values.append(ts);
-    values.append("GMT+2"); // default timezone
+    values.append(timeZoneStr);
     values.append("catamaran");
     boolean b = insertRecord(tables[TableList::MISSION], values);
     if (b) {
@@ -446,19 +448,29 @@ QStandardItemModel* DatabaseManager::getMissionsAsModel()
  */
 QStandardItemModel* DatabaseManager::getDataForMissionsAsModel(QString missionName)
 {
+    //qDebug() << "getDataForMissionsAsModel() - " << missionName;
     qint64 missionId = getMission(missionName).getId();
     QStandardItemModel* model = new QStandardItemModel;
-    model->appendRow(new QStandardItem("gps")); // add GPS sensor type (always)
     if (db.open()) {
         QSqlQuery query(db);
-        QString sqlQuery = "SELECT DISTINCT sensor_type FROM sensorlog WHERE mission_id = "+ QString::number(missionId);
+        QString sqlQuery;
+        sqlQuery = "SELECT DISTINCT mission_id FROM gpslog WHERE mission_id = "+ QString::number(missionId);
+        if (query.exec(sqlQuery)) {
+            while( query.next() )
+            {
+                model->appendRow(new QStandardItem("gps"));
+            }
+        } else {
+            qDebug() << "[getDataForMissionsAsModel() - gpslog] SELECT failed !" << query.lastError();
+        }
+        sqlQuery = "SELECT DISTINCT sensor_type FROM sensorlog WHERE mission_id = "+ QString::number(missionId);
         if (query.exec(sqlQuery)) {
             while( query.next() )
             {
                 model->appendRow(new QStandardItem(query.value(0).toString()));
             }
         } else {
-            qDebug() << "[getDataForMissionsAsModel()] SELECT failed !" << query.lastError();
+            qDebug() << "[getDataForMissionsAsModel() - sensorlog] SELECT failed !" << query.lastError();
         }
     } else {
         qDebug() << "DB not open !";

@@ -1481,22 +1481,7 @@
               </item>
               <item>
                <widget class="QWidget" name="widget_3" native="true">
-                <layout class="QHBoxLayout" name="horizontalLayout_8">
-                 <item>
-                  <widget class="QLabel" name="label_31">
-                   <property name="text">
-                    <string>Timezone</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="comboBoxTimezone">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <layout class="QHBoxLayout" name="horizontalLayout_8"/>
                </widget>
               </item>
               <item>

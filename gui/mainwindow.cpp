@@ -564,27 +564,61 @@ void MainWindow::on_exportBtnClicked()
 void MainWindow::on_removeMissionBtnClicked()
 {
     QString missionName = ui->listViewMission->selectionModel()->selectedIndexes().first().data().toString();
-    if (missionName == dbManager->getCurrentMissionName()) {
-        addStatusText("[Warning] Current mission can not be deleted ! \n");
-        return;
+    QMessageBox msgBox;
+    msgBox.setText("You are about to do some irreversible changes.");
+    msgBox.setInformativeText("Do you really want to delete mission: "+ missionName +" ?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+    int ret = msgBox.exec();
+    switch (ret) {
+        case QMessageBox::Yes:
+            // Yes was clicked
+            if (missionName == dbManager->getCurrentMissionName()) {
+                addStatusText("[Warning] Current mission can not be deleted ! \n");
+                return;
+            }
+            dbManager->removeMission(missionName);
+            //qDebug() << "on_removeMissionBtnClicked() - " << missionName << " - "<< b;
+            updateMissionList();
+            break;
+        case QMessageBox::No:
+            // No was clicked, do nothing
+            break;
+        default:
+            // should never be reached
+            break;
     }
-    dbManager->removeMission(missionName);
-    //qDebug() << "on_removeMissionBtnClicked() - " << missionName << " - "<< b;
-    updateMissionList();
 }
 
 void MainWindow::on_removeAllMissionBtnClicked()
 {
     //qDebug() << "on_removeAllMissionBtnClicked() " << ui->listViewMission->selectionModel()->model()->rowCount();
-    for ( int i = 0 ; i < ui->listViewMission->model()->rowCount() ; ++i )
-    {
-      QString missionName = ui->listViewMission->model()->index( i, 0 ).data( Qt::DisplayRole ).toString() ;
-      if (missionName != dbManager->getCurrentMissionName()) {
-          // remove all missions except current one
-          dbManager->removeMission(missionName);
-      }
+    QMessageBox msgBox;
+    msgBox.setText("You are about to do some irreversible changes.");
+    msgBox.setInformativeText("Do you really want to delete ALL missions ?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+    int ret = msgBox.exec();
+    switch (ret) {
+        case QMessageBox::Yes:
+            // Yes was clicked
+            for ( int i = 0 ; i < ui->listViewMission->model()->rowCount() ; ++i )
+            {
+              QString missionName = ui->listViewMission->model()->index( i, 0 ).data( Qt::DisplayRole ).toString() ;
+              if (missionName != dbManager->getCurrentMissionName()) {
+                  // remove all missions except current one
+                  dbManager->removeMission(missionName);
+              }
+            }
+            updateMissionList();
+            break;
+        case QMessageBox::No:
+            // No was clicked, do nothing
+            break;
+        default:
+            // should never be reached
+            break;
     }
-    updateMissionList();
 }
 
 /**
@@ -1151,9 +1185,6 @@ void MainWindow::removeLastWaypoint()
 
 void MainWindow::createExportPanel()
 {
-    ui->comboBoxTimezone->addItem("GMT+2");
-    ui->comboBoxTimezone->addItem("GMT+9");
-
     // load missions in list view
     updateMissionList();
 
@@ -1168,7 +1199,6 @@ void MainWindow::createExportPanel()
                                    "    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E1AFB2, stop: 1 #F8C6C8);" \
                                    "}");
 
-    connect(ui->listViewMission->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(on_missionSelectedChanged(QItemSelection)));
     connect(ui->exportBtn, SIGNAL(clicked()), this, SLOT(on_exportBtnClicked()));
     connect(ui->removeMissionBtn, SIGNAL(clicked()), this, SLOT(on_removeMissionBtnClicked()));
     connect(ui->removeAllMissionBtn, SIGNAL(clicked()), this, SLOT(on_removeAllMissionBtnClicked()));
@@ -1203,6 +1233,7 @@ void MainWindow::updateMissionList()
     ui->listViewMission->setCurrentIndex(model->index(0,0));
     // load data for mission
     displayDataForMission(model->index(0,0).data().toString());
+    connect(ui->listViewMission->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(on_missionSelectedChanged(QItemSelection)));
 }
 
 /**

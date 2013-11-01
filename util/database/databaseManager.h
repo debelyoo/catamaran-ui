@@ -12,6 +12,7 @@
 #include "model/mission.h"
 #include "dbTable.h"
 #include "manager/sensortypemanager.h"
+#include "util/timeHelper.h"
 
 namespace TableList {
     typedef enum {
