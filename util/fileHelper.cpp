@@ -61,7 +61,8 @@ void FileHelper::writeFile(QString filename, QString fileContent, bool isLog)
  */
 void FileHelper::appendToFile(QString filename, QString text)
 {
-    QString filePath = QDir::currentPath() + "/"+ logFolder +"/" + filename;
+    QString filePath = QDir::currentPath() + "/" + logFolder + "/" + DatabaseManager::instance()->getCurrentMissionName().replace(':', "") + "/" + filename;
+    //QString filePath = QDir::currentPath() + "/"+ logFolder +"/" + filename;
     QFile file(filePath);
     if (file.open(QIODevice::ReadWrite)) {
         file.seek(file.size());

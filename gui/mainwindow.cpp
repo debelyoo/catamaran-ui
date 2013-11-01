@@ -364,6 +364,7 @@ void MainWindow::on_registeredSensorButtonClick(QModelIndex &index)
 void MainWindow::on_sensorConfigChanged()
 {
     compactRio->setSensorsConfig();
+    fileHelper->createLogFiles();
 }
 
 void MainWindow::on_registeredSensorClicked(QModelIndex index)

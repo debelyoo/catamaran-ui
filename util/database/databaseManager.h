@@ -53,7 +53,7 @@ class DatabaseManager
             db.setDatabaseName("ecoldata.sqlite");
             createNecessaryTables();
             insertMission(); // create mission when application starts
-            insertSampleData();
+            //insertSampleData();
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);
