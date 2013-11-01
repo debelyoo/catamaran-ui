@@ -31,11 +31,13 @@ class DataExporter : public QObject
         DatabaseManager* dbManager;
         QString tempMissionName;
         QList<QString> tempSensorTypeList;
-        static const int MAX_DATA_LOG_IN_EXPORT_REQUEST = 10;
+        QQueue<QJsonDocument> jsChunksToSend;
+        static const int MAX_DATA_LOG_IN_EXPORT_REQUEST = 1000;
 
         void sendMission();
         void sendData(long missionIdOnBackend);
-        QList<QJsonDocument> prepareDataChunk(QList<QJsonObject> jsDataList, QString sensorType);
+        void prepareDataChunk(QList<QJsonObject> jsDataList, QString sensorType);
+        void sendNextDataJsonChunkInQueue();
 };
 
 #endif // DATAEXPORTER_H
