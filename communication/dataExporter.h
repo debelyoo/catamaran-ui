@@ -9,7 +9,7 @@ class DataExporter : public QObject
     Q_OBJECT
     public:
         static DataExporter* instance();
-        void exportData(QString missionName, QString dataType);
+        void exportData(QString missionName, QList<QString> sensorTypeList);
 
     signals:
         void displayInGui(QString);
@@ -30,7 +30,7 @@ class DataExporter : public QObject
         HttpRequester* httpRequester;
         DatabaseManager* dbManager;
         QString tempMissionName;
-        QString tempDataType;
+        QList<QString> tempSensorTypeList;
         static const int MAX_DATA_LOG_IN_EXPORT_REQUEST = 10;
 
         void sendMission();

@@ -556,9 +556,13 @@ void MainWindow::on_exportBtnClicked()
 {
     // export data
     QString missionName = ui->listViewMission->selectionModel()->selectedIndexes().first().data().toString();
-    QString datatype = ui->listViewData->selectionModel()->selectedIndexes().first().data().toString();
+    QList<QString> sensorTypeList;
+    for ( int i = 0 ; i < ui->listViewData->model()->rowCount() ; ++i ) {
+      QString missionName = ui->listViewData->model()->index( i, 0 ).data( Qt::DisplayRole ).toString() ;
+      sensorTypeList.append(missionName);
+    }
     //qDebug() << "on_exportBtnClicked() - " << missionName << ", " << datatype;
-    dataExporter->exportData(missionName, datatype);
+    dataExporter->exportData(missionName, sensorTypeList);
 }
 
 void MainWindow::on_removeMissionBtnClicked()
@@ -602,8 +606,7 @@ void MainWindow::on_removeAllMissionBtnClicked()
     switch (ret) {
         case QMessageBox::Yes:
             // Yes was clicked
-            for ( int i = 0 ; i < ui->listViewMission->model()->rowCount() ; ++i )
-            {
+            for ( int i = 0 ; i < ui->listViewMission->model()->rowCount() ; ++i ) {
               QString missionName = ui->listViewMission->model()->index( i, 0 ).data( Qt::DisplayRole ).toString() ;
               if (missionName != dbManager->getCurrentMissionName()) {
                   // remove all missions except current one
@@ -1219,7 +1222,7 @@ void MainWindow::displayDataForMission(QString missionName)
 {
     QStandardItemModel *model = dbManager->getDataForMissionsAsModel(missionName);
     ui->listViewData->setModel(model);
-    ui->listViewData->setCurrentIndex(model->index(0,0));
+    //ui->listViewData->setCurrentIndex(model->index(0,0));
 }
 
 /**

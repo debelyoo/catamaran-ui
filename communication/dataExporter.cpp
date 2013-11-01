@@ -15,10 +15,10 @@ DataExporter* DataExporter::instance()
     return s_instance;
 }
 
-void DataExporter::exportData(QString missionName, QString dataType)
+void DataExporter::exportData(QString missionName, QList<QString> sensorTypeList)
 {
     tempMissionName = missionName;
-    tempDataType = dataType;
+    tempSensorTypeList = sensorTypeList;
     // send mission first. Once we get the ack, send data
     sendMission();
 }
@@ -46,14 +46,15 @@ void DataExporter::sendMission()
  */
 void DataExporter::sendData(long missionIdOnBackend)
 {
-    QList<QJsonObject> jsDataList = dbManager->getDataAsJSON(tempMissionName, tempDataType, missionIdOnBackend);
-    QList<QJsonDocument> jsChunks = prepareDataChunk(jsDataList, tempDataType);
-    foreach(QJsonDocument json, jsChunks) {
-        // send {"datatype": "temperature", "items":[...]}
-        httpRequester->sendPostRequest(QString("/portal/api/data"), json);
+    foreach (QString sensorType, tempSensorTypeList) {
+        QList<QJsonObject> jsDataList = dbManager->getDataAsJSON(tempMissionName, sensorType, missionIdOnBackend);
+        QList<QJsonDocument> jsChunks = prepareDataChunk(jsDataList, sensorType);
+        foreach(QJsonDocument json, jsChunks) {
+            // send {"datatype": "temperature", "items":[...]}
+            httpRequester->sendPostRequest(QString("/portal/api/data"), json);
+        }
+        emit displayInGui("Data [" + sensorType + "] has been sent to server !\n");
     }
-    //qDebug() << "Data [" << tempDataType << "] has been sent to server !";
-    emit displayInGui("Data [" + tempDataType + "] has been sent to server !\n");
 }
 
 /**

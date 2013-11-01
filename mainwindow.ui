@@ -1439,7 +1439,11 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <item>
-               <widget class="QListView" name="listViewData"/>
+               <widget class="QListView" name="listViewData">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
