@@ -34,6 +34,9 @@ public:
     ~MainWindow();
     void sendEngineCommand();
     void drawWayPointOnMap(QPointF, bool);
+
+signals:
+    void sensorConfigChanged();
     
 public slots:
     void on_navSysStart();
@@ -94,6 +97,8 @@ public slots:
 
     void on_saveConfig();
     void on_loadConfig();
+
+    void on_timer();
 
 protected slots:
     void on_engineValueAutoUpdate();

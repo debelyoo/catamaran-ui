@@ -11,7 +11,7 @@ Server *Server::s_instance = NULL;
 Server::Server() :
     QObject(),
     inputStream(NULL),
-    consumer(NULL),
+    m_consumer(NULL),
     m_commandQueue(),
     m_dataQueue(),
     m_queuesEnabled(false)
@@ -64,13 +64,13 @@ void Server::on_newConnection()
     }
     //inputStream->setDevice(socket);
     inputStream = new CRioDataStream(socket);
-    consumer = new MessageConsumer(this, inputStream);
+    m_consumer = new MessageConsumer(this, inputStream);
     publisher = new MessagePublisher(this, socket);
 
-    connect(this, SIGNAL(dataReceived()), consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
+    connect(this, SIGNAL(dataReceived()), m_consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
     /// signals to be relayed to GUI
-    connect(consumer, SIGNAL(messageParsed(QString)), this, SLOT(on_messageParsed(QString)));
-    connect(consumer, SIGNAL(gpsPointReceived(double,double)), this, SLOT(on_gpsPointReceived(double,double)));
+    connect(m_consumer, SIGNAL(messageParsed(QString)), this, SLOT(on_messageParsed(QString)));
+    connect(m_consumer, SIGNAL(gpsPointReceived(double,double)), this, SLOT(on_gpsPointReceived(double,double)));
 
     connect(socket, SIGNAL(disconnected()), this, SLOT(on_disconnected()));
     //connect(socket, SIGNAL(readyRead()), this, SLOT(on_readyRead()));
@@ -202,6 +202,11 @@ void Server::disableQueues()
 bool Server::queueEnabled() const
 {
     return m_queuesEnabled;
+}
+
+MessageConsumer *Server::consumer() const
+{
+    return m_consumer;
 }
 
 bool Server::isConnected() const

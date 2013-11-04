@@ -43,6 +43,8 @@ public:
     void disableQueues();
     bool queueEnabled() const;
 
+    MessageConsumer *consumer() const;
+
 signals:
     void displayInGui(QString);
     void dataReceived();
@@ -64,7 +66,7 @@ private:
     CRioDataStream *inputStream;
     QTcpServer* server;
     QTcpSocket* socket;
-    MessageConsumer* consumer;
+    MessageConsumer* m_consumer;
     MessagePublisher* publisher;
     DatabaseManager* dbManager;
     SensorConfig* sensorConfig; // singleton

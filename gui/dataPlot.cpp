@@ -1,9 +1,11 @@
 #include "dataPlot.h"
+#include <QLabel>
 
 DataPlot::DataPlot(int plotIndex, QWidget *parent) :
     QCustomPlot(parent),
     m_sensorsToPlot(),
     m_sensorToGraphHash(),
+    m_yWindowPrc(0.1),
     m_availableGraphIndex()
 {
     m_availableGraphIndex.append(0);
@@ -11,8 +13,7 @@ DataPlot::DataPlot(int plotIndex, QWidget *parent) :
     m_timeWindow = 15 * 60; // 15 minutes in seconds
     double now = QDateTime::currentDateTime().toTime_t();
     int fromTs = now - m_timeWindow;
-    m_minValue = 99;
-    m_maxValue = 0;
+    resetMinMax();
     m_plotIndex = plotIndex;
 
     // configure bottom axis to show date and time instead of number:
@@ -49,24 +50,52 @@ DataPlot::DataPlot(int plotIndex, QWidget *parent) :
     this->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft);
     this->legend->setVisible(true);
 
-    m_configBt = new QPushButton("Edit", this);
-    m_configBt->setGeometry(5,5,40,20);
-    m_configBt->show();
-    connect(m_configBt, SIGNAL(clicked()), this, SLOT(on_editClicked()));
+    m_uiContainer = new QWidget(this);
+    m_uiContainer->setGeometry(5, 5, 500, 18);
+
+    QPushButton *configBt = new QPushButton("Edit", m_uiContainer);
+
+    connect(configBt, SIGNAL(clicked()), this, SLOT(on_editClicked()));
+
+    QSpinBox *yScaleSpinBox = new QSpinBox(m_uiContainer);
+
+    yScaleSpinBox->setMaximum(100);
+    yScaleSpinBox->setMinimum(-100);
+    yScaleSpinBox->setSingleStep(1);
+    yScaleSpinBox->setValue(m_yWindowPrc * 100);
+    connect(yScaleSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_yScaleChange(int)));
+
+    QLabel *label = new QLabel("Plot y margin [%] : ", this);
+
+    QHBoxLayout *uiContainerLayout = new QHBoxLayout(m_uiContainer);
+    uiContainerLayout->setContentsMargins(QMargins(0,0,0,0));
+    uiContainerLayout->addWidget(configBt);
+    uiContainerLayout->addSpacing(150);
+    uiContainerLayout->addWidget(label);
+    uiContainerLayout->addWidget(yScaleSpinBox);
+    uiContainerLayout->addStretch(0);
+
+    m_uiContainer->show();
+
     updateSensorList();
+}
+
+int DataPlot::timeWindow() const
+{
+    return m_timeWindow;
 }
 
 DataPlot::~DataPlot()
 {
-    delete m_configBt;
+    delete m_uiContainer;
 }
 
-void DataPlot::updatePlot()
+void DataPlot::updatePlot(int deltaT)
 {
     //qDebug() << "DataPlot.updatePlot()";
     double now = QDateTime::currentDateTime().toTime_t();
     int fromTsAxis = now - m_timeWindow;
-    int fromTs = now - 1; // time window of 1 second
+    int fromTs = now - deltaT; // time window of 1 second
     //qDebug() << "Range axis Y: " << minValue << " -> " << maxValue;
     foreach(Sensor * s, m_sensorToGraphHash.keys())
     {
@@ -86,24 +115,29 @@ void DataPlot::updatePlot()
     }
     // set axis ranges to show all data:
     this->xAxis->setRange(fromTsAxis, now);
-    this->yAxis->setRange(m_minValue, m_maxValue);
+    //this->yAxis->setRange(m_minValue, m_maxValue);
     // redraw plot
     this->replot();
 }
 
-void DataPlot::updateMinMaxValues(QVector<double> values)
+void DataPlot::updateMinMaxValues(QVector<double> values, bool forceUpdate)
 {
+    bool changed = forceUpdate;
     if (!values.isEmpty()) {
         QVector<double> vVal = values; // copy vector to sort it
         qSort(vVal); // sort values from smallest to highest
         if (vVal.first() < m_minValue){
             m_minValue = vVal.first();
-            m_minValue *= (m_minValue < 0)?1.1:0.9;
+            changed = true;
         }
         if (vVal.last() > m_maxValue){
             m_maxValue = vVal.last();
-            m_maxValue *= (m_maxValue > 0)?1.1:0.9;
+            changed = true;
         }
+    }
+    if(changed){
+        double range = m_maxValue - m_minValue;
+        this->yAxis->setRange(m_minValue - m_yWindowPrc*range, m_maxValue + m_yWindowPrc*range);
     }
 }
 
@@ -132,9 +166,9 @@ QPair< QVector<double>, QVector<double> > DataPlot::getData(int gi)
 void DataPlot::resizeEvent(QResizeEvent *e)
 {
     QCustomPlot::resizeEvent(e);
-    QRect rect = m_configBt->geometry();
+    QRect rect = m_uiContainer->geometry();
     rect.moveTo(rect.x(), this->height()-rect.height()-5);
-    m_configBt->setGeometry(rect);
+    m_uiContainer->setGeometry(rect);
 }
 
 void DataPlot::addSensorToPlot(Sensor *sensor)
@@ -182,7 +216,8 @@ void DataPlot::updateSensorList()
             addSensorToPlot(s);
         }
     }
-    updatePlot();
+    resetMinMax();
+    updatePlot(m_timeWindow);
 }
 
 int DataPlot::nextGraphIndex()
@@ -198,6 +233,12 @@ int DataPlot::nextGraphIndex()
     return index;
 }
 
+void DataPlot::resetMinMax()
+{
+    m_minValue = 100000;
+    m_maxValue = -100000;
+}
+
 void DataPlot::on_editClicked()
 {
     AddToPlotWidget * widget = new AddToPlotWidget(m_plotIndex);
@@ -210,4 +251,10 @@ void DataPlot::on_editWidgetSaved(bool changed)
     if(changed){
         updateSensorList();
     }
+}
+
+void DataPlot::on_yScaleChange(int scale)
+{
+    m_yWindowPrc = scale / 100.0;
+    updateMinMaxValues(QVector<double>(), true);
 }

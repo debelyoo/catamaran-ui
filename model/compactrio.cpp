@@ -74,16 +74,16 @@ void CompactRio::feedWithData(const CRioData &data)
     case CRIO::DATA_ADDR_DEBUG:
         if(data.data().count() > 0){
             QString str = QDateTime::fromMSecsSinceEpoch(data.timestamp.unixTimestamp).toString("hh:mm:ss:zzz");
-            str += ": [CRIO]";
-            str += data.data()[0].toString();
+            str += ": [CRIO] ";
+            str += data.data()[0].toString() + "\n";
             emit newCRioStatusMessage(str);
         }
         break;
     case CRIO::DATA_ADDR_NAV_SYS_LOG:
         if(data.data().count() > 0){
             QString str = QDateTime::fromMSecsSinceEpoch(data.timestamp.unixTimestamp).toString("hh:mm:ss:zzz");
-            str += ": [ NS ]";
-            str += data.data()[0].toString();
+            str += ": [ NS  ]";
+            str += data.data()[0].toString() + "\n";
             emit newCRioStatusMessage(str);
         }
         break;
@@ -235,6 +235,10 @@ void CompactRio::initSelftAllocatedSensors()
     Sensor *gpsPos = new Sensor("48", "GPS[position]", SensorTypeManager::instance()->type("GPS Position"), true, true, "GPS", "", false);
     Sensor *gpsSpeed = new Sensor("49", "GPS[velocity]", SensorTypeManager::instance()->type("GPS Speed"), true, true, "GPS", "", false);
     Sensor *compass = new Sensor("41", "Compass[heading]", SensorTypeManager::instance()->type("Compass"), true, true, "Compass", "", false);
+    Sensor *rightEngine = new Sensor("51", "Right engine", SensorTypeManager::instance()->type("Engines"), true, true, "Engines", "", false);
+    Sensor *leftEngine = new Sensor("52",  "Left engine", 0, true, true, "Engines", "", false);
+    Sensor *crioDebug = new Sensor("60", "crioDebug", 0, false, true, "", "", false);
+    Sensor *navSysLog = new Sensor("61", "NavSysLog", 0, false, true, "", "", false);
 
     TransformationBaseClass *prismeTransformation = new PRisme();
     TransformationManager::instance()->addTransformation(prismeTransformation);
@@ -244,6 +248,10 @@ void CompactRio::initSelftAllocatedSensors()
     m_selfAllocatedSensors.append(gpsPos);
     m_selfAllocatedSensors.append(gpsSpeed);
     m_selfAllocatedSensors.append(compass);
+    m_selfAllocatedSensors.append(leftEngine);
+    m_selfAllocatedSensors.append(rightEngine);
+    m_selfAllocatedSensors.append(crioDebug);
+    m_selfAllocatedSensors.append(navSysLog);
     //m_selfAllocatedSensors.append(prisme);
 }
 

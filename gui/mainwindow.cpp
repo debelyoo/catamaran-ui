@@ -6,6 +6,9 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QScrollBar>
+
+#include <QTimer>
+
 #include "inRowLineEdit.h"
 #include "inRowComboBox.h"
 #include "inRowCheckBox.h"
@@ -187,6 +190,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->graphicsView->scene()->addItem(m_catPolygon);
     m_catPolygon->setZValue(999999999);
 
+
+
+    QTimer *timer = new QTimer();
+    timer->setInterval(1000);
+    connect(timer, SIGNAL(timeout()), this, SLOT(on_timer()));
+    //timer->start();
 }
 
 MainWindow::~MainWindow()
@@ -288,6 +297,7 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->stopBtn->hide();
         ui->waypointGroupBox->show();
         connect(compactRio, SIGNAL(enginesChanged()), this, SLOT(on_engineValueAutoUpdate()));
+        qDebug() << "Signal connected";
     }
 
 }
@@ -323,6 +333,7 @@ void MainWindow::on_directionValueChanged(int val)
  */
 void MainWindow::on_graphNbValueChanged(int nb)
 {
+    Q_UNUSED(nb)
     //sensorConfig->updateDisplayGraphList(nb);
 }
 
@@ -371,6 +382,7 @@ void MainWindow::on_sensorConfigChanged()
 {
     compactRio->setSensorsConfig();
     fileHelper->createLogFiles();
+    emit sensorConfigChanged();
 }
 
 void MainWindow::on_registeredSensorClicked(QModelIndex index)
@@ -499,6 +511,17 @@ void MainWindow::on_loadConfig()
     QByteArray ba = QByteArray::fromHex(blob);
     QDataStream ds(&ba, QIODevice::ReadWrite);
     loadProfile(ds);
+    on_sensorConfigChanged();
+}
+
+void MainWindow::on_timer()
+{
+    QVariantList vl;
+    vl.append(QVariant::fromValue<qint8>((qrand()%254)-127));
+    CRioData d(51, vl, CRIO::Timestamp());
+    if(server->isConnected()){
+        server->consumer()->handleDataMessage(d);
+    }
 }
 
 void MainWindow::on_engineValueAutoUpdate()
@@ -509,7 +532,6 @@ void MainWindow::on_engineValueAutoUpdate()
     ui->leftSlider->setValue(left);
     ui->rightSlider->setValue(right);
     updateSpeedDirectionSliders(left, right);
-    qDebug() << "on_engineValueAutoUpdate called: left="<<left<<" right="<<right;
     setEngineControlSlidersConnection(true);
 }
 
@@ -1153,6 +1175,8 @@ QWidget* MainWindow::createPlotByDate(int plotIndex, QRect geometry)
         dataPlot->setMinimumWidth(geometry.width());
         dataPlot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         connect(dataPlot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(on_graphWheelEvent(QWheelEvent*)));
+        connect(this, SIGNAL(sensorConfigChanged()), dataPlot, SLOT(updateSensorList()));
+        //connect(this, SIGNAL(sensorConfigChanged()), dataPlot, SLOT(updatePlot(dataPlot->timeWindow(); )));
         QTimer *timer = new QTimer();
         timer->setInterval(3000);
         connect(timer, SIGNAL(timeout()), dataPlot, SLOT(updatePlot()));
