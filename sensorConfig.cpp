@@ -260,3 +260,23 @@ QDataStream &operator>>(QDataStream &stream, SensorConfig &sc)
     }
     return stream;
 }
+
+/**
+ * Creat ea new QSerialPort object
+ * @brief SensorConfig::initializeSerialPort
+ * @param portName The name of the port (on local machine)
+ */
+void SensorConfig::initializeSerialPort(QString portName)
+{
+    vSerialPort = new QSerialPort(portName);
+}
+
+/**
+ * Getter for the virtual serial port
+ * @brief SensorConfig::virtualSerialPort
+ * @return The QSerialPort object
+ */
+QSerialPort* SensorConfig::virtualSerialPort()
+{
+    return vSerialPort;
+}

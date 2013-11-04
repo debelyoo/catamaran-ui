@@ -37,6 +37,7 @@ public:
     bool sendMessage(const CRioByteArray &cba);
     bool sendMessage(const CRioCommand &cmd);
     bool sendMessage(const CRioData &data);
+    bool sendMessageToVirtualSerialPort(QVariant strData);
 
     void enableQueues();
     void disableQueues();

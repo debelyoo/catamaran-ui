@@ -31,10 +31,18 @@ void MessagePublisher::sendCommandMessage(QByteArray data)
     //qDebug() << ba;
 }
 */
+
 void MessagePublisher::sendMessage(const CRioByteArray &cba)
 {
     int bytesWritten = socket->write(cba.byteArray());
     bool bytesFlushed = socket->flush();
     qDebug() << "Wrote ["<<bytesWritten<<"] bytes on wire - flushed: "<<(int)bytesFlushed<<" ba=" << cba.byteArray().toHex();
+}
+
+void MessagePublisher::sendMessage(QSerialPort* serialPort, QByteArray ba)
+{
+    int bytesWritten = serialPort->write(ba);
+    bool bytesFlushed = serialPort->flush();
+    qDebug() << "Wrote ["<<bytesWritten<<"] bytes on SERIAL port - flushed: "<<(int)bytesFlushed<<" ba=" << ba.toHex();
 }
 

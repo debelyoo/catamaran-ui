@@ -326,6 +326,12 @@ void MainWindow::on_graphNbValueChanged(int nb)
     //sensorConfig->updateDisplayGraphList(nb);
 }
 
+void MainWindow::on_serialPortValueChanged(QString portName)
+{
+    //qDebug() << "port name: " << portName;
+    sensorConfig->initializeSerialPort(portName);
+}
+
 void MainWindow::on_availableSensorsValueChanged()
 {
     ui->availableSensorsInput->expandAll();
@@ -1168,6 +1174,11 @@ void MainWindow::createConfigurationPanel()
     ui->pt100_module2_comboBox->addItem("Low res.");
     ui->pt100_module2_comboBox->addItem("High res.");
     connect(ui->graphNbSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_graphNbValueChanged(int)));
+    QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
+    foreach (QSerialPortInfo sp, list) {
+        ui->serialPortsComboBox->addItem(sp.portName());
+    }
+    connect(ui->serialPortsComboBox, SIGNAL(activated(QString)), this, SLOT(on_serialPortValueChanged(QString)));
 }
 
 

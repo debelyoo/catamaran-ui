@@ -176,6 +176,17 @@ bool Server::sendMessage(const CRioData &data)
     return false;
 }
 
+bool Server::sendMessageToVirtualSerialPort(QVariant strData)
+{
+    if (sensorConfig->virtualSerialPort() != NULL) {
+        QByteArray ba;
+        ba.append(strData.toString());
+        publisher->sendMessage(sensorConfig->virtualSerialPort(), ba);
+        return true;
+    }
+    return false;
+}
+
 void Server::enableQueues()
 {
     m_queuesEnabled = true;

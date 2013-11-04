@@ -82,7 +82,7 @@ CRioData MessageConsumer::transformDataObject(CRioData &iobj){
 
 /**
  * Handle data according to data type. Act specifically for each type of data (GPS, temperature, radiometer, etc)
- * @brief MessageConsumer::handleMessageData
+ * @brief MessageConsumer::handleDataMessage
  * @param address The address of the sensor
  * @param values The values of the log
  * @param ts The timestamp of the log
@@ -123,8 +123,12 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
+        } else if(idataObj.address == "66") {
+            // serial port for ADCP
+            // dataObj.data() is a list with one element, this single element is a String containing the data
+            Server::instance()->sendMessageToVirtualSerialPort(dataObj.data().at(0));
         } else {
-            // TODO - add check to know if it's a data
+            // check if sensor is a data sensor, and if record flag is set
             if (s->isData() && s->record()) {
                 // dataObj->values contains only one sensor value
                 double value = dataObj.data().at(0).toDouble();

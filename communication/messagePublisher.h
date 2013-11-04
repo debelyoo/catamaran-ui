@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QSerialPort>
 #include "util/criobytearray.h"
 
 class MessagePublisher : public QObject
@@ -10,6 +11,8 @@ class MessagePublisher : public QObject
     Q_OBJECT
     public:
         explicit MessagePublisher(QObject *parent = 0, QTcpSocket* socket = 0);
+        void sendMessage(QSerialPort* serialPort, QByteArray ba);
+
     signals:
 
     public slots:
@@ -18,7 +21,6 @@ class MessagePublisher : public QObject
 
     private:
         QTcpSocket* socket;
-        //ByteArrayConverter* converter;
 
 };
 

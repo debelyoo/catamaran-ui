@@ -12,6 +12,7 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QGraphicsEllipseItem>
+#include <QtSerialPort/QSerialPortInfo>
 #include "gui/model/sensorinputsmodel.h"
 #include "gui/model/registeredsensorsmodel.h"
 #include "gui/delegate/registeredSensorsDelegate.h"
@@ -65,6 +66,7 @@ public slots:
 
     /// config update
     void on_graphNbValueChanged(int);
+    void on_serialPortValueChanged(QString);
 
     /// sensor transformation and config tables events
     void on_availableSensorsValueChanged();
