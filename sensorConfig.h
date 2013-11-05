@@ -57,6 +57,7 @@ class SensorConfig
         friend QDataStream &operator<< (QDataStream &stream, const SensorConfig &sc);
         friend QDataStream &operator>> (QDataStream &stream, SensorConfig &sc);
 
+        void setAdcpMode(int ind);
         void initializeSerialPort(QString portName);
         QSerialPort* virtualSerialPort();
 
@@ -74,6 +75,7 @@ class SensorConfig
         QMap<QString, Sensor *> m_sensors;
         //QMap<int, SensorType*> m_sensorTypes;
         QHash<int, QList<Sensor *> > m_sensorForPlotIndexMap;
+        int adcpMode;
         QSerialPort* vSerialPort; // the virtual serial port used to stream the ADCP data
 
         static bool addressLessThan(Sensor* s1, Sensor* s2);

@@ -337,6 +337,31 @@ void MainWindow::on_graphNbValueChanged(int nb)
     //sensorConfig->updateDisplayGraphList(nb);
 }
 
+void MainWindow::on_adcpModeValueChanged(int ind)
+{
+    switch (ind) {
+    case 0:
+        // Stream mode
+        ui->adcpStreamLabel->show();
+        ui->adcpSerialPortsComboBox->show();
+        ui->adcpLogfilPrefixLabel->hide();
+        ui->adcpLogfilePrefixField->hide();
+        sensorConfig->setAdcpMode(0);
+        break;
+    case 1:
+        // write to file mode
+        ui->adcpLogfilPrefixLabel->show();
+        ui->adcpLogfilePrefixField->show();
+        ui->adcpStreamLabel->hide();
+        ui->adcpSerialPortsComboBox->hide();
+        sensorConfig->setAdcpMode(1);
+        break;
+    default:
+        // should never pass here
+        break;
+    }
+}
+
 void MainWindow::on_serialPortValueChanged(QString portName)
 {
     //qDebug() << "port name: " << portName;
@@ -1198,11 +1223,20 @@ void MainWindow::createConfigurationPanel()
     ui->pt100_module2_comboBox->addItem("Low res.");
     ui->pt100_module2_comboBox->addItem("High res.");
     connect(ui->graphNbSpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_graphNbValueChanged(int)));
+    ui->adcpModeComboBox->addItem("Stream to virtual serial port");
+    ui->adcpModeComboBox->addItem("Write to file");
+    connect(ui->adcpModeComboBox, SIGNAL(activated(int)), this, SLOT(on_adcpModeValueChanged(int)));
+    ui->adcpSerialPortsComboBox->addItem("None");
     QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
     foreach (QSerialPortInfo sp, list) {
-        ui->serialPortsComboBox->addItem(sp.portName());
+        ui->adcpSerialPortsComboBox->addItem(sp.portName());
     }
-    connect(ui->serialPortsComboBox, SIGNAL(activated(QString)), this, SLOT(on_serialPortValueChanged(QString)));
+    connect(ui->adcpSerialPortsComboBox, SIGNAL(activated(QString)), this, SLOT(on_serialPortValueChanged(QString)));
+    // select 'write to file' mode by default
+    ui->adcpModeComboBox->setCurrentIndex(1);
+    ui->adcpStreamLabel->hide();
+    ui->adcpSerialPortsComboBox->hide();
+    sensorConfig->setAdcpMode(1);
 }
 
 

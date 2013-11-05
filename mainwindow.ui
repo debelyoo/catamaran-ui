@@ -963,13 +963,36 @@
                 <string>ADCP</string>
                </property>
                <layout class="QGridLayout" name="gridLayout">
-                <item row="0" column="1">
-                 <widget class="QComboBox" name="serialPortsComboBox"/>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_31">
+                <item row="1" column="0">
+                 <widget class="QLabel" name="adcpStreamLabel">
                   <property name="text">
                    <string>Serial port (output)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QComboBox" name="adcpModeComboBox"/>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QComboBox" name="adcpSerialPortsComboBox"/>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="adcpLogfilPrefixLabel">
+                  <property name="text">
+                   <string>Log file (prefix)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLineEdit" name="adcpLogfilePrefixField">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>ADCP_log</string>
                   </property>
                  </widget>
                 </item>
@@ -1006,13 +1029,16 @@
                <property name="minimumSize">
                 <size>
                  <width>221</width>
-                 <height>121</height>
+                 <height>70</height>
                 </size>
                </property>
                <property name="title">
                 <string>Plots</string>
                </property>
                <layout class="QFormLayout" name="formLayout_4">
+                <property name="fieldGrowthPolicy">
+                 <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                </property>
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_17">
                   <property name="text">

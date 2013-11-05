@@ -69,6 +69,7 @@ public slots:
 
     /// config update
     void on_graphNbValueChanged(int);
+    void on_adcpModeValueChanged(int);
     void on_serialPortValueChanged(QString);
 
     /// sensor transformation and config tables events

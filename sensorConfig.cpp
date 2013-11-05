@@ -262,18 +262,36 @@ QDataStream &operator>>(QDataStream &stream, SensorConfig &sc)
 }
 
 /**
+ * Set the ADCP mode. 0 -> stream to serial port, 1 -> write to log file
+ * @brief SensorConfig::setAdcpMode
+ * @param ind The id of the mode
+ */
+void SensorConfig::setAdcpMode(int ind)
+{
+    adcpMode = ind;
+}
+
+/**
  * Creat ea new QSerialPort object
  * @brief SensorConfig::initializeSerialPort
  * @param portName The name of the port (on local machine)
  */
 void SensorConfig::initializeSerialPort(QString portName)
 {
+<<<<<<< HEAD
     vSerialPort = new QSerialPort(portName);
     vSerialPort->open(QIODevice::ReadWrite);
     vSerialPort->setBaudRate(115200);
     vSerialPort->setParity(QSerialPort::NoParity);
     vSerialPort->setStopBits(QSerialPort::OneStop);
     vSerialPort->setDataBits(QSerialPort::Data8);
+=======
+    if (portName == "None") {
+        vSerialPort = 0;
+    } else {
+        vSerialPort = new QSerialPort(portName);
+    }
+>>>>>>> add two modes behaviour for ADCp
 }
 
 /**
