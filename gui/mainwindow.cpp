@@ -344,14 +344,10 @@ void MainWindow::on_adcpModeValueChanged(int ind)
         // Stream mode
         ui->adcpStreamLabel->show();
         ui->adcpSerialPortsComboBox->show();
-        ui->adcpLogfilPrefixLabel->hide();
-        ui->adcpLogfilePrefixField->hide();
         sensorConfig->setAdcpMode(0);
         break;
     case 1:
         // write to file mode
-        ui->adcpLogfilPrefixLabel->show();
-        ui->adcpLogfilePrefixField->show();
         ui->adcpStreamLabel->hide();
         ui->adcpSerialPortsComboBox->hide();
         sensorConfig->setAdcpMode(1);

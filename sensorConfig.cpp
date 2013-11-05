@@ -271,6 +271,11 @@ void SensorConfig::setAdcpMode(int ind)
     adcpMode = ind;
 }
 
+int SensorConfig::getAdcpMode()
+{
+    return adcpMode;
+}
+
 /**
  * Creat ea new QSerialPort object
  * @brief SensorConfig::initializeSerialPort
@@ -278,20 +283,16 @@ void SensorConfig::setAdcpMode(int ind)
  */
 void SensorConfig::initializeSerialPort(QString portName)
 {
-<<<<<<< HEAD
-    vSerialPort = new QSerialPort(portName);
-    vSerialPort->open(QIODevice::ReadWrite);
-    vSerialPort->setBaudRate(115200);
-    vSerialPort->setParity(QSerialPort::NoParity);
-    vSerialPort->setStopBits(QSerialPort::OneStop);
-    vSerialPort->setDataBits(QSerialPort::Data8);
-=======
     if (portName == "None") {
         vSerialPort = 0;
     } else {
         vSerialPort = new QSerialPort(portName);
+        vSerialPort->open(QIODevice::ReadWrite);
+        vSerialPort->setBaudRate(115200);
+        vSerialPort->setParity(QSerialPort::NoParity);
+        vSerialPort->setStopBits(QSerialPort::OneStop);
+        vSerialPort->setDataBits(QSerialPort::Data8);
     }
->>>>>>> add two modes behaviour for ADCp
 }
 
 /**

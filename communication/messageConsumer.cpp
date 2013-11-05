@@ -134,7 +134,18 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
         } else if(idataObj.address == "66") {
             // serial port for ADCP
             // dataObj.data() is a list with one element, this single element is a String containing the ADCP data
-            Server::instance()->sendMessageToVirtualSerialPort(dataObj.data().at(0));
+            switch (sensorConfig->getAdcpMode()) {
+            case 0:
+                // stream mode
+                Server::instance()->sendMessageToVirtualSerialPort(dataObj.data().at(0));
+                break;
+            case 1:
+                // write to file mode
+                writeInLogFile(s, dataObj.data().at(0).toString());
+                break;
+            default:
+                break;
+            }
         } else {
             // check if sensor is a data sensor, and if record flag is set
             if (s->isData() && s->record()) {

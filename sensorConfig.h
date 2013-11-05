@@ -58,6 +58,7 @@ class SensorConfig
         friend QDataStream &operator>> (QDataStream &stream, SensorConfig &sc);
 
         void setAdcpMode(int ind);
+        int getAdcpMode();
         void initializeSerialPort(QString portName);
         QSerialPort* virtualSerialPort();
 

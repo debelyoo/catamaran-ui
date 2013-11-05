@@ -232,6 +232,7 @@ void CompactRio::initSelftAllocatedSensors()
     SensorTypeManager::instance()->createType("Wind Speed");
     SensorTypeManager::instance()->createType("Wind Direction");
     SensorTypeManager::instance()->createType("Radiometer");
+    SensorTypeManager::instance()->createType("ADCP");
     Sensor *gpsPos = new Sensor("48", "GPS[position]", SensorTypeManager::instance()->type("GPS Position"), true, true, "GPS", "", false);
     Sensor *gpsSpeed = new Sensor("49", "GPS[velocity]", SensorTypeManager::instance()->type("GPS Speed"), true, true, "GPS", "", false);
     Sensor *compass = new Sensor("41", "Compass[heading]", SensorTypeManager::instance()->type("Compass"), true, true, "Compass", "", false);
