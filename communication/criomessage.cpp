@@ -48,7 +48,7 @@ CRIO::MessageType CRioMessage::type() const{
 }
 
 bool CRioMessage::isValid() const{
-    if(!m_valid)qDebug() << "s_neededB="<<s_neededBytes<<" s_cType="<<s_currentType;
+    //if(!m_valid)qDebug() << "s_neededB="<<s_neededBytes<<" s_cType="<<s_currentType;
     return m_valid;
 }
 

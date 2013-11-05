@@ -269,6 +269,11 @@ QDataStream &operator>>(QDataStream &stream, SensorConfig &sc)
 void SensorConfig::initializeSerialPort(QString portName)
 {
     vSerialPort = new QSerialPort(portName);
+    vSerialPort->open(QIODevice::ReadWrite);
+    vSerialPort->setBaudRate(115200);
+    vSerialPort->setParity(QSerialPort::NoParity);
+    vSerialPort->setStopBits(QSerialPort::OneStop);
+    vSerialPort->setDataBits(QSerialPort::Data8);
 }
 
 /**

@@ -25,8 +25,10 @@ void MessageConsumer::on_dataReceived()
 {
     //checkQueue(true);
     if(!consuming){
+        int nloop = 0;
         consuming = true;
-        while(crioDataStream->device()->bytesAvailable() >= 5){
+        while(crioDataStream->device()->bytesAvailable()>=5 && nloop < 1000){
+            ++nloop;
             //qDebug() << "Try to decode Message (buffer length:"<<crioDataStream->device()->bytesAvailable()<<")";
             // New datastream reader
             //qDebug() << "ba : " << crioByteArrayIn.toHex();
@@ -56,7 +58,13 @@ void MessageConsumer::on_dataReceived()
                     break;
                 }
             }else{
-                qDebug() << "Message Invalide : " << crioDataStream->device()->readAll().toHex();
+                if(crioMessage.type() == CRIO::MESSAGE_TYPE_ERROR){
+                    qDebug() << "Message Invalide : " << crioDataStream->device()->readAll().toHex();
+                    CRioMessage::reset();
+                }
+            }
+            if(nloop > 1000){
+                qDebug() << "nloop > 1000 : " << crioDataStream->device()->readAll().toHex();
                 CRioMessage::reset();
             }
         }

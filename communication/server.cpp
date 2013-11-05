@@ -178,9 +178,9 @@ bool Server::sendMessage(const CRioData &data)
 
 bool Server::sendMessageToVirtualSerialPort(QVariant strData)
 {
-    if (sensorConfig->virtualSerialPort() != NULL) {
+    if (sensorConfig->virtualSerialPort()) {
         QByteArray ba;
-        ba.append(strData.toString());
+        ba.append(strData.toByteArray());
         publisher->sendMessage(sensorConfig->virtualSerialPort(), ba);
         return true;
     }

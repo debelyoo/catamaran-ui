@@ -42,7 +42,7 @@ void MessagePublisher::sendMessage(const CRioByteArray &cba)
 void MessagePublisher::sendMessage(QSerialPort* serialPort, QByteArray ba)
 {
     int bytesWritten = serialPort->write(ba);
-    bool bytesFlushed = serialPort->flush();
-    qDebug() << "Wrote ["<<bytesWritten<<"] bytes on SERIAL port - flushed: "<<(int)bytesFlushed<<" ba=" << ba.toHex();
+
+    qDebug() << "Wrote ["<<bytesWritten<<"] bytes on SERIAL port : ba=" << ba.toHex();
 }
 
