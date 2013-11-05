@@ -18,12 +18,13 @@ class FileHelper
 
         void writeFile(QString filename, QString fileContent, bool isLog);
         void appendToFile(QString filename, QString text);
+        void appendToFile(QString filename, const QByteArray &text);
         bool loadConfigFile();
         void createLogFiles();
         bool loadSensorTypesFile();
         QList<QPointF> loadWaypointsFile(QString fileName);
 
-    private:
+private:
         FileHelper() {
             logFolder = "logs";
         }

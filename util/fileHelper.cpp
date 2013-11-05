@@ -71,6 +71,23 @@ void FileHelper::appendToFile(QString filename, QString text)
 }
 
 /**
+ * Append text to log file
+ * @brief FileHelper::appendToFile
+ * @param filename
+ * @param text
+ */
+void FileHelper::appendToFile(QString filename, const QByteArray &text)
+{
+    QString filePath = QDir::currentPath() + "/" + logFolder + "/" + DatabaseManager::instance()->getCurrentMissionName().replace(':', "") + "/" + filename;
+    QFile file(filePath);
+    if (file.open(QIODevice::ReadWrite)) {
+        file.seek(file.size());
+        QDataStream stream(&file);
+        stream.writeRawData(text.constData(), text.count());
+    }
+}
+
+/**
  * Load the config file in memory (populate sensors list in SensorConfig singleton)
  * @brief MainWindow::loadConfigFile
  * @param sensorConfig The sensor configuration object

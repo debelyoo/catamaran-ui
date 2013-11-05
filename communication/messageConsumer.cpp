@@ -138,10 +138,11 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
             case 0:
                 // stream mode
                 Server::instance()->sendMessageToVirtualSerialPort(dataObj.data().at(0));
+                writeInLogFile(s, dataObj.data().at(0).toByteArray());
                 break;
             case 1:
                 // write to file mode
-                writeInLogFile(s, dataObj.data().at(0).toString());
+                writeInLogFile(s, dataObj.data().at(0).toByteArray());
                 break;
             default:
                 break;
@@ -234,6 +235,21 @@ QString MessageConsumer::createLogText(const CRioData &dataObj)
  * @param logTxt
  */
 void MessageConsumer::writeInLogFile(Sensor* s, QString logTxt)
+{
+    QString logFile = s->currentLogFilename();
+    if (logFile != "")
+    {
+        fileHelper->appendToFile(logFile, logTxt);
+    }
+}
+
+/**
+ * Write some text in log file
+ * @brief MessageConsumer::writeInLogFile
+ * @param s
+ * @param logTxt
+ */
+void MessageConsumer::writeInLogFile(Sensor* s, const QByteArray &logTxt)
 {
     QString logFile = s->currentLogFilename();
     if (logFile != "")

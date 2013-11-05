@@ -21,8 +21,7 @@ class MessageConsumer : public QObject, public IDataMessageReceiver
         explicit MessageConsumer(QObject *parent = 0, CRioDataStream* ds = 0);
         void handleDataMessage(CRioData &dataObj);
         ~MessageConsumer();
-
-    signals:
+signals:
         void messageParsed(QString);
         void gpsPointReceived(double, double);
 
@@ -40,6 +39,7 @@ class MessageConsumer : public QObject, public IDataMessageReceiver
         void handleGetCommand(int address);
         QString createLogText(const CRioData &dataObj);
         void writeInLogFile(Sensor* s, QString logTxt);
+        void writeInLogFile(Sensor *s, const QByteArray &logTxt);
         CRioData applyTransformation(QString dllName, CRioData &val) const;
         CRioData transformDataObject(CRioData &iobj);
 };
