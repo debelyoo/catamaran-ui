@@ -50,6 +50,7 @@ public:
 
     // General Commands
     bool getCommand(const CRIO::CommandAddresses &addr);
+    bool getCurrentTime();
 
     // Engine Commands
     bool setEngine(const CRIO::Engines engine, const qint8 value);

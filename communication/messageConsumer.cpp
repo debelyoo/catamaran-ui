@@ -100,10 +100,10 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
     bool handeled = true;
 
     // Temporary modification for test on 09.10.2013
-    if(idataObj.address == "53"){
-        QVariantList tmp; tmp.append(idataObj.data()[1]);
-        idataObj = CRioData(idataObj.address, tmp, idataObj.timestamp);
-    }
+//    if(idataObj.address == "53"){
+//        QVariantList tmp; tmp.append(idataObj.data()[1]);
+//        idataObj = CRioData(idataObj.address, tmp, idataObj.timestamp);
+//    }
     // End of temporary modification for 09.10.2013
 
     CRioData dataObj = transformDataObject(idataObj);

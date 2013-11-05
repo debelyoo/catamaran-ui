@@ -77,32 +77,7 @@ void Server::on_newConnection()
     connect(socket, SIGNAL(readyRead()), this, SIGNAL(dataReceived()));
     emit newConnection();
 }
-/*
-void Server::on_readyRead()
-{
-    while(socket->bytesAvailable() > 0)
-    {
-        //QByteArray ba = socket->readLine();
-        QByteArray ba = socket->read(BYTE_CHUNK_SIZE_TO_READ);
-        if(strcmp(ba.constData(), "!exit\n") == 0)
-        {
-            socket->disconnectFromHost();
-            break;
-        }
-        //printf(">> %s", ba.constData());
-        //fflush(stdout);
-        //printf("bytearray size >> %d\n", ba.length());
 
-        for (int i=0; i < ba.length(); i++) {
-            char c = ba.at(i);
-            queue->enqueue(c);
-        }
-        //printf("queue size >> %d \n", queue->size());
-
-        emit dataReceived();
-    }
-}
-*/
 void Server::on_disconnected()
 {
     //printf("Connection disconnected.\n");

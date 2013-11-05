@@ -59,6 +59,7 @@ namespace CRIO {
         CMD_ADDR_MEMORY_8BIT = 1,           // Memory8b
         CMD_ADDR_MEMORY_16BIT = 2,          // Memory16b
         CMD_ADDR_MEMORY_32BIT = 3,          // Memory32b
+        CMD_ADDR_CURRENT_TIME = 4,
         CMD_ADDR_SENSOR_CONFIG = 5,         // Address Conf & LUT	P1 Array{{(bool) stream, (uint8) addr}, ...}
         CMD_ADDR_ENGINE_MODE = 6,           // Motors Mode	P1 (uint8) Mode [0: Auto, 1: Manual]
         CMD_ADDR_LEFT_ENGINE = 7,           // Left Motor Value  P1 (int 8) value [-127, 127]
