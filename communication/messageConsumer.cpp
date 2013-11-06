@@ -132,7 +132,7 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
             // log it in log file
             QString log = createLogText(dataObj);
             writeInLogFile(s, log);
-        } else if(idataObj.address == "66") {
+        } else if(s->type()->name() == "ADCP") {
             // serial port for ADCP
             // dataObj.data() is a list with one element, this single element is a String containing the ADCP data
             switch (sensorConfig->getAdcpMode()) {
