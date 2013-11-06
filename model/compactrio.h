@@ -49,6 +49,8 @@ public:
 
     bool timesampSynchronized() const;
 
+    void resetTimestampSynchronization();
+
     /*
      *  Command Factory methods
      */
@@ -72,6 +74,7 @@ public:
     bool setNavSysMode(const CRIO::NAV_SYS_MODE &mode);
     bool setNavSysConstants(const double C_perp, const double C_point, const double C_aheadD, const double Kp_Y, const double Kp_V);
     bool setNavSysLimits(const double delta, const double epsilon);
+    bool setNavSysSpeedSetpoint(const double setpoint);
 
     // Waypoints Commands
     bool addWaypointCmd(const QPointF &p, int index = -1);

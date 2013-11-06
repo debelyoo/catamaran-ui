@@ -11,6 +11,7 @@ Server *Server::s_instance = NULL;
 Server::Server() :
     QObject(),
     inputStream(NULL),
+    socket(NULL),
     m_consumer(NULL),
     m_commandQueue(),
     m_dataQueue(),
@@ -50,43 +51,57 @@ void Server::listen()
     QString msg = "Listening on " + ipAddress.toString() +":"+QString::number(port)+"\n";
     emit displayInGui(msg);
     server->listen(QHostAddress(ipAddress), port);
-
-
 }
 
 void Server::on_newConnection()
 {
-    socket = server->nextPendingConnection();
-    if(socket->state() == QTcpSocket::ConnectedState)
-    {
-        emit displayInGui("New connection established.\n");
-        connected = true;
+    //connection already exist
+    if(socket){
+        if(socket->isValid()){
+            server->nextPendingConnection()->disconnectFromHost();
+            qDebug() << "New connection refused, because server is already connected";
+            return;
+        }else{
+            on_disconnected();
+        }
+    }else{
+        socket = server->nextPendingConnection();
+        if(socket->state() == QTcpSocket::ConnectedState)
+        {
+            emit displayInGui("New connection established.\n");
+            connected = true;
+        }
+        //inputStream->setDevice(socket);
+        inputStream = new CRioDataStream(socket);
+        m_consumer = new MessageConsumer(this, inputStream);
+        publisher = new MessagePublisher(this, socket);
+
+        connect(this, SIGNAL(dataReceived()), m_consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
+        /// signals to be relayed to GUI
+        connect(m_consumer, SIGNAL(messageParsed(QString)), this, SLOT(on_messageParsed(QString)));
+        connect(m_consumer, SIGNAL(gpsPointReceived(double,double)), this, SLOT(on_gpsPointReceived(double,double)));
+
+        connect(socket, SIGNAL(disconnected()), this, SLOT(on_disconnected()));
+        connect(socket, SIGNAL(readyRead()), this, SIGNAL(dataReceived()));
+        emit newConnection();
     }
-    //inputStream->setDevice(socket);
-    inputStream = new CRioDataStream(socket);
-    m_consumer = new MessageConsumer(this, inputStream);
-    publisher = new MessagePublisher(this, socket);
-
-    connect(this, SIGNAL(dataReceived()), m_consumer, SLOT(on_dataReceived())); // notify the consumer that some data has arrived
-    /// signals to be relayed to GUI
-    connect(m_consumer, SIGNAL(messageParsed(QString)), this, SLOT(on_messageParsed(QString)));
-    connect(m_consumer, SIGNAL(gpsPointReceived(double,double)), this, SLOT(on_gpsPointReceived(double,double)));
-
-    connect(socket, SIGNAL(disconnected()), this, SLOT(on_disconnected()));
-    //connect(socket, SIGNAL(readyRead()), this, SLOT(on_readyRead()));
-    connect(socket, SIGNAL(readyRead()), this, SIGNAL(dataReceived()));
-    emit newConnection();
 }
 
 void Server::on_disconnected()
 {
     //printf("Connection disconnected.\n");
+    emit connectionLost();
     emit displayInGui("Connection disconnected.\n");
     connected = false;
-    fflush(stdout);
+    //fflush(stdout);
     disconnect(socket, SIGNAL(disconnected()));
     disconnect(socket, SIGNAL(readyRead()));
     socket->deleteLater();
+
+    delete m_consumer;
+    delete publisher;
+    delete inputStream;
+    socket = NULL;
 }
 
 /**

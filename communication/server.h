@@ -50,6 +50,7 @@ signals:
     void dataReceived();
     void gpsPointReceived(double, double);
     void newConnection();
+    void connectionLost();
 
 public slots:
     void on_newConnection();

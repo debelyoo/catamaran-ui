@@ -78,8 +78,9 @@ CRioData PRismeMessage::decodePrismeData(const CRioData &msg, IDataMessageReceiv
             quint16 data = encodedValue & PRISME_DATA_MASK;
 
 //            if(address == 7){
-//                qDebug() << "EV: " << toBin(encodedValue);
-//                qDebug() << " d: " << toBin(data);
+//                qDebug() << "EV: " << toBin16(encodedValue);
+//                qDebug() << " a: " << toBin8(address);
+//                qDebug() << " d: " << toBin16(data);
 //            }
             if(lastPTS > 0 && pseudoTS < lastPTS){
                 pseudoTS += 256*PSEUDO_TIMESTAMP_INC_MS;
@@ -89,8 +90,12 @@ CRioData PRismeMessage::decodePrismeData(const CRioData &msg, IDataMessageReceiv
                 //address += ADDRESS_OFFSET;
                 QVariantList params;
                 params.append((quint16)data);
-                CRioData dObj(sensorAddress+"."+subsensorsAddress[address], params, msg.timestamp /*PSEUDO_TIMESTAMP_SYNC_VALUE + pseudoTS*/);
-                callback->handleDataMessage(dObj);
+                if(subsensorsAddress.count() > address){
+                    CRioData dObj(sensorAddress+"."+subsensorsAddress[address], params, msg.timestamp /*PSEUDO_TIMESTAMP_SYNC_VALUE + pseudoTS*/);
+                    callback->handleDataMessage(dObj);
+                }else{
+                    qDebug() << "PRisme address="<<address;
+                }
             }
             i += 5;
         }else{

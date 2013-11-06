@@ -71,8 +71,9 @@ namespace CRIO {
         CMD_ADDR_PRISME_TS_SYNC = 13,       // PRisme Sync Timestamp	[GET] (uint8) Prisme addr, [SET] P1 Timestamp
         CMD_ADDR_NS_LIMITS = 14,            // Nav.Sys. Limits   : (double)	Delta, (double) Epsilon
         CMD_ADDR_NS_CSTS = 15,              // Nav.Sys. Constant : (double) C_perp, (double) C_point, (double) C_aheahD, (double) P
-        CMD_ADDR_NS_WAYPOINTS = 16          // Nav.Sys. Waypoints	P1…n waypoint {{(double) X, (double) Y}, ...}
-    } CommandAddresses;
+        CMD_ADDR_NS_WAYPOINTS = 16,         // Nav.Sys. Waypoints : P1…n waypoint {{(double) X, (double) Y}, ...}
+        CMD_ADDR_NS_SPEED_SETPOINT = 17     // Nav.Sys. Speed Setpoint : v in m/s (double)
+} CommandAddresses;
 
     typedef enum {  // cast to quint8
         NAV_SYS_AUTO = 0,

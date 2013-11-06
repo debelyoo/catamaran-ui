@@ -66,6 +66,7 @@ public slots:
 
     /// server event
     void on_newConnection();
+    void on_connectionLost();
 
     /// config update
     void on_graphNbValueChanged(int);
@@ -90,6 +91,9 @@ public slots:
     void on_getNSCongifBtnClick();
     void on_defaultNSConfigClick();
     void on_loadWPBtnClicked();
+
+    void on_nsSpeedSetPointSliderChange(int value);
+    void on_nsSpeedSetPointSpinerChange(double value);
 
     /// CompactRio State changed
     void on_crioPositionChanged();

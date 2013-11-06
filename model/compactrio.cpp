@@ -46,6 +46,11 @@ bool CompactRio::timesampSynchronized() const
     return m_currentTimeIsSet;
 }
 
+void CompactRio::resetTimestampSynchronization()
+{
+    m_currentTimeIsSet = false;
+}
+
 QPointF CompactRio::speed() const
 {
     return m_speed;
@@ -140,6 +145,15 @@ void CompactRio::feedWithData(const CRioData &data)
             m_speed.setY(data.data()[1].toDouble());
             m_pastSpeed.append(m_speed);
             processMeanSpeed();
+            emit speedChanged();
+        }
+        break;
+    case 62:
+        if(data.data().count() > 1){
+            double vx = data.data()[0].toDouble();
+            double vy = data.data()[1].toDouble();
+            double theta = data.data()[2].toDouble();
+            qDebug() << "GPS course overground: vx="<<vx<<" vy="<<vy<<" v="<<sqrt(vx*vx+vy*vy)<<" theta="<<theta;
             emit speedChanged();
         }
         break;
@@ -272,6 +286,8 @@ void CompactRio::initSelftAllocatedSensors()
     Sensor *crioDebug = new Sensor("60", "crioDebug", 0, false, true, "", "", false);
     Sensor *navSysLog = new Sensor("61", "NavSysLog", 0, false, true, "", "", false);
 
+    Sensor *gpsSpeed2 = new Sensor("62", "GPS[velocity2]", SensorTypeManager::instance()->type("GPS Speed"), true, true, "GPS", "", false);
+
     TransformationBaseClass *prismeTransformation = new PRisme();
     TransformationManager::instance()->addTransformation(prismeTransformation);
     //Sensor *prisme = new Sensor("65", "PRisme", SensorTypeManager::instance()->type("Unknown"), 0, false, true, "", "", false);
@@ -284,6 +300,8 @@ void CompactRio::initSelftAllocatedSensors()
     m_selfAllocatedSensors.append(rightEngine);
     m_selfAllocatedSensors.append(crioDebug);
     m_selfAllocatedSensors.append(navSysLog);
+
+    m_selfAllocatedSensors.append(gpsSpeed2);
     //m_selfAllocatedSensors.append(prisme);
 }
 
@@ -365,6 +383,13 @@ bool CompactRio::setNavSysLimits(const double delta, const double epsilon)
     CRioCommand cmd(CRIO::CMD_SET, CRIO::CMD_ADDR_NS_LIMITS);
     cmd.addParameter(QVariant::fromValue(epsilon));
     cmd.addParameter(QVariant::fromValue(delta));
+    return m_server->sendMessage(cmd);
+}
+
+bool CompactRio::setNavSysSpeedSetpoint(const double setpoint)
+{
+    CRioCommand cmd(CRIO::CMD_SET, CRIO::CMD_ADDR_NS_SPEED_SETPOINT);
+    cmd.addParameter(QVariant::fromValue(setpoint));
     return m_server->sendMessage(cmd);
 }
 

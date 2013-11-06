@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     server = Server::instance();
     connect(server, SIGNAL(displayInGui(QString)), this, SLOT(addStatusText(QString)));
     connect(server, SIGNAL(newConnection()), this, SLOT(on_newConnection()));
+    connect(server, SIGNAL(connectionLost()), this, SLOT(on_connectionLost()));
 
     connect(compactRio, SIGNAL(newCRioStatusMessage(QString)), this, SLOT(addCrioStatusText(QString)));
     connect(compactRio, SIGNAL(positionChanged()), this, SLOT(on_crioPositionChanged()));
@@ -125,6 +126,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->l0, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
     connect(ui->l1, SIGNAL(valueChanged(double)), this, SLOT(on_nsValueChange()));
     connect(ui->loadWPFileBtn, SIGNAL(clicked()), this, SLOT(on_loadWPBtnClicked()));
+
+    connect(ui->nsSpeedSetpointSlider, SIGNAL(valueChanged(int)), this, SLOT(on_nsSpeedSetPointSliderChange(int)));
+    connect(ui->nsSpeedSetpointSpiner, SIGNAL(valueChanged(double)), this, SLOT(on_nsSpeedSetPointSpinerChange(double)));
+
     updateWPFileList();
 
     // Sensor transformation view
@@ -196,6 +201,8 @@ MainWindow::MainWindow(QWidget *parent) :
     timer->setInterval(1000);
     connect(timer, SIGNAL(timeout()), this, SLOT(on_timer()));
     //timer->start();
+
+    ui->nsSpeedSetpointSpiner->setValue(2.);
 }
 
 MainWindow::~MainWindow()
@@ -486,6 +493,19 @@ void MainWindow::on_loadWPBtnClicked()
     addStatusText("Waypoints ["+ QString::number(waypoints.length()) +"] have been loaded ! \n");
 }
 
+void MainWindow::on_nsSpeedSetPointSliderChange(int value)
+{
+    double v = value/10.;
+    ui->nsSpeedSetpointSpiner->setValue(v);
+    compactRio->setNavSysSpeedSetpoint(v);
+}
+
+void MainWindow::on_nsSpeedSetPointSpinerChange(double value)
+{
+    int v = value*10;
+    ui->nsSpeedSetpointSlider->setValue(v);
+}
+
 void MainWindow::on_crioPositionChanged()
 {
     QPointF p = compactRio->position();
@@ -498,7 +518,9 @@ void MainWindow::on_crioSpeedChanged()
 {
     QPointF s = compactRio->speed();
     QPointF ms = compactRio->meanSpeed();
-    ui->speedLabel->setText(QString("%1(%3), %2(%4) [m/s]").arg(s.x(), 3, ' ', 1).arg(s.y(), 3, ' ', 1).arg(ms.x(), 3, ' ', 1).arg(ms.y(), 3, ' ', 1));
+
+    ui->speedLabel->setText(QString("%1(%2) [m/s]").arg(sqrt(s.x()*s.x()+s.y()*s.y()), 3, ' ', 1).arg(sqrt(ms.x()*ms.x()+ms.y()*ms.y()), 3, ' ', 1));
+    //ui->speedLabel->setText(QString("%1(%3), %2(%4) [m/s]").arg(s.x(), 3, ' ', 1).arg(s.y(), 3, ' ', 1).arg(ms.x(), 3, ' ', 1).arg(ms.y(), 3, ' ', 1));
 }
 
 void MainWindow::on_crioHeadingChanged()
@@ -595,10 +617,7 @@ void MainWindow::on_clearWpClicked()
  */
 void MainWindow::on_cleanGPSClicked()
 {
-    while (!gpsPoints.isEmpty())
-    {
-        delete gpsPoints.first();
-    }
+    qDeleteAll(gpsPoints);
 }
 
 void MainWindow::on_exportBtnClicked()
@@ -759,6 +778,14 @@ void MainWindow::on_newConnection()
         compactRio->setPRismeSamplingRate(10, i);
     }
     compactRio->getCurrentTime();
+    compactRio->setNavSysConstants(ui->c0->value(), ui->c1->value(), ui->c2->value(), ui->c3->value(), ui->c4->value());
+    compactRio->setNavSysLimits(ui->l0->value(), ui->l1->value());
+    compactRio->setSensorsConfig();
+}
+
+void MainWindow::on_connectionLost()
+{
+    compactRio->resetTimestampSynchronization();
 }
 
 /**
