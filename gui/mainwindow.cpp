@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->navModeComboBox->addItem("Manual");
     ui->navModeComboBox->addItem("Automatic");
     ui->waypointGroupBox->hide(); // hide WP panel because mode is manual by default
+    ui->nsControlGroup->hide();
 
     ui->graphNbSpinBox->setValue(3);
 
@@ -203,6 +204,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //timer->start();
 
     ui->nsSpeedSetpointSpiner->setValue(2.);
+    ui->nsSpeedSetpointSlider->setValue(20);
 }
 
 MainWindow::~MainWindow()
@@ -286,6 +288,7 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSlider->setEnabled(true);
         ui->directionSpinBox->setEnabled(true);
         ui->waypointGroupBox->hide();
+        ui->nsControlGroup->hide();
         ui->stopBtn->show();
         compactRio->stop();
         compactRio->setNavSysMode(CRIO::NAV_SYS_MANUAL);
@@ -303,6 +306,7 @@ void MainWindow::on_navModeChanged(int modeId)
         ui->directionSpinBox->setEnabled(false);
         ui->stopBtn->hide();
         ui->waypointGroupBox->show();
+        ui->nsControlGroup->show();
         connect(compactRio, SIGNAL(enginesChanged()), this, SLOT(on_engineValueAutoUpdate()));
         qDebug() << "Signal connected";
     }
@@ -502,7 +506,7 @@ void MainWindow::on_nsSpeedSetPointSliderChange(int value)
 
 void MainWindow::on_nsSpeedSetPointSpinerChange(double value)
 {
-    int v = value*10;
+    int v = round(value*10);
     ui->nsSpeedSetpointSlider->setValue(v);
 }
 
@@ -781,6 +785,7 @@ void MainWindow::on_newConnection()
     compactRio->setNavSysConstants(ui->c0->value(), ui->c1->value(), ui->c2->value(), ui->c3->value(), ui->c4->value());
     compactRio->setNavSysLimits(ui->l0->value(), ui->l1->value());
     compactRio->setSensorsConfig();
+    compactRio->setNavSysSpeedSetpoint(ui->nsSpeedSetpointSpiner->value());
 }
 
 void MainWindow::on_connectionLost()

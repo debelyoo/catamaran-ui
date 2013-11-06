@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1360</width>
-    <height>730</height>
+    <height>736</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -807,7 +807,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QGroupBox" name="groupBox_10">
+               <widget class="QGroupBox" name="nsControlGroup">
                 <property name="title">
                  <string>Navigation System</string>
                 </property>
