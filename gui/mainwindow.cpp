@@ -758,6 +758,7 @@ void MainWindow::on_newConnection()
     for(quint8 i=0;i<8;++i){
         compactRio->setPRismeSamplingRate(10, i);
     }
+    compactRio->getCurrentTime();
 }
 
 /**

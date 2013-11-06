@@ -11,7 +11,7 @@ CompactRio::CompactRio():
     AbstractCrioStatesHolder(),
     m_server(Server::instance()),
     m_sensorConfig(SensorConfig::instance()),
-    m_syncTimestamp(),
+    m_crioTimestamp(),
     m_navMode(),
     m_leftEngineValue(),
     m_rightEngineValue(),
@@ -20,7 +20,8 @@ CompactRio::CompactRio():
     m_speed(),
     m_meanSpeed(),
     m_pastSpeed(),
-    m_selfAllocatedSensors()
+    m_selfAllocatedSensors(),
+    m_currentTimeIsSet(false)
 {
     initSelftAllocatedSensors();
     initAvailableInputs();
@@ -28,6 +29,21 @@ CompactRio::CompactRio():
 QPointF CompactRio::meanSpeed() const
 {
     return m_meanSpeed;
+}
+
+qint64 CompactRio::crioSyncTimestamp() const
+{
+    return m_crioTimestamp;
+}
+
+qint64 CompactRio::localSyncTimestamp() const
+{
+    return m_localTimestamp;
+}
+
+bool CompactRio::timesampSynchronized() const
+{
+    return m_currentTimeIsSet;
 }
 
 QPointF CompactRio::speed() const
@@ -139,8 +155,8 @@ void CompactRio::feedWithCommand(const CRioCommand &cmd)
         switch(cmd.address()){
         case CRIO::CMD_ADDR_ENGINE_MODE:
         {
-            if(cmd.parameters().count() < 1){ break;}
-            CRIO::NAV_SYS_MODE nv = (CRIO::NAV_SYS_MODE) cmd.parameters()[0].toInt();
+            if(cmd.parameters().count() < 2){ break;}
+            CRIO::NAV_SYS_MODE nv = (CRIO::NAV_SYS_MODE) cmd.parameters()[1].toInt();
             if(nv != m_navMode){
                 m_navMode = nv;
                 emit navigationModeChanged();
@@ -149,8 +165,8 @@ void CompactRio::feedWithCommand(const CRioCommand &cmd)
         }
         case CRIO::CMD_ADDR_LEFT_ENGINE:
         {
-            if(cmd.parameters().count() < 1){ break;}
-            qint8 v = cmd.parameters()[0].value<qint8>();
+            if(cmd.parameters().count() < 2){ break;}
+            qint8 v = cmd.parameters()[1].value<qint8>();
             if(v != m_leftEngineValue){
                 m_leftEngineValue = v;
                 emit enginesChanged();
@@ -159,11 +175,26 @@ void CompactRio::feedWithCommand(const CRioCommand &cmd)
         }
         case CRIO::CMD_ADDR_RIGHT_ENGINE:
         {
-            if(cmd.parameters().count() < 1){ break;}
-            qint8 v = cmd.parameters()[0].value<qint8>();
+            if(cmd.parameters().count() < 2){ break;}
+            qint8 v = cmd.parameters()[1].value<qint8>();
             if(v != m_rightEngineValue){
                 m_rightEngineValue = v;
                 emit enginesChanged();
+            }
+            break;
+        }
+        case CRIO::CMD_ADDR_CURRENT_TIME:
+        {
+            if(cmd.parameters().count() < 2){ break;}
+            CRIO::Timestamp ts = cmd.parameters()[1].value<CRIO::Timestamp>();
+            if(!m_currentTimeIsSet || ts.unixTimestamp != m_crioTimestamp){
+                m_currentTimeIsSet = true;
+                m_crioTimestamp = ts.timestamp;
+                m_localTimestamp = QDateTime::currentMSecsSinceEpoch();
+
+                qint64 delta = m_localTimestamp - m_crioTimestamp * 1000;
+                CRIO::Timestamp::timestampDeltaMs = delta;
+                emit syncTimestampChanged();
             }
             break;
         }
@@ -271,6 +302,8 @@ void CompactRio::initAvailableInputs()
     m_availableInputs.append(NamedAddress(101, "PT100 M1P1"));
     m_availableInputs.append(NamedAddress(102, "PT100 M1P2"));
     m_availableInputs.append(NamedAddress(103, "PT100 M1P3"));
+
+    m_availableInputs.append(NamedAddress(53, "Impulse counter"));
 }
 
 bool CompactRio::setEngine(const CRIO::Engines engine, const qint8 value){
@@ -367,6 +400,12 @@ bool CompactRio::setSabertoothConfig(const quint8 &configAddr, const quint8 &val
 bool CompactRio::getCommand(const CRIO::CommandAddresses &addr)
 {
     CRioCommand cmd(CRIO::CMD_GET, addr);
+    return m_server->sendMessage(cmd);
+}
+
+bool CompactRio::getCurrentTime()
+{
+    CRioCommand cmd(CRIO::CMD_GET, CRIO::CMD_ADDR_CURRENT_TIME);
     return m_server->sendMessage(cmd);
 }
 

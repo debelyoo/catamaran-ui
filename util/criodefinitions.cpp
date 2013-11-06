@@ -2,6 +2,7 @@
 #include <QtCore>
 
 qint64 CRIO::Timestamp::LABVIEW_EPOCH = QDateTime::fromString(QString("1904-01-01T00:00:00"), Qt::ISODate).toMSecsSinceEpoch();
+qint64 CRIO::Timestamp::timestampDeltaMs = -5000000000;
 
 /*
  *  Timestamp class definition
@@ -22,20 +23,17 @@ CRIO::Timestamp::Timestamp(double ts):
 {
     unixTimestamp = toUnixMsTimestamp(timestamp);
 }
-/*
-CRIO::Timestamp::Timestamp(CRioDataStream &ds)
+
+CRIO::Timestamp::Timestamp(const CRIO::Timestamp &ts):
+    timestamp(ts.timestamp),
+    unixTimestamp(ts.unixTimestamp)
 {
-    qint64 secs;
-    quint64 fracs;
-    ds >> secs;
-    ds >> fracs;
-    timestamp = secs + ((double) fracs) / Q_UINT64_C(18446744073709551615);
-    unixTimestamp = toUnixMsTimestamp(timestamp);
+
 }
-*/
+
 qint64 CRIO::Timestamp::toUnixMsTimestamp(double timestamp)
 {
-    qint64 newTs = CRIO::Timestamp::LABVIEW_EPOCH + round(timestamp * 1000);
+    qint64 newTs = (timestamp*1000)+CRIO::Timestamp::timestampDeltaMs;
     return newTs;
 }
 

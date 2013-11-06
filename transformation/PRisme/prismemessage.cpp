@@ -22,10 +22,20 @@ PRismeMessage::PRismeMessage()
 {
 }
 
-QString toBin(quint16 v){
+QString toBin16(quint16 v){
     QString s="";
     quint16 mask = 1<<15;
     for(int i=0;i<16;++i){
+        s += (v&mask)?"1":"0";
+        mask >>=1;
+    }
+    return s;
+}
+
+QString toBin8(quint8 v){
+    QString s="";
+    quint8 mask = 1<<7;
+    for(int i=0;i<8;++i){
         s += (v&mask)?"1":"0";
         mask >>=1;
     }
@@ -48,7 +58,7 @@ CRioData PRismeMessage::decodePrismeData(const CRioData &msg, IDataMessageReceiv
     while(i<len){
         if(buffer.at(i+3) == '\r' && buffer.at(i+4) == '\n'){
             // Read the pseudo timestamp (8bits)
-            unsigned char pseudoTSchar = buffer.at(i);//bdata[i];
+            quint8 pseudoTSchar = buffer.at(i);//bdata[i];
             int pseudoTS =  pseudoTSchar * PSEUDO_TIMESTAMP_INC_MS;
 
             //                qDebug() << "Byte[0]: "<<(unsigned int)bdata[0];
@@ -62,15 +72,10 @@ CRioData PRismeMessage::decodePrismeData(const CRioData &msg, IDataMessageReceiv
                     b[10-14]    : Address (5bits)
                     b[0-9]      : Data (10bits)
             */
-            unsigned short encodedValue = buffer.at(i+1);//bdata[1+i];
-            encodedValue <<= 8;
-            encodedValue += buffer.at(i+2);//bdata[2+i];
-
-
-
+            quint16 encodedValue = ((quint8)buffer.at(i+1))*256 + ((quint8)buffer.at(i+2));//bdata[2+i];
             bool type = encodedValue & PRISME_TYPE_MASK;
-            unsigned char address = (encodedValue >> 10)&PRISME_ADDR_MASK;
-            unsigned short data = encodedValue & PRISME_DATA_MASK;
+            quint8 address = (encodedValue >> 10)&PRISME_ADDR_MASK;
+            quint16 data = encodedValue & PRISME_DATA_MASK;
 
 //            if(address == 7){
 //                qDebug() << "EV: " << toBin(encodedValue);

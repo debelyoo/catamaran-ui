@@ -44,6 +44,11 @@ public:
     QPointF speed() const;
     QPointF meanSpeed() const;
 
+    qint64 crioSyncTimestamp() const;
+    qint64 localSyncTimestamp() const;
+
+    bool timesampSynchronized() const;
+
     /*
      *  Command Factory methods
      */
@@ -103,7 +108,8 @@ private:
     SensorConfig *m_sensorConfig;
     CompactRio();
 
-    qint64 m_syncTimestamp;
+    double m_crioTimestamp;
+    qint64 m_localTimestamp;
 
     CRIO::NAV_SYS_MODE m_navMode;
 
@@ -122,6 +128,8 @@ private:
     void processMeanSpeed();
     void initSelftAllocatedSensors();
     void initAvailableInputs();
+
+    bool m_currentTimeIsSet;
 
 };
 

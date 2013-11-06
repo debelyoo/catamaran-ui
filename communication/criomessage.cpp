@@ -12,7 +12,7 @@ CRioMessage::CRioMessage(CRioDataStream &ds):
     m_pContent(NULL),
     m_valid(false)
 {
-    if(s_neededBytes <= 0 | (s_currentType == CRIO::MESSAGE_TYPE_ERROR)){
+    if((s_neededBytes <= 0) | (s_currentType == CRIO::MESSAGE_TYPE_ERROR)){
         if(ds.device()->bytesAvailable() >= 5){
             quint8 messageType;
             ds >> messageType;
@@ -178,7 +178,19 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
             ds >> secs;
             ds >> fracs;
             CRIO::Timestamp ts(secs, fracs);
-            params.append(QVariant::fromValue(ts.timestamp));
+            params.append(QVariant::fromValue(ts));
+            break;
+        }
+        case CRIO::CMD_ADDR_CURRENT_TIME:
+        {
+            ds >> strlen;
+            qint64 secs;
+            quint64 fracs;
+            ds >> secs;
+            ds >> fracs;
+            CRIO::Timestamp ts(secs, fracs);
+            params.append(QVariant::fromValue(ts));
+            break;
         }
             break;
         case CRIO::CMD_ADDR_HONK:

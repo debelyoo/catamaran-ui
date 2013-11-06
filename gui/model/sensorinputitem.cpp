@@ -19,6 +19,13 @@ SensorInputItem::SensorInputItem(const QString &name, SensorInputItem *pParent):
 {
 }
 
+SensorInputItem::~SensorInputItem()
+{
+    if(m_pParent){
+        m_pParent->removeChild(this->childNumber());
+    }
+}
+
 SensorInputItem *SensorInputItem::parent() const
 {
     return m_pParent;
@@ -28,12 +35,12 @@ void SensorInputItem::setParent(SensorInputItem *pParent)
 {
     m_pParent = pParent;
 }
-QVector<SensorInputItem *> SensorInputItem::childs() const
+QList<SensorInputItem *> SensorInputItem::childs() const
 {
     return m_childs;
 }
 
-void SensorInputItem::setChilds(const QVector<SensorInputItem *> &childs)
+void SensorInputItem::setChilds(const QList<SensorInputItem *> &childs)
 {
     m_childs = childs;
 }
@@ -50,11 +57,28 @@ void SensorInputItem::insertChild(SensorInputItem *child, int pos)
     m_childs.insert(pos, child);
 }
 
-SensorInputItem *SensorInputItem::removeChild(int index)
+bool SensorInputItem::removeChild(int index)
 {
-    SensorInputItem *c = m_childs[index];
-    m_childs.remove(index);
-    return c;
+    if(index < m_childs.count() && index >= 0){
+        SensorInputItem *c = m_childs[index];
+        if(c){
+            m_childs.removeAt(index);
+            emit itemChanged();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void SensorInputItem::deleteChilds()
+{
+    foreach(SensorInputItem *i, m_childs){
+        m_childs.removeOne(i);
+        emit itemChanged();
+        delete i;
+    }
+
 }
 
 SensorInputItem *SensorInputItem::child(int index) const

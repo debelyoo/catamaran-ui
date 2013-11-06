@@ -40,9 +40,11 @@ void MessageConsumer::on_dataReceived()
                 case CRIO::CMD:
                 {
                     CRioCommand *p = static_cast<CRioCommand *>(crioMessage.content());
-                    //qDebug() << "\tCommand: cmd = " << p->command() << ", addr = " << p->address();
-                    if(p->command() == CRIO::CMD_GET){
-                        handleGetCommand((int)p->address());
+                    if(p){
+                        CompactRio::instance()->feedWithCommand(*p);
+                        if(p->command() == CRIO::CMD_GET){
+                            handleGetCommand((int)p->address());
+                        }
                     }
                 }
                     break;
@@ -98,16 +100,15 @@ CRioData MessageConsumer::transformDataObject(CRioData &iobj){
 void MessageConsumer::handleDataMessage(CRioData &idataObj)
 {
     bool handeled = true;
-
-    // Temporary modification for test on 09.10.2013
-//    if(idataObj.address == "53"){
-//        QVariantList tmp; tmp.append(idataObj.data()[1]);
-//        idataObj = CRioData(idataObj.address, tmp, idataObj.timestamp);
-//    }
-    // End of temporary modification for 09.10.2013
+    if(!CompactRio::instance()->timesampSynchronized()){
+        qDebug() << "[MessageConsumer] Timestamp not synchronized, skip data " << idataObj.address;
+        return;
+    }
 
     CRioData dataObj = transformDataObject(idataObj);
     CompactRio::instance()->feedWithData(dataObj);
+
+
 
     if (sensorConfig->containsSensor(dataObj.address))
     {
@@ -174,7 +175,7 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
             emit messageParsed(outputStr);
         }
     }else{
-        qDebug() << "[MessageConsumer] Sensor " << dataObj.address << " not found in config !";
+        //qDebug() << "[MessageConsumer] Sensor " << dataObj.address << " not found in config !";
     }
 }
 
@@ -224,7 +225,7 @@ QString MessageConsumer::createLogText(const CRioData &dataObj)
             break;
         }
     }
-    log = dataObj.address + "\t" + QDateTime::fromMSecsSinceEpoch(dataObj.timestamp.unixTimestamp).toString("hh:mm:ss:zzz: ") + valuesAsText;
+    log = dataObj.address + "\t" + QString::number(dataObj.timestamp.unixTimestamp) + valuesAsText;
     return log;
 }
 

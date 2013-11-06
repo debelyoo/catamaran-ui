@@ -129,7 +129,10 @@ namespace CRIO {
         Timestamp();
         Timestamp(qint64 secs, quint64 fraqs);
         Timestamp(double ts);
+        Timestamp(const Timestamp &ts);
         //Timestamp(CRioDataStream &ds);
+
+        static qint64 timestampDeltaMs;
 
     private:
         static qint64 LABVIEW_EPOCH;
@@ -142,5 +145,7 @@ namespace CRIO {
         DataType::Types cRIOType() const;
     };
 }
+
+Q_DECLARE_METATYPE(CRIO::Timestamp)
 
 #endif // CRIODEFINITIONS_H

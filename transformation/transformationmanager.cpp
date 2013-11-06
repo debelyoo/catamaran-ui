@@ -107,6 +107,7 @@ int TransformationManager::unloadAll()
 bool TransformationManager::addTransformation(TransformationBaseClass *tr)
 {
     m_transformations.insert(tr->getTransformationDefinition().name, tr);
+    return true;
 }
 
 TransformationManager::TransformationManager()

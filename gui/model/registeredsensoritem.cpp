@@ -37,6 +37,7 @@ RegisteredSensorItem::~RegisteredSensorItem()
         m_parent->removeChild(this);
     }
     m_sensorInput->enable();
+    m_sensorInput->deleteChilds();
     delete m_model;
 }
 

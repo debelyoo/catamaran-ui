@@ -1,7 +1,7 @@
 #ifndef SENSORINPUTITEM_H
 #define SENSORINPUTITEM_H
 
-#include <QVector>
+#include <QList>
 #include <QString>
 #include <QObject>
 
@@ -12,14 +12,16 @@ class SensorInputItem : public QObject
 public:
     SensorInputItem(const QString &address, const QString &name, SensorInputItem *pParent = NULL);
     SensorInputItem(const QString &name, SensorInputItem *pParent = NULL);
+    ~SensorInputItem();
     SensorInputItem *parent() const;
     void setParent(SensorInputItem *pParent);
 
-    QVector<SensorInputItem *> childs() const;
-    void setChilds(const QVector<SensorInputItem *> &childs);
+    QList<SensorInputItem *> childs() const;
+    void setChilds(const QList<SensorInputItem *> &childs);
     void addChild(SensorInputItem *child);
     void insertChild(SensorInputItem *child, int pos);
-    SensorInputItem *removeChild(int index);
+    bool removeChild(int index);
+    void deleteChilds();
     SensorInputItem *child(int index) const;
 
     QString name() const;
@@ -41,7 +43,7 @@ signals:
 
 protected:
     SensorInputItem *m_pParent;
-    QVector<SensorInputItem *> m_childs;
+    QList<SensorInputItem *> m_childs;
     QString m_name;
     QString m_address;
     bool m_enabled;
