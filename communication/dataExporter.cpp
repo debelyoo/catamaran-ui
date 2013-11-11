@@ -73,7 +73,7 @@ void DataExporter::prepareDataChunk(QList<QJsonObject> jsDataList, QString senso
             QJsonObject json;
             json.insert("datatype", sensorType);
             json.insert("items", jArr);
-            json.insert("inc", inc);
+            json.insert("last_chunk", inc == jsDataList.length());
             jsChunksToSend.enqueue(QJsonDocument(json));
             jArr = QJsonArray(); // reset array
         }

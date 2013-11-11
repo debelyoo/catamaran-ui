@@ -13,6 +13,8 @@
 #include "dbTable.h"
 #include "manager/sensortypemanager.h"
 #include "util/timeHelper.h"
+#include "util/fileHelper.h"
+
 
 namespace TableList {
     typedef enum {
@@ -35,6 +37,7 @@ class DatabaseManager
         bool insertGpsPoint(qint64 unixTs, double lat, double lon, double alt, double heading);
         bool insertSensorValue(QString sensorAddress, QString sensorType, qint64 unixTs, double value);
         bool insertSensorConfigBlob(QByteArray blob);
+        bool createNewMission();
         bool insertMission();
         bool removeMission(QString missionName);
         QStandardItemModel* getMissionsAsModel();
@@ -54,7 +57,6 @@ class DatabaseManager
             db.setDatabaseName("ecoldata.sqlite");
             createNecessaryTables();
             insertMission(); // create mission when application starts
-            //insertSampleData();
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);

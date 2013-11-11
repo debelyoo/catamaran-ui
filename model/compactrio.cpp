@@ -133,12 +133,19 @@ void CompactRio::feedWithData(const CRioData &data)
         }
         break;
     case CRIO::DATA_ADDR_POSITION:
-        if(data.data().count() > 1){
-            m_position.setX(data.data()[0].toDouble());
-            m_position.setY(data.data()[1].toDouble());
-            emit positionChanged();
+        {
+            qint64 tsDiff = data.timestamp.unixTimestamp - m_lastTimestamp.unixTimestamp;
+            if (tsDiff > 3000) {
+                emit nonConsecutiveDataReceived();
+            }
+            m_lastTimestamp = data.timestamp;
+            if(data.data().count() > 1){
+                m_position.setX(data.data()[0].toDouble());
+                m_position.setY(data.data()[1].toDouble());
+                emit positionChanged();
+            }
+            break;
         }
-        break;
     case CRIO::DATA_ADDR_VELOCITY:
         if(data.data().count() > 1){
             m_speed.setX(data.data()[0].toDouble());

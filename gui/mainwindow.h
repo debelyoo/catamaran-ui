@@ -99,9 +99,11 @@ public slots:
     void on_crioPositionChanged();
     void on_crioSpeedChanged();
     void on_crioHeadingChanged();
+    void on_nonConsecutiveDataReceived();
 
     void on_saveConfig();
     void on_loadConfig();
+    void on_createNewMission();
 
     void on_timer();
 

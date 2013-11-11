@@ -102,6 +102,7 @@ signals:
     void speedChanged();
     void headingChanged();
     void syncTimestampChanged();
+    void nonConsecutiveDataReceived(); // triggered when data with big timestamp difference arrives
 
 private:
     Q_DISABLE_COPY(CompactRio)
@@ -133,7 +134,7 @@ private:
     void initAvailableInputs();
 
     bool m_currentTimeIsSet;
-
+    CRIO::Timestamp m_lastTimestamp;
 };
 
 #endif // COMPACTRIO_H

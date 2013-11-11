@@ -108,8 +108,6 @@ void MessageConsumer::handleDataMessage(CRioData &idataObj)
     CRioData dataObj = transformDataObject(idataObj);
     CompactRio::instance()->feedWithData(dataObj);
 
-
-
     if (sensorConfig->containsSensor(dataObj.address))
     {
         Sensor* s = sensorConfig->getSensor(dataObj.address);

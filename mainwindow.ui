@@ -1858,6 +1858,8 @@
     </property>
     <addaction name="actionSave_config"/>
     <addaction name="actionLoad_configuration"/>
+    <addaction name="separator"/>
+    <addaction name="actionNew_mission"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -1878,6 +1880,11 @@
   <action name="actionLoad_configuration">
    <property name="text">
     <string>Load configuration</string>
+   </property>
+  </action>
+  <action name="actionNew_mission">
+   <property name="text">
+    <string>New mission</string>
    </property>
   </action>
  </widget>

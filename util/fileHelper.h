@@ -20,7 +20,7 @@ class FileHelper
         void appendToFile(QString filename, QString text);
         void appendToFile(QString filename, const QByteArray &text);
         bool loadConfigFile();
-        void createLogFiles();
+        void createLogFiles(bool forceCreation);
         bool loadSensorTypesFile();
         QList<QPointF> loadWaypointsFile(QString fileName);
 
@@ -36,7 +36,7 @@ private:
 
         QString logFolder;
         QMap<QString, QString> logFiles;
-        QString getLogFileName(QString prefix);
+        QString getLogFileName(QString prefix, bool forceCreation);
 };
 
 #endif // FILEHELPER_H

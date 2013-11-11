@@ -134,18 +134,18 @@ bool FileHelper::loadConfigFile()
 /**
  * Create the log files for the sensor that have the 'record' flag set and log file prefix
  * @brief FileHelper::createLogFiles
- * @param sensorConfig The config object
+ * @param forceCreation Force creation of log files (in case of new mission created)
  */
-void FileHelper::createLogFiles()
+void FileHelper::createLogFiles(bool forceCreation)
 {
     SensorConfig* sensorConfig = SensorConfig::instance();
     //qDebug() << "createLogFiles()";
     foreach(Sensor* s, sensorConfig->getSensors())
     {
-        if (s->record() && s->logFilePrefix() != "" && s->currentLogFilename() == "")
+        if (s->record() && s->logFilePrefix() != "" && (s->currentLogFilename() == "" || forceCreation))
         {
-            QString currentLogFilename = getLogFileName(s->logFilePrefix());
-            //qDebug() << currentLogFilename;
+            QString currentLogFilename = getLogFileName(s->logFilePrefix(), forceCreation);
+            //qDebug() << "create: " << currentLogFilename;
             s->setCurrentLogFilename(currentLogFilename);
             writeFile(s->currentLogFilename(), "", true);
         }
@@ -217,12 +217,13 @@ QList<QPointF> FileHelper::loadWaypointsFile(QString fileName)
  * Get the name of the log file. Returns existing filename if file with same prefix already exists
  * @brief FileHelper::getLogFileName
  * @param prefix The prefix of the log file
+ * @param forceCreation Force creation of log files (in case of new mission created)
  * @return The name of the logfile
  */
-QString FileHelper::getLogFileName(QString prefix)
+QString FileHelper::getLogFileName(QString prefix, bool forceCreation)
 {
     QString logFileName;
-    if(logFiles.contains(prefix))
+    if(logFiles.contains(prefix) && !forceCreation)
     {
         logFileName = logFiles.value(prefix);
     }

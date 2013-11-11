@@ -204,6 +204,13 @@ QString DatabaseManager::buildInsertQuery(DbTable table)
     return query;
 }
 
+bool DatabaseManager::createNewMission()
+{
+    bool b = insertMission();
+    FileHelper::instance()->createLogFiles(true);
+    return b;
+}
+
 bool DatabaseManager::insertMission()
 {
     bool res;
@@ -212,7 +219,7 @@ bool DatabaseManager::insertMission()
     QDateTime dateTime = QDateTime::currentDateTime();
     QString tzOffset = TimeHelper::getTimeZoneOffset();
     QString timeZoneStr = "GMT"+tzOffset; // set timezone id (e.g. GMT+1, GMT+2, GMT+9)
-    QString missionName = "mission_"+dateTime.toString("yyyyMMdd_hh:mm:ss");;
+    QString missionName = "mission_"+dateTime.toString("yyyyMMdd_hh:mm:ss");
     double ts = (double)dateTime.currentMSecsSinceEpoch() / 1000;
     values.append(missionName);
     values.append(ts);

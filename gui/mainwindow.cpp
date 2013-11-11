@@ -55,8 +55,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->graphNbSpinBox->setValue(3);
 
+    // menu bar
     connect(ui->actionSave_config, SIGNAL(triggered()), this, SLOT(on_saveConfig()));
     connect(ui->actionLoad_configuration, SIGNAL(triggered()), this, SLOT(on_loadConfig()));
+    connect(ui->actionNew_mission, SIGNAL(triggered()), this, SLOT(on_createNewMission()));
 
     createConfigurationPanel();
     createPlotsPanel(); // need to be after configuration panel for plots
@@ -72,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(compactRio, SIGNAL(positionChanged()), this, SLOT(on_crioPositionChanged()));
     connect(compactRio, SIGNAL(speedChanged()), this, SLOT(on_crioSpeedChanged()));
     connect(compactRio, SIGNAL(headingChanged()), this, SLOT(on_crioHeadingChanged()));
+    connect(compactRio, SIGNAL(nonConsecutiveDataReceived()), this, SLOT(on_nonConsecutiveDataReceived()));
 
     sliderIsMoving = false;
     previousSpeedValue = 0;
@@ -413,7 +416,7 @@ void MainWindow::on_registeredSensorButtonClick(QModelIndex &index)
 void MainWindow::on_sensorConfigChanged()
 {
     compactRio->setSensorsConfig();
-    fileHelper->createLogFiles();
+    fileHelper->createLogFiles(false);
     emit sensorConfigChanged();
 }
 
@@ -536,6 +539,11 @@ void MainWindow::on_crioHeadingChanged()
     //ui->graphicsView->update();
 }
 
+void MainWindow::on_nonConsecutiveDataReceived()
+{
+    on_createNewMission();
+}
+
 void MainWindow::on_saveConfig()
 {
     QByteArray ba;
@@ -559,6 +567,16 @@ void MainWindow::on_loadConfig()
     QDataStream ds(&ba, QIODevice::ReadWrite);
     loadProfile(ds);
     on_sensorConfigChanged();
+}
+
+void MainWindow::on_createNewMission()
+{
+    // TODO - test if it crashes when data is streamed
+    bool b = dbManager->createNewMission();
+    if (b) {
+        addStatusText("New mission created ["+dbManager->getCurrentMissionName()+"] !\n");
+    }
+    updateMissionList();
 }
 
 void MainWindow::on_timer()
@@ -755,7 +773,6 @@ void MainWindow::on_sensorTypeRequestDone(int statusCode, QList<QString> sensorT
         foreach (QString stName, sensorTypes) {
             SensorTypeManager::instance()->createType(stName);
         }
-        // TODO refresh panels with sensor types combo box
     } else {
         qDebug() << "[ERROR] while getting the sensor types from server";
     }
