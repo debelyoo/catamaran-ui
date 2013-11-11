@@ -56,7 +56,7 @@ class DatabaseManager
             db = QSqlDatabase::addDatabase("QSQLITE");
             db.setDatabaseName("ecoldata.sqlite");
             createNecessaryTables();
-            insertMission(); // create mission when application starts
+            //insertMission(); // create mission when application starts (should be called when first data arrives)
         }
         DatabaseManager(const DatabaseManager &);
         DatabaseManager& operator=(const DatabaseManager &);

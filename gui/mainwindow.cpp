@@ -541,6 +541,7 @@ void MainWindow::on_crioHeadingChanged()
 
 void MainWindow::on_nonConsecutiveDataReceived()
 {
+    qDebug() << "[Warning] non consecutive data received !";
     on_createNewMission();
 }
 
