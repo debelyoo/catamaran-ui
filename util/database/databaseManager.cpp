@@ -282,7 +282,7 @@ QPair< QVector<double>, QVector<double> > DatabaseManager::getData(Sensor* s, in
     QVector<double> logValues;
     if (db.open()) {
         QSqlQuery query(db);
-        QString sqlQuery = "SELECT * FROM sensorlog WHERE mission_id = "+ currentMissionId;
+        QString sqlQuery = "SELECT * FROM sensorlog WHERE mission_id = "+ QString::number(currentMissionId);
         sqlQuery += " AND sensor_address = '"+ s->address()+"'";
         sqlQuery += " AND timestamp > "+ QString::number(fromTs);
         sqlQuery += " ORDER BY timestamp";// LIMIT 100";
