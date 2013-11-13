@@ -6,6 +6,9 @@
 
 CompactRio *CompactRio::s_instance = NULL;
 
+/**
+ * @brief CompactRio::CompactRio Default contstructor (private)
+ */
 CompactRio::CompactRio():
     QObject(),
     AbstractCrioStatesHolder(),
@@ -26,56 +29,102 @@ CompactRio::CompactRio():
     initSelftAllocatedSensors();
     initAvailableInputs();
 }
+
+/**
+ * @brief CompactRio::meanSpeed getter for the mean speed of the catamaran
+ * @return mean speed [m/s]
+ */
 QPointF CompactRio::meanSpeed() const
 {
     return m_meanSpeed;
 }
 
+/**
+ * @brief CompactRio::crioSyncTimestamp getter for the remote (crio) timestamp
+ * @return remote (crio) timestamp
+ */
 qint64 CompactRio::crioSyncTimestamp() const
 {
     return m_crioTimestamp;
 }
 
+/**
+ * @brief CompactRio::localSyncTimestamp getter for the local timestamp
+ * @return local timestamp
+ */
 qint64 CompactRio::localSyncTimestamp() const
 {
     return m_localTimestamp;
 }
 
+/**
+ * @brief CompactRio::timesampSynchronized getter for the synchronization flag
+ * @return true if timestamps (local and remote) are synchronized
+ */
 bool CompactRio::timesampSynchronized() const
 {
     return m_currentTimeIsSet;
 }
 
+/**
+ * @brief CompactRio::resetTimestampSynchronization clear the timestamp synchronization flag.
+ *
+ * This method is useful for exemple after a reconnection
+ */
 void CompactRio::resetTimestampSynchronization()
 {
     m_currentTimeIsSet = false;
 }
 
+/**
+ * @brief CompactRio::speed getter for the catamran instant speed
+ * @return catamran speed [m/s]
+ */
 QPointF CompactRio::speed() const
 {
     return m_speed;
 }
 
+/**
+ * @brief CompactRio::position getter for the catamean position
+ * @return catamran position [m]
+ */
 QPointF CompactRio::position() const
 {
     return m_position;
 }
 
+/**
+ * @brief CompactRio::heading getter for the catamran heading
+ * @return catamran heading [°], 0° == North
+ */
 double CompactRio::heading() const
 {
     return m_heading;
 }
 
+/**
+ * @brief CompactRio::rightEngineValue getter for the right engine value
+ * @return right engine value [-127:127]
+ */
 qint8 CompactRio::rightEngineValue() const
 {
     return m_rightEngineValue;
 }
 
+/**
+ * @brief CompactRio::leftEngineValue getter for the left engine value
+ * @return left engine value [-127:127]
+ */
 qint8 CompactRio::leftEngineValue() const
 {
     return m_leftEngineValue;
 }
 
+/**
+ * @brief CompactRio::instance static method used to access singleton instance
+ * @return the instance for this class
+ */
 CompactRio *CompactRio::instance()
 {
     if(!s_instance){
@@ -84,6 +133,12 @@ CompactRio *CompactRio::instance()
     return s_instance;
 }
 
+/**
+ * @brief CompactRio::feedWithData method used to feed this object with data
+ * This methods grab useful informations from the parameter data. Normaly this methode is used inside
+ * the method MessageConsumer::handleDataMessage()
+ * @param data reference on a CRioData used as input for feeding
+ */
 void CompactRio::feedWithData(const CRioData &data)
 {
     bool valid;
@@ -169,6 +224,12 @@ void CompactRio::feedWithData(const CRioData &data)
     }
 }
 
+/**
+ * @brief CompactRio::feedWithCommand method used to feed this object with command
+ * This methods grab useful informations from the parameter cmd. Normaly this methode is used inside
+ * the method MessageConsumer::on_dataReceived()
+ * @param cmd reference on a CrioCommand object used for feeding
+ */
 void CompactRio::feedWithCommand(const CRioCommand &cmd)
 {
     switch(cmd.command()){
@@ -243,16 +304,103 @@ void CompactRio::feedWithCommand(const CRioCommand &cmd)
         default:
             break;
         }
+        break;
+    case CRIO::CMD_NOTIFY:
+        switch(cmd.address()){
+        case CRIO::NOTIFY_NS_NEW_LINE:
+            notificationNavSysNewLinePointIndexes(cmd.parameters()[2].value<quint16>(), cmd.parameters()[3].value<quint16>(), cmd.parameters()[2].value<CRIO::Timestamp>());
+            break;
+        case CRIO::NOTIFY_NS_WP_REACHED:
+            notificationNavSysWaypointReached(cmd.parameters()[2].value<quint16>(), cmd.parameters()[2].value<CRIO::Timestamp>());
+        default:
+            break;
+        }
+
     default:
         break;
     }
 }
 
+/**
+ * @brief CompactRio::waypoints getter for waypoints list
+ * @return waypoints
+ */
+const QList<QPointF> &CompactRio::waypoints() const
+{
+    return m_waypoints;
+}
+
+/**
+ * @brief CompactRio::waypoint getter for a single waypoint at index "index"
+ * @param index index of the desired waypoint
+ * @return if index is valid return the desired waypoint otherwise return a default QPoinF
+ */
+QPointF CompactRio::waypoint(int index) const
+{
+    if(index < m_waypoints.count()){
+        return m_waypoints.at(index);
+    }
+    return QPointF();
+}
+
+/**
+ * @brief CompactRio::addWaypoint append a waypoint to the waypoints list and return the new size of the list
+ * @param wp the waypoint to add
+ * @return size of the number of waypoints in the list
+ */
+int CompactRio::addWaypoint(const QPointF &wp)
+{
+    m_waypoints.append(wp);
+    return m_waypoints.count();
+}
+
+/**
+ * @brief CompactRio::removeWaypoint remove the waypoint pointed by index from  the waypoints list
+ * @param index
+ * @return true on success, false otherwise
+ */
+bool CompactRio::removeWaypoint(int index)
+{
+    if(index < m_waypoints.count()){
+        m_waypoints.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @brief CompactRio::removeLastWaypoint remove the last waypoint in the waypoints list
+ */
+void CompactRio::removeLastWaypoint()
+{
+    if(!m_waypoints.isEmpty()){
+        m_waypoints.pop_front();
+    }
+}
+
+/**
+ * @brief CompactRio::clearWaypoint clear the waypoints list
+ * @param force
+ */
+void CompactRio::clearWaypoint(bool force)
+{
+    Q_UNUSED(force);
+    m_waypoints.clear();
+}
+
+/**
+ * @brief CompactRio::availableInputs getter for the list off available inputs
+ * @return the list of available inputs
+ */
 const QList<CompactRio::NamedAddress> CompactRio::availableInputs() const
 {
     return m_availableInputs;
 }
 
+/**
+ * @brief CompactRio::selfAllocatedSensors getter for all the immutable sensors needed by the catamran
+ * @return the list of all self allocated sensors
+ */
 const QList<Sensor *> CompactRio::selfAllocatedSensors() const
 {
     return m_selfAllocatedSensors;
@@ -275,6 +423,10 @@ void CompactRio::processMeanSpeed()
     m_meanSpeed /= n;
 }
 
+/**
+ * @brief CompactRio::initSelftAllocatedSensors initialize the compactRio object
+ * The method create all the self allocated sensors and add them to the list
+ */
 void CompactRio::initSelftAllocatedSensors()
 {
     SensorTypeManager::instance()->createType("GPS Position");
@@ -312,6 +464,9 @@ void CompactRio::initSelftAllocatedSensors()
     //m_selfAllocatedSensors.append(prisme);
 }
 
+/**
+ * @brief CompactRio::initAvailableInputs getter for all the available inputs
+ */
 void CompactRio::initAvailableInputs()
 {
     m_availableInputs.append(NamedAddress(64 , "Serial M0P0"));
@@ -331,6 +486,13 @@ void CompactRio::initAvailableInputs()
     m_availableInputs.append(NamedAddress(53, "Impulse counter"));
 }
 
+/**
+ * @brief CompactRio::setEngine set the engine value on the catamran
+ * This tool build and send a "setEngine" command to the catamran
+ * @param engine desired engine (CRIO::LEFT / CRIO::RIGHT)
+ * @param value the value for the engine [-127:127]
+ * @return true on success, false otherwise
+ */
 bool CompactRio::setEngine(const CRIO::Engines engine, const qint8 value){
     CRioCommand cmd(CRIO::CMD_SET, (engine==CRIO::LEFT)?CRIO::CMD_ADDR_LEFT_ENGINE:CRIO::CMD_ADDR_RIGHT_ENGINE);
     cmd.addParameter(QVariant::fromValue(value));
@@ -480,6 +642,20 @@ bool CompactRio::setFpgaCounterSamplingTime(const quint16 &ms)
     cmd.addParameter(QVariant::fromValue((quint8) CRIO::Memory::FPGA_COUNTER_1_SAMPLING_TIME));
     cmd.addParameter(QVariant::fromValue(ms));
     return m_server->sendMessage(cmd);
+}
+
+void CompactRio::notificationNavSysNewLinePointIndexes(quint16 id1, quint16 id2, const CRIO::Timestamp &ts)
+{
+    qDebug() << "WP new line used id1=" << id1 << " id2="<<id2 << " ts=" << ts.unixTimestamp;
+    m_waypointsUsedInLineIndexes.first = id1;
+    m_waypointsUsedInLineIndexes.second = id2;
+    emit navSysNewLineInUse();
+}
+
+void CompactRio::notificationNavSysWaypointReached(quint16 id2, const CRIO::Timestamp &ts)
+{
+    qDebug() << "WP reached id=" << id2 << " ts=" << ts.unixTimestamp;
+    emit navSysWaypointReached(id2);
 }
 
 bool CompactRio::delWaypointCmd()

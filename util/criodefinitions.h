@@ -50,9 +50,9 @@ namespace CRIO {
         CMD_GET = 1,
         CMD_SET = 2,
         CMD_ADD = 3,
-        CMD_DEL = 4
+        CMD_DEL = 4,
+        CMD_NOTIFY = 5
     } CommandTypes;
-
 
     typedef enum {  // cast to quint8
         CMD_ADDR_NO_ADDRESS = 0,            // Reserved (Error Check)
@@ -73,7 +73,17 @@ namespace CRIO {
         CMD_ADDR_NS_CSTS = 15,              // Nav.Sys. Constant : (double) C_perp, (double) C_point, (double) C_aheahD, (double) P
         CMD_ADDR_NS_WAYPOINTS = 16,         // Nav.Sys. Waypoints : P1…n waypoint {{(double) X, (double) Y}, ...}
         CMD_ADDR_NS_SPEED_SETPOINT = 17     // Nav.Sys. Speed Setpoint : v in m/s (double)
-} CommandAddresses;
+    } CommandAddresses;
+
+    typedef enum {
+        NOTIFY_ERROR = 0,
+        NOTIFY_NS_STARTED = 1,
+        NOTIFY_NS_STOPPED = 2,
+        NOTIFY_NS_WP_REACHED = 3,           // (uint16) WP id
+        NOTIFY_NS_NEW_LINE = 4,             // (uint16) WP[n] id, (uint16) WP[n+1] id
+        NOTIFY_NS_END_REACHED = 5,
+        NOTIFY_CATAMARAN_STOPPED = 6
+    } NotificationTypes;
 
     typedef enum {  // cast to quint8
         NAV_SYS_AUTO = 0,

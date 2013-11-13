@@ -152,17 +152,20 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
     quint32 nParams;
     ds >> nParams;
     QVariantList params;
-    quint8 address = 0;
+    
     switch(cmdType){
     case CRIO::CMD_GET:
     {
+        quint8 address;
         quint32 strlen;
         ds >> strlen;
         ds >> address;
+        return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)address, params);
     }
         break;
     case CRIO::CMD_SET:
     {
+        quint8 address;
         quint32 strlen;
         if(nParams > 0){
             ds >> strlen;
@@ -199,6 +202,7 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
         default:
             break;
         }
+        return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)address, params);
     }
         break;
     case CRIO::CMD_ADD:
@@ -213,10 +217,57 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
         break;
     case CRIO::CMD_STOP:
         break;
+    case CRIO::CMD_NOTIFY:
+    {
+        quint32 strlen;
+        quint16 notificationType;
+        ds >> strlen;
+        ds >> notificationType;
+
+        ds >> strlen;
+        qint64 secs;
+        quint64 fracs;
+        ds >> secs;
+        ds >> fracs;
+
+        CRIO::Timestamp ts(secs, fracs);
+        params.append(QVariant::fromValue(ts));
+
+        switch(notificationType){
+            case CRIO::NOTIFY_NS_END_REACHED:
+
+            break;
+        case CRIO::NOTIFY_NS_NEW_LINE:
+        {
+            quint16 id1, id2;
+            ds >> strlen;
+            ds >> id1;
+            ds >> strlen;
+            ds >> id2;
+            params.append(QVariant::fromValue(id1));
+            params.append(QVariant::fromValue(id2));
+            break;
+        }
+        case CRIO::NOTIFY_NS_WP_REACHED:
+        {
+            quint16 id;
+            ds >> strlen;
+            ds >> id;
+            params.append(QVariant::fromValue(id));
+            break;
+        }
+        default:
+            break;
+        }
+        return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)notificationType, params);
+        break;
+    }
+    default:
+        break;
     }
 
     if(error){
         return NULL;
     }
-    return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)address, params);
+
 }
