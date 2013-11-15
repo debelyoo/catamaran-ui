@@ -181,7 +181,7 @@ void DataPlot::addSensorToPlot(Sensor *sensor)
 
     QPen pen;
     int hueOffset = 30; // the offset for the first color (30° -> orange)
-    pen.setColor(QColor::fromHsl(hueOffset + (25*index), 255, 150));
+    pen.setColor(QColor::fromHsl((360 + hueOffset - (50*index))%360, 255, 150));
     graph->setLineStyle(QCPGraph::lsLine);
     graph->setPen(pen);
 
