@@ -842,12 +842,15 @@ void MainWindow::drawPointOnMap(double x, double y)
     QColor color = QColor(255, 90, 0); // orange
     QGraphicsEllipseItem* pt = ui->graphicsView->scene()->addEllipse(x-rad, y-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
     gpsPoints.push_back(pt); // add the point in array to be remove when click on "clean GPS points" button
-    // center view on new point
-    ui->graphicsView->centerOn(x, y);
+    if (ui->trackCatamaranCheckBox->isChecked()) {
+        // center view on new point
+        ui->graphicsView->centerOn(x, y);
+    }
 }
 
 /**
- * Draw a way point on map
+ * Draw a way point on map.
+ * This function is called when user right-clicks on map or when use loads a WP file.
  * @brief MainWindow::drawWayPointOnMap
  * @param newPoint The new way point to dram on map
  * @param hasClicked Indicates if the user right-clicked on map to draw the point (in manual mode, points can not be drawn with right click)
@@ -873,9 +876,12 @@ void MainWindow::drawWayPointOnMap(QPointF newPoint, bool hasClicked)
         pom.p = pointOnMap;
         double rad = 1;
         QColor color = QColor(124, 252, 0); // green
+        QPen linePen = QPen(color); // default width is 1
+        linePen.setWidthF(0.5); // set smaller width
+        //qDebug() << "width: " << linePen.width();
         pom.circle = ui->graphicsView->scene()->addEllipse(pointOnMap.x()-rad, pointOnMap.y()-rad, rad, rad, QPen(color), QBrush(Qt::SolidPattern));
         if (!previousPoint.isNull())
-            pom.line = ui->graphicsView->scene()->addLine(previousPoint.x(), previousPoint.y(), pointOnMap.x(), pointOnMap.y(), QPen(color));
+            pom.line = ui->graphicsView->scene()->addLine(previousPoint.x()-rad/2, previousPoint.y()-rad/2, pointOnMap.x()-rad/2, pointOnMap.y()-rad/2, linePen);
         else
             pom.line = 0;
         wayPoints.push_back(pom);
