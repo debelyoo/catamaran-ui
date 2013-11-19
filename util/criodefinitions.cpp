@@ -7,23 +7,40 @@ qint64 CRIO::Timestamp::timestampDeltaMs = -5000000000;
 /*
  *  Timestamp class definition
  */
+
+/**
+ * @brief CRIO::Timestamp::Timestamp default constructor
+ */
 CRIO::Timestamp::Timestamp():
     timestamp(0)
 {
 }
 
+/**
+ * @brief CRIO::Timestamp::Timestamp constructor using a lavbiew timestamp
+ * @param secs
+ * @param fracs
+ */
 CRIO::Timestamp::Timestamp(qint64 secs, quint64 fracs)
 {
     timestamp = secs + ((double) fracs) / Q_UINT64_C(18446744073709551615);
     unixTimestamp = toUnixMsTimestamp(timestamp);
 }
 
+/**
+ * @brief CRIO::Timestamp::Timestamp constructor using a lavbiew timestamp
+ * @param ts
+ */
 CRIO::Timestamp::Timestamp(double ts):
     timestamp(ts)
 {
     unixTimestamp = toUnixMsTimestamp(timestamp);
 }
 
+/**
+ * @brief CRIO::Timestamp::Timestamp copy constructor
+ * @param ts
+ */
 CRIO::Timestamp::Timestamp(const CRIO::Timestamp &ts):
     timestamp(ts.timestamp),
     unixTimestamp(ts.unixTimestamp)
@@ -31,6 +48,12 @@ CRIO::Timestamp::Timestamp(const CRIO::Timestamp &ts):
 
 }
 
+/**
+ * @brief CRIO::Timestamp::toUnixMsTimestamp create a unix timestamp using crio timestamp. This method also add the right offset
+ * for timestamp correction
+ * @param timestamp in labview epoch
+ * @return a unix timestamp
+ */
 qint64 CRIO::Timestamp::toUnixMsTimestamp(double timestamp)
 {
     qint64 newTs = (timestamp*1000)+CRIO::Timestamp::timestampDeltaMs;
@@ -43,7 +66,6 @@ qint64 CRIO::Timestamp::toUnixMsTimestamp(double timestamp)
 CRIO::PolymorphicData::PolymorphicData():
     value()
 {
-
 }
 
 CRIO::PolymorphicData::PolymorphicData(QVariant value): value(value){}

@@ -887,6 +887,8 @@ void MainWindow::drawWayPointOnMap(QPointF newPoint, bool hasClicked)
         wayPoints.push_back(pom);
         QList<QPointF> ptList;
         ptList.push_back(coordinateHelper->UIMaptoLV03(pointFloat));
+
+
         // send command to cRIO
         sendWaypointCommand(MessageUtil::Add, ptList);
     }
@@ -956,6 +958,12 @@ void MainWindow::applyStyle()
                 );
 }
 
+/**
+ * @brief MainWindow::setEngineControlSlidersConnection
+ *
+ * Enable or disable the linked behavior between sliders
+ * @param enableConnections
+ */
 void MainWindow::setEngineControlSlidersConnection(bool enableConnections)
 {
     if(enableConnections){
@@ -971,6 +979,10 @@ void MainWindow::setEngineControlSlidersConnection(bool enableConnections)
     }
 }
 
+/** Load a profile from a datastream. A profile is composed of the SensorTypeManager and the SensorConfig.
+ * @brief MainWindow::loadProfile unserialize a profile from a datastream
+ * @param ds the datastream containing the serialized profile
+ */
 void MainWindow::loadProfile(QDataStream &ds)
 {
     ds >> *SensorTypeManager::instance();
@@ -997,7 +1009,7 @@ void MainWindow::sendEngineCommand()
     }
 }
 
-/// private methods
+// private methods
 void MainWindow::sendLeftEngineCommand()
 {
     // command (uint8) | length array (uint32) | length engine addr (uint32) |engine addr (uint8) | length value (uint32) | value (int8)
@@ -1013,6 +1025,9 @@ void MainWindow::sendRightEngineCommand()
     qDebug() << "sendRightEngineCommand() [" << val << "]";
 }
 
+/** Build the items of the senor input tree view and registered sensor table view and add them to the models
+ * @brief MainWindow::buildConfigSensorsView
+ */
 void MainWindow::buildConfigSensorsView()
 {
     QList<Sensor *> list = SensorConfig::instance()->getSensors();
@@ -1198,39 +1213,7 @@ void MainWindow::createPlotsPanel()
     scrollArea->setWidget(viewport);
     plotsPanelLayout->addWidget(scrollArea);
 }
-/*
-QWidget* MainWindow::createPlot(int xPos, int yPos, int width, int height)
-{
-    QWidget *viewport = new QWidget;
-    QVBoxLayout *layout = new QVBoxLayout;
-    viewport->setLayout(layout);
 
-    QCustomPlot* plot1 = new QCustomPlot;
-    layout->addWidget(plot1);
-    // add title layout element:
-    //plot1->plotLayout()->insertRow(0);
-    //plot1->plotLayout()->addElement(0, 0, new QCPPlotTitle(plot1, "GraphX"));
-    plot1->setGeometry(xPos, yPos, width, height);
-    // generate some data:
-    QVector<double> x(101), y(101); // initialize with entries 0..100
-    for (int i=0; i<101; ++i)
-    {
-      x[i] = i/50.0 - 1; // x goes from -1 to 1
-      y[i] = x[i]*x[i]; // let's plot a quadratic function
-    }
-    // create graph and assign data to it:
-    plot1->addGraph();
-    plot1->graph(0)->setData(x, y);
-    // give the axes some labels:
-    plot1->xAxis->setLabel("x");
-    plot1->yAxis->setLabel("y");
-    // set axes ranges, so we see all data:
-    plot1->xAxis->setRange(-1, 1);
-    plot1->yAxis->setRange(0, 1);
-    plot1->replot();
-    return viewport;
-}
-*/
 /**
  * Create a plot with date as x axis
  * @brief MainWindow::createPlotByDate

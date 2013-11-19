@@ -5,6 +5,10 @@
 #include "util/criodefinitions.h"
 
 class Sensor;
+
+/**
+ * @brief Commands used to interact with the catamaran
+ */
 class CRioCommand : public CRIO::Object
 {
 public:
@@ -16,9 +20,9 @@ public:
     QList<QVariant> parameters() const;
     void addParameter(QVariant p);
 protected:
-    CRIO::CommandTypes m_command;
-    QList<QVariant> m_parameters;
-    CRIO::CommandAddresses m_address;
+    CRIO::CommandTypes m_command;           /// Command type [GET, SET, STOP, ADD, REMOVE, NOTIFY]
+    QList<QVariant> m_parameters;           /// Parameters of the command
+    CRIO::CommandAddresses m_address;       /// Specific parameter (1st parameter) used for GET/SET/NOTIFY/REMOVE/ADD commands
 };
 
 #endif // CRIOCOMMAND_H

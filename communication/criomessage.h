@@ -6,6 +6,9 @@
 #include "communication/criocommand.h"
 #include "communication/criodata.h"
 
+/**
+ * @brief Class used to create CRioCommand or CRioData object using a datastream
+ */
 class CRioMessage{
 public:
     CRioMessage(CRioDataStream &ds);
@@ -20,15 +23,15 @@ protected:
     CRioCommand *createCommand(CRioDataStream &ds);
     CRioData *createData(CRioDataStream &ds);
 private:
-    CRIO::MessageType m_type;
-    CRIO::Object *m_pContent;
-    bool m_valid;
-
     bool buildCommand(CRioDataStream &ds);
     bool buildData(CRioDataStream &ds);
 
-    static CRIO::MessageType s_currentType;
-    static quint32 s_neededBytes;
+    CRIO::MessageType m_type;                   /// Type of the message [CMD / DATA]
+    CRIO::Object *m_pContent;                   /// Pointer on the message content (CRioCommand * / CRioData *)
+    bool m_valid;                               /// True if content is valid, false otherwise
+
+    static CRIO::MessageType s_currentType;     /// Used for message creation. It contains the type of the pending message
+    static quint32 s_neededBytes;               /// Used for message creation. It contains the number of bytes needed to parse the pending message
 
 };
 

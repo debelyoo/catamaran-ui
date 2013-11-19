@@ -11,6 +11,9 @@ namespace Ui {
 class SensorTransformationConfig;
 }
 
+/**
+ * @brief The SensorTransformationConfig class user interface used for transformation selection and configuration
+ */
 class SensorTransformationConfig : public QWidget
 {
     Q_OBJECT

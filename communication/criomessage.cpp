@@ -8,6 +8,16 @@
 quint32 CRioMessage::s_neededBytes = 0;
 CRIO::MessageType CRioMessage::s_currentType = CRIO::MESSAGE_TYPE_ERROR;
 
+/**
+ * @brief CRioMessage::CRioMessage Constructor
+ *
+ * Create a message by reading bytes in a datastream.
+ * If we can, we read the first five bytes from the datastream to get the type of the message
+ * and the number of bytes needed to decode the message.
+ * If there is enough available bytes in the datastream, we try to build the message
+ * according to the type.
+ * @param ds the datastream used for creation
+ */
 CRioMessage::CRioMessage(CRioDataStream &ds):
     m_pContent(NULL),
     m_valid(false)
@@ -37,95 +47,105 @@ CRioMessage::CRioMessage(CRioDataStream &ds):
     }
 }
 
+/**
+ * @brief CRioMessage::~CRioMessage Destructor
+ */
 CRioMessage::~CRioMessage(){
     if(m_pContent){
         delete m_pContent;
     }
 }
 
+/**
+ * @brief CRioMessage::type getter for the type
+ * @return the type
+ */
 CRIO::MessageType CRioMessage::type() const{
     return m_type;
 }
 
+/**
+ * @brief CRioMessage::isValid getter for the validity of the message
+ * @return True if message is valid, false otherwise
+ */
 bool CRioMessage::isValid() const{
     //if(!m_valid)qDebug() << "s_neededB="<<s_neededBytes<<" s_cType="<<s_currentType;
     return m_valid;
 }
 
+/**
+ * @brief CRioMessage::content getter for the content pointer
+ * @return if valid, a pointer on the content, oterwise Null
+ */
 CRIO::Object *CRioMessage::content()
 {
     return m_pContent;
 }
 
+/**
+ * @brief CRioMessage::reset reset the status of the builder
+ *
+ * This method is used when errors are reached to re-synchronize the builder and the datastream
+ */
 void CRioMessage::reset()
 {
     s_neededBytes = 0;
     s_currentType = CRIO::MESSAGE_TYPE_ERROR;
 }
 
+/**
+ * @brief CRioMessage::buildCommand this method try to create a command using the datastream.
+ *
+ * This method skip unused bytes to avoid a de-synchronization between the builder and the datastream
+ * @param ds the datastream used to create a command
+ * @return true on success, false otherwise
+ */
 bool CRioMessage::buildCommand(CRioDataStream &ds)
 {
 
     int pos = ds.device()->pos();
     m_pContent = createCommand(ds);
     int skip = s_neededBytes - (ds.device()->pos()-pos);
-    if(skip > 0){
+    if(skip > 0){       // skip unsued bytes
         ds.skipRawData(skip);
-//        int skiped = ds.skipRawData(skip);
-//        qDebug() << "build CMD : skip " << skip << " ("<<skiped<<") bytes.";
-//        qDebug() << "\tneeded="<<s_neededBytes;
-//        qDebug() << "\tpos1="<<pos;
-//        qDebug() << "\tpos2="<<ds.device()->pos();
-//        qDebug() << "\tab="<<ds.device()->bytesAvailable();
-//        CRioCommand *cmd = (CRioCommand *)m_pContent;
-//        if(cmd){
-//            qDebug() << "\tCMD="<<cmd->command() << " addr="<<cmd->address();
-//            foreach(QVariant v, cmd->parameters()){
-//                qDebug() << "\t\t"<<v;
-//            }
-//        }else{
-//            qDebug() << "\tCMD invalid";
-//        }
-
-        //char *s = new char[skip];
-        //ds.readRawData(s, skip);
-        //qDebug() << QByteArray(s, skip).toHex();
-        //delete [] s;
     }
+    // reset static variables
     s_neededBytes = 0;
     s_currentType = CRIO::MESSAGE_TYPE_ERROR;
     return true;
 }
 
+/**
+ * @brief CRioMessage::buildData this method try to create a command using the datastream
+ *
+ * This method skip unused bytes to avoid a de-synchronization between the builder and the datastream
+ * @param ds the datastream
+ * @return true on success, false otherwise
+ */
 bool CRioMessage::buildData(CRioDataStream &ds)
 {
     int pos = ds.device()->pos();
     m_pContent = createData(ds);
     int skip = s_neededBytes - (ds.device()->pos()-pos);
-    if(skip > 0){
+    if(skip > 0){       // skip unused bytes
         ds.skipRawData(skip);
-//        int skiped = ds.skipRawData(skip);
-//        CRioData *data = (CRioData*) m_pContent;
-//        qDebug() << "build DATA : skip " << skip << " ("<<skiped<<") bytes.";
-//        qDebug() << "\tneeded="<<s_neededBytes;
-//        qDebug() << "\tpos1="<<pos;
-//        qDebug() << "\tpos2="<<ds.device()->pos();
-//        qDebug() << "\tab="<<ds.device()->bytesAvailable();
-//        if(data){
-//            qDebug() << "\tData.addr="<<data->address<<", nP="<<data->polymorphicData().count();
-//            foreach(CRIO::PolymorphicData p, data->polymorphicData()){
-//                qDebug() << "\t\t" << p.value;
-//            }
-//        }
     }
+    // reset static variables
     s_neededBytes = 0;
     s_currentType = CRIO::MESSAGE_TYPE_ERROR;
     return true;
 }
 
+/**
+ * @brief CRioMessage::createData create a data content with the datastream.
+ *
+ * This method create a CRioData by decoding the datastream regarding the structure of a data.
+ * For more information, see the [Wiki](http://wiki.epfl.ch/ecol-cat-gui/data-structure "Catamaran Wiki: Data Structure").
+ * @param ds the datastream
+ * @return the datastream
+ */
 CRioData *CRioMessage::createData(CRioDataStream &ds)
 {
-
     quint8 address;
     ds >> address;
     QList<CRIO::PolymorphicData> pl;
@@ -144,22 +164,32 @@ CRioData *CRioMessage::createData(CRioDataStream &ds)
     return new CRioData(address, vl, ts);
 }
 
+/**
+ * @brief CRioMessage::createCommand create a command content with the datastream.
+ *
+ * This method create a CRioData by decoding the datastream regarding the structure of a data.
+ * For more information, see the [Wiki page](http://wiki.epfl.ch/ecol-cat-gui/data-structure "Catamaran Wiki: Data Structure") for data structure or this
+ * [Wiki page](http://wiki.epfl.ch/ecol-cat-gui/commands "Catamaran Wiki: List of commands") for command explanation
+ * @param ds the datastream
+ * @return the datastream
+ */
 CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
 {
     bool error = false;
     quint8 cmdType;
-    ds >> cmdType;
+    ds >> cmdType;              // get the command type
     quint32 nParams;
-    ds >> nParams;
+    ds >> nParams;              // get the number of parameters in the command
     QVariantList params;
-    
+
+    /* BEGIN SWITCH on command type */
     switch(cmdType){
     case CRIO::CMD_GET:
     {
         quint8 address;
         quint32 strlen;
-        ds >> strlen;
-        ds >> address;
+        ds >> strlen;           // length in bytes of the next paramater
+        ds >> address;          // address for the get command
         return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)address, params);
     }
         break;
@@ -172,6 +202,7 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
             ds >> address;
             --nParams;
         }
+        /* BEGIN SWITCH on address */
         switch(address){
         case CRIO::CMD_ADDR_PRISME_TS_SYNC:
         {
@@ -202,6 +233,7 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
         default:
             break;
         }
+        /* END SWITCH on address */
         return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)address, params);
     }
         break;
@@ -232,7 +264,7 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
 
         CRIO::Timestamp ts(secs, fracs);
         params.append(QVariant::fromValue(ts));
-
+        /* BEGIN SWITCH on notification type */
         switch(notificationType){
             case CRIO::NOTIFY_NS_END_REACHED:
 
@@ -259,15 +291,16 @@ CRioCommand *CRioMessage::createCommand(CRioDataStream &ds)
         default:
             break;
         }
+        /* END SWITCH on notification type */
         return new CRioCommand((CRIO::CommandTypes)cmdType, (CRIO::CommandAddresses)notificationType, params);
         break;
     }
     default:
         break;
     }
-
+    /* END SWITCH on command type */
     if(error){
         return NULL;
     }
-
+    return NULL;
 }
